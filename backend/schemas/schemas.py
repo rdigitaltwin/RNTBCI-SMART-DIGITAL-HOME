@@ -1,0 +1,329 @@
+"""RNTBCI Smart Home Digital Twin - Pydantic Schemas.
+
+Request/response validation schemas for all API endpoints.
+"""
+
+import uuid
+from datetime import datetime
+from enum import Enum
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+
+# =============================================================================
+# AUTH SCHEMAS
+# =============================================================================
+
+
+class RegisterRequest(BaseModel):
+    """User registration request."""
+
+    email: EmailStr
+    username: str = Field(..., min_length=3, max_length=100)
+    password: str = Field(..., min_length=8, max_length=128)
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
+
+    @field_validator("username")
+    @classmethod
+    def username_alphanumeric(cls, v: str) -> str:
+        if not v.replace("_", "").replace("-", "").isalnum():
+            raise ValueError("Username must be alphanumeric (underscores and hyphens allowed)")
+        return v
+
+
+class LoginRequest(BaseModel):
+    """User login request."""
+
+    email: EmailStr
+    password: str
+
+
+class TokenResponse(BaseModel):
+    """JWT token pair response."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class RefreshRequest(BaseModel):
+    """Token refresh request."""
+
+    refresh_token: str
+
+
+class UserResponse(BaseModel):
+    """Public user profile response."""
+
+    id: uuid.UUID
+    email: str
+    username: str
+    first_name: str
+    last_name: str
+    role: str
+    is_active: bool
+    last_login: datetime | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserUpdateRequest(BaseModel):
+    """User profile update."""
+
+    first_name: str | None = None
+    last_name: str | None = None
+    username: str | None = None
+
+
+# =============================================================================
+# ROOM SCHEMAS
+# =============================================================================
+
+
+class RoomResponse(BaseModel):
+    """Room data response."""
+
+    id: uuid.UUID
+    name: str
+    type: str
+    floor: int
+    position_x: float
+    position_y: float
+    position_z: float
+    width: float
+    depth: float
+    height: float
+    metadata: dict
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class RoomCreateRequest(BaseModel):
+    """Room creation request."""
+
+    name: str = Field(..., min_length=1, max_length=100)
+    type: str
+    floor: int = 0
+    position_x: float = 0.0
+    position_y: float = 0.0
+    position_z: float = 0.0
+    width: float = 4.0
+    depth: float = 4.0
+    height: float = 3.0
+    metadata: dict = Field(default_factory=dict)
+
+
+# =============================================================================
+# DEVICE SCHEMAS
+# =============================================================================
+
+
+class DeviceCreateRequest(BaseModel):
+    """Device creation request."""
+
+    name: str = Field(..., min_length=1, max_length=200)
+    type: str
+    room_id: uuid.UUID
+    metadata: dict = Field(default_factory=dict)
+    position_x: float = 0.0
+    position_y: float = 0.0
+    position_z: float = 0.0
+
+
+class DeviceUpdateRequest(BaseModel):
+    """Device configuration update."""
+
+    name: str | None = None
+    room_id: uuid.UUID | None = None
+    metadata: dict | None = None
+    position_x: float | None = None
+    position_y: float | None = None
+    position_z: float | None = None
+
+
+class DeviceControlRequest(BaseModel):
+    """Device control command."""
+
+    command: str = Field(..., min_length=1, max_length=100)
+    parameters: dict = Field(default_factory=dict)
+
+
+class DevicePowerRequest(BaseModel):
+    """Device power toggle."""
+
+    power_state: str = Field(..., pattern="^(on|off|standby)$")
+
+
+class DeviceResponse(BaseModel):
+    """Device data response."""
+
+    id: uuid.UUID
+    name: str
+    type: str
+    room_id: uuid.UUID
+    room_name: str | None = None
+    status: str
+    power_state: str
+    connectivity: str
+    energy_usage_kw: float
+    efficiency_percent: float
+    metadata: dict
+    position_x: float
+    position_y: float
+    position_z: float
+    last_updated: datetime
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DeviceStateResponse(BaseModel):
+    """Device state snapshot."""
+
+    id: uuid.UUID
+    device_id: uuid.UUID
+    state_json: dict
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DeviceListResponse(BaseModel):
+    """Paginated device list."""
+
+    devices: list[DeviceResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+# =============================================================================
+# EVENT SCHEMAS
+# =============================================================================
+
+
+class DeviceEventResponse(BaseModel):
+    """Device event log entry."""
+
+    id: uuid.UUID
+    device_id: uuid.UUID
+    device_name: str | None = None
+    event_type: str
+    severity: str
+    message: str
+    metadata: dict
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class EventListResponse(BaseModel):
+    """Paginated event list."""
+
+    events: list[DeviceEventResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+# =============================================================================
+# ENERGY SCHEMAS
+# =============================================================================
+
+
+class EnergyRecordResponse(BaseModel):
+    """Energy consumption record."""
+
+    id: uuid.UUID
+    device_id: uuid.UUID
+    power_kw: float
+    voltage: float
+    current_amps: float
+    cost_usd: float
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class EnergySummaryResponse(BaseModel):
+    """Energy analytics summary."""
+
+    total_consumption_kw: float
+    peak_load_kw: float
+    average_usage_kw: float
+    total_cost_usd: float
+    efficiency_average: float
+    device_count: int
+    online_devices: int
+    period_start: datetime
+    period_end: datetime
+    room_breakdown: list[dict]
+    device_breakdown: list[dict]
+    hourly_data: list[dict]
+
+
+# =============================================================================
+# ALERT SCHEMAS
+# =============================================================================
+
+
+class AlertResponse(BaseModel):
+    """Alert data response."""
+
+    id: uuid.UUID
+    device_id: uuid.UUID | None
+    device_name: str | None = None
+    type: str
+    severity: str
+    message: str
+    acknowledged: bool
+    metadata: dict
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AlertAcknowledgeRequest(BaseModel):
+    """Alert acknowledgement."""
+
+    acknowledged: bool = True
+
+
+# =============================================================================
+# DASHBOARD SCHEMAS
+# =============================================================================
+
+
+class DashboardRealtimeResponse(BaseModel):
+    """Real-time dashboard aggregation."""
+
+    total_devices: int
+    online_devices: int
+    offline_devices: int
+    faulty_devices: int
+    warning_devices: int
+    total_energy_kw: float
+    peak_load_kw: float
+    average_usage_kw: float
+    active_alerts: int
+    recent_events: list[DeviceEventResponse]
+    power_trend: list[dict]
+    device_health: dict
+    room_stats: list[dict]
+
+
+# =============================================================================
+# WEBSOCKET SCHEMAS
+# =============================================================================
+
+
+class WSMessage(BaseModel):
+    """WebSocket message format."""
+
+    type: str
+    payload: dict
+    timestamp: datetime | None = None
+    event_id: str | None = None

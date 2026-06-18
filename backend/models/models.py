@@ -1,0 +1,496 @@
+"""RNTBCI Smart Home Digital Twin - SQLAlchemy Models.
+
+All 12 database tables for the platform:
+- Users, Roles, Permissions (Auth & RBAC)
+- Rooms, Devices, DeviceStates, DeviceEvents (Home & Devices)
+- EnergyHistory (Energy Tracking)
+- Alerts, AuditLogs, Notifications, WebSocketSessions (Operations)
+"""
+
+import enum
+import uuid
+from datetime import datetime, timezone
+
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from backend.database.connection import Base
+
+
+def utcnow() -> datetime:
+    """Return current UTC timestamp."""
+    return datetime.now(timezone.utc)
+
+
+def new_uuid() -> uuid.UUID:
+    """Generate a new UUID4."""
+    return uuid.uuid4()
+
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+
+class RoleName(str, enum.Enum):
+    """User roles."""
+
+    ADMIN = "admin"
+    USER = "user"
+    GUEST = "guest"
+
+
+class DeviceType(str, enum.Enum):
+    """Supported device types."""
+
+    SMART_LIGHT = "smart_light"
+    SMART_SWITCH = "smart_switch"
+    SMART_PLUG = "smart_plug"
+    DOOR_LOCK = "door_lock"
+    GARAGE_DOOR = "garage_door"
+    HVAC = "hvac"
+    WASHING_MACHINE = "washing_machine"
+    DISHWASHER = "dishwasher"
+    REFRIGERATOR = "refrigerator"
+    WATER_HEATER = "water_heater"
+    NEBULIZER = "nebulizer"
+    ROUTER = "router"
+    CAMERA = "camera"
+    SMART_TV = "smart_tv"
+
+
+class DeviceStatus(str, enum.Enum):
+    """Device operational status."""
+
+    ONLINE = "online"
+    OFFLINE = "offline"
+    FAULTY = "faulty"
+    WARNING = "warning"
+
+
+class PowerState(str, enum.Enum):
+    """Device power state."""
+
+    ON = "on"
+    OFF = "off"
+    STANDBY = "standby"
+
+
+class ConnectivityStatus(str, enum.Enum):
+    """Device connectivity."""
+
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+    WEAK = "weak"
+
+
+class EventSeverity(str, enum.Enum):
+    """Event severity levels."""
+
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+class AlertType(str, enum.Enum):
+    """Alert types."""
+
+    DOOR_LEFT_OPEN = "door_left_open"
+    WATER_LEAKAGE = "water_leakage"
+    INTERNET_DISCONNECTED = "internet_disconnected"
+    TEMPERATURE_HIGH = "temperature_high"
+    ENERGY_SPIKE = "energy_spike"
+    DEVICE_OFFLINE = "device_offline"
+    MOTION_DETECTED = "motion_detected"
+    SECURITY_BREACH = "security_breach"
+
+
+class RoomType(str, enum.Enum):
+    """Room types in the house."""
+
+    LIVING_ROOM = "living_room"
+    KITCHEN = "kitchen"
+    MASTER_BEDROOM = "master_bedroom"
+    BATHROOM = "bathroom"
+    GARAGE = "garage"
+    UTILITY_ROOM = "utility_room"
+    HALLWAY = "hallway"
+
+
+# =============================================================================
+# AUTH MODELS
+# =============================================================================
+
+
+class Role(Base):
+    """User role for RBAC."""
+
+    __tablename__ = "roles"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    name: Mapped[str] = mapped_column(
+        Enum(RoleName), unique=True, nullable=False
+    )
+    description: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    # Relationships
+    users: Mapped[list["User"]] = relationship("User", back_populates="role")
+    permissions: Mapped[list["Permission"]] = relationship(
+        "Permission", back_populates="role", cascade="all, delete-orphan"
+    )
+
+
+class User(Base):
+    """Platform user."""
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False, index=True
+    )
+    username: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False, index=True
+    )
+    password_hash: Mapped[str] = mapped_column(String(512), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    role_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_login: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    # Relationships
+    role: Mapped["Role"] = relationship("Role", back_populates="users")
+    audit_logs: Mapped[list["AuditLog"]] = relationship(
+        "AuditLog", back_populates="user"
+    )
+    notifications: Mapped[list["Notification"]] = relationship(
+        "Notification", back_populates="user"
+    )
+    websocket_sessions: Mapped[list["WebSocketSession"]] = relationship(
+        "WebSocketSession", back_populates="user"
+    )
+
+
+class Permission(Base):
+    """RBAC permission entry."""
+
+    __tablename__ = "permissions"
+    __table_args__ = (
+        UniqueConstraint("role_id", "resource", "action", name="uq_role_resource_action"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    role_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False
+    )
+    resource: Mapped[str] = mapped_column(String(100), nullable=False)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    # Relationships
+    role: Mapped["Role"] = relationship("Role", back_populates="permissions")
+
+
+# =============================================================================
+# HOME & DEVICE MODELS
+# =============================================================================
+
+
+class Room(Base):
+    """Room in the smart home."""
+
+    __tablename__ = "rooms"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    type: Mapped[str] = mapped_column(Enum(RoomType), nullable=False)
+    floor: Mapped[int] = mapped_column(Integer, default=0)
+    position_x: Mapped[float] = mapped_column(Float, default=0.0)
+    position_y: Mapped[float] = mapped_column(Float, default=0.0)
+    position_z: Mapped[float] = mapped_column(Float, default=0.0)
+    width: Mapped[float] = mapped_column(Float, default=4.0)
+    depth: Mapped[float] = mapped_column(Float, default=4.0)
+    height: Mapped[float] = mapped_column(Float, default=3.0)
+    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    # Relationships
+    devices: Mapped[list["Device"]] = relationship("Device", back_populates="room")
+
+
+class Device(Base):
+    """IoT device in the smart home."""
+
+    __tablename__ = "devices"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    type: Mapped[str] = mapped_column(Enum(DeviceType), nullable=False)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        Enum(DeviceStatus), default=DeviceStatus.ONLINE
+    )
+    power_state: Mapped[str] = mapped_column(
+        Enum(PowerState), default=PowerState.OFF
+    )
+    connectivity: Mapped[str] = mapped_column(
+        Enum(ConnectivityStatus), default=ConnectivityStatus.CONNECTED
+    )
+    energy_usage_kw: Mapped[float] = mapped_column(Float, default=0.0)
+    efficiency_percent: Mapped[float] = mapped_column(Float, default=100.0)
+    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    position_x: Mapped[float] = mapped_column(Float, default=0.0)
+    position_y: Mapped[float] = mapped_column(Float, default=0.0)
+    position_z: Mapped[float] = mapped_column(Float, default=0.0)
+    last_updated: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    # Relationships
+    room: Mapped["Room"] = relationship("Room", back_populates="devices")
+    states: Mapped[list["DeviceState"]] = relationship(
+        "DeviceState", back_populates="device", cascade="all, delete-orphan"
+    )
+    events: Mapped[list["DeviceEvent"]] = relationship(
+        "DeviceEvent", back_populates="device", cascade="all, delete-orphan"
+    )
+    energy_history: Mapped[list["EnergyHistory"]] = relationship(
+        "EnergyHistory", back_populates="device", cascade="all, delete-orphan"
+    )
+    alerts: Mapped[list["Alert"]] = relationship(
+        "Alert", back_populates="device", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("ix_devices_room_type", "room_id", "type"),
+        Index("ix_devices_status", "status"),
+    )
+
+
+class DeviceState(Base):
+    """Snapshot of device state at a point in time."""
+
+    __tablename__ = "device_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
+    )
+    state_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    # Relationships
+    device: Mapped["Device"] = relationship("Device", back_populates="states")
+
+
+class DeviceEvent(Base):
+    """Event log entry for a device."""
+
+    __tablename__ = "device_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
+    )
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(
+        Enum(EventSeverity), default=EventSeverity.INFO
+    )
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    # Relationships
+    device: Mapped["Device"] = relationship("Device", back_populates="events")
+
+    __table_args__ = (
+        Index("ix_device_events_severity", "severity"),
+        Index("ix_device_events_device_time", "device_id", "timestamp"),
+    )
+
+
+# =============================================================================
+# ENERGY TRACKING
+# =============================================================================
+
+
+class EnergyHistory(Base):
+    """Energy consumption record."""
+
+    __tablename__ = "energy_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
+    )
+    power_kw: Mapped[float] = mapped_column(Float, nullable=False)
+    voltage: Mapped[float] = mapped_column(Float, default=220.0)
+    current_amps: Mapped[float] = mapped_column(Float, default=0.0)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    # Relationships
+    device: Mapped["Device"] = relationship("Device", back_populates="energy_history")
+
+    __table_args__ = (
+        Index("ix_energy_device_time", "device_id", "timestamp"),
+    )
+
+
+# =============================================================================
+# OPERATIONS
+# =============================================================================
+
+
+class Alert(Base):
+    """System alert."""
+
+    __tablename__ = "alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    device_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="SET NULL"), nullable=True
+    )
+    type: Mapped[str] = mapped_column(Enum(AlertType), nullable=False)
+    severity: Mapped[str] = mapped_column(
+        Enum(EventSeverity), default=EventSeverity.WARNING
+    )
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
+    acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    # Relationships
+    device: Mapped["Device | None"] = relationship("Device", back_populates="alerts")
+
+
+class AuditLog(Base):
+    """Security audit log."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    action: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource: Mapped[str] = mapped_column(String(200), nullable=False)
+    details: Mapped[dict] = mapped_column(JSONB, default=dict)
+    ip_address: Mapped[str] = mapped_column(String(45), nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    # Relationships
+    user: Mapped["User | None"] = relationship("User", back_populates="audit_logs")
+
+
+class Notification(Base):
+    """User notification."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    read: Mapped[bool] = mapped_column(Boolean, default=False)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="notifications")
+
+
+class WebSocketSession(Base):
+    """Active WebSocket connection tracking."""
+
+    __tablename__ = "websocket_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    session_id: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False
+    )
+    connected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+    last_ping: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="websocket_sessions")

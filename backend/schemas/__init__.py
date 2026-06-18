@@ -1,0 +1,3 @@
+"""Schemas package."""
+
+from backend.schemas.schemas import *  # noqa: F401, F403
