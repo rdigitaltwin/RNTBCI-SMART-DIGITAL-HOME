@@ -15,6 +15,7 @@ import {
 } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import api from '@/services/api';
 import { useDeviceStore, type Device, type Room } from '@/store';
 
 // =============================================================================
@@ -468,8 +469,19 @@ function DeviceModel({ device, isSelected, onClick }: {
 // =============================================================================
 
 function DeviceHUD({ device, color }: { device: Device; color: string }) {
+  const [toggling, setToggling] = useState(false);
   const meta = device.metadata || {};
   const isOn = device.power_state === 'on';
+
+  const handlePowerToggle = async () => {
+    setToggling(true);
+    try {
+      const newState = isOn ? 'off' : 'on';
+      await api.togglePower(device.id, newState);
+      useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+    } catch { /* Ignore */ }
+    setToggling(false);
+  };
 
   return (
     <div className="hud-panel" style={{
@@ -528,8 +540,23 @@ function DeviceHUD({ device, color }: { device: Device; color: string }) {
         marginTop: '10px', padding: '6px 8px', borderRadius: '4px',
         background: 'rgba(0, 229, 255, 0.05)',
         fontSize: '9px', color: '#64748B', fontFamily: "'JetBrains Mono', monospace",
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
-        EFF: {device.efficiency_percent?.toFixed(0) || 90}% • {device.type.replace(/_/g, ' ').toUpperCase()}
+        <span>EFF: {device.efficiency_percent?.toFixed(0) || 90}% • {device.type.replace(/_/g, ' ').toUpperCase()}</span>
+        <button
+          onClick={handlePowerToggle}
+          disabled={toggling}
+          style={{
+            background: isOn ? 'rgba(0, 255, 157, 0.2)' : 'rgba(255, 77, 109, 0.2)',
+            border: `1px solid ${isOn ? '#00FF9D' : '#FF4D6D'}`,
+            color: isOn ? '#00FF9D' : '#FF4D6D',
+            padding: '2px 8px', borderRadius: '4px', cursor: 'pointer',
+            fontSize: '9px', fontWeight: 'bold', fontFamily: "'Orbitron', monospace",
+            opacity: toggling ? 0.5 : 1, transition: 'all 0.2s',
+          }}
+        >
+          {isOn ? 'TURN OFF' : 'TURN ON'}
+        </button>
       </div>
     </div>
   );
