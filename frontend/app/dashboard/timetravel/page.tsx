@@ -7,13 +7,15 @@
  * and synchronized dashboard/3D twin updates.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import {
   Clock, Play, Pause, SkipBack, SkipForward, RotateCcw,
   Calendar, Rewind, FastForward, History,
 } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
 import api from '@/services/api';
 import { useSimulationStore } from '@/store';
+import { DigitalTwinScene } from '../twin/page';
 
 const PRESETS = [
   {
@@ -271,27 +273,27 @@ export default function TimeTravelPage() {
         </div>
       </div>
 
-      {/* Info */}
-      <div className="glass-card" style={{ padding: '20px' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>How Time Travel Works</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-          {[
-            { emoji: '💡', title: 'Lights', desc: 'Watch lights turn on and off based on historical patterns' },
-            { emoji: '🚗', title: 'Garage', desc: 'Garage door opens and closes at recorded times' },
-            { emoji: '❄️', title: 'HVAC', desc: 'Temperature changes replayed with cooling cycles' },
-            { emoji: '📊', title: 'Graphs', desc: 'Energy charts animate with historical data' },
-            { emoji: '📋', title: 'Events', desc: 'Event logs replay in chronological order' },
-            { emoji: '⚡', title: 'Energy', desc: 'Power consumption updates in real-time' },
-          ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '20px' }}>{item.emoji}</span>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{item.title}</div>
-                <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>{item.desc}</div>
-              </div>
-            </div>
-          ))}
+      {/* 3D Visualizer */}
+      <div className="glass-card" style={{ padding: '2px', height: '500px', overflow: 'hidden', position: 'relative' }}>
+        <div style={{
+          position: 'absolute', top: '16px', left: '16px', zIndex: 10,
+          fontFamily: "'Orbitron', monospace", fontSize: '11px',
+          color: '#00E5FF', padding: '8px 14px', borderRadius: '8px',
+          background: 'rgba(5, 8, 22, 0.85)', border: '1px solid rgba(0, 229, 255, 0.2)',
+          backdropFilter: 'blur(8px)',
+        }}>
+          HISTORICAL REPLAY VISUALIZER
         </div>
+        
+        <Canvas
+          camera={{ position: [8, 6, 8], fov: 45 }}
+          gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+          style={{ background: '#050816', borderRadius: '14px' }}
+        >
+          <Suspense fallback={null}>
+            <DigitalTwinScene />
+          </Suspense>
+        </Canvas>
       </div>
     </div>
   );

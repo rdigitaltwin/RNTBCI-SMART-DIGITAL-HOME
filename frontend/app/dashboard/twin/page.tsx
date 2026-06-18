@@ -566,7 +566,7 @@ function DeviceHUD({ device, color }: { device: Device; color: string }) {
 // MAIN 3D SCENE
 // =============================================================================
 
-function DigitalTwinScene() {
+export function DigitalTwinScene() {
   const devices = useDeviceStore((s) => s.devices);
   const rooms = useDeviceStore((s) => s.rooms);
   const selectedDevice = useDeviceStore((s) => s.selectedDevice);

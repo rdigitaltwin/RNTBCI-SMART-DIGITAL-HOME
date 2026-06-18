@@ -270,8 +270,20 @@ function RoomEnergyBreakdown() {
 
 function QuickDeviceList() {
   const devices = useDeviceStore((s) => s.devices);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const displayDevices = devices.length > 0 ? devices.slice(0, 8) : [
+  const handleToggle = async (device: any) => {
+    if (togglingId === device.id) return;
+    setTogglingId(device.id);
+    const newState = device.power_state === 'on' ? 'off' : 'on';
+    try {
+      await api.togglePower(device.id, newState);
+      useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+    } catch { /* Ignore */ }
+    setTogglingId(null);
+  };
+
+  const displayDevices = devices.length > 0 ? devices.slice(0, 6) : [
     { id: '1', name: 'Living Room AC', type: 'hvac', status: 'online', power_state: 'on', energy_usage_kw: 2.1 },
     { id: '2', name: 'Refrigerator', type: 'refrigerator', status: 'online', power_state: 'on', energy_usage_kw: 0.08 },
     { id: '3', name: 'Smart TV 65"', type: 'smart_tv', status: 'online', power_state: 'on', energy_usage_kw: 0.12 },
@@ -295,13 +307,16 @@ function QuickDeviceList() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {displayDevices.map((device) => (
-          <div key={device.id} style={{
+          <div key={device.id} 
+            onClick={() => handleToggle(device)}
+            style={{
             display: 'flex', alignItems: 'center', gap: '12px',
             padding: '8px 12px', borderRadius: '8px',
             background: 'rgba(11, 17, 32, 0.5)',
             border: '1px solid rgba(255,255,255,0.03)',
             transition: 'all 0.2s',
-            cursor: 'pointer',
+            cursor: togglingId === device.id ? 'wait' : 'pointer',
+            opacity: togglingId === device.id ? 0.7 : 1,
           }}>
             <span style={{ fontSize: '16px' }}>{typeIcons[device.type] || '📱'}</span>
             <div style={{ flex: 1 }}>
