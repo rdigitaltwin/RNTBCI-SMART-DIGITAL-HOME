@@ -327,7 +327,7 @@ pip install -r requirements.txt
 # Tables are auto-created on startup via SQLAlchemy
 
 # Start the API server
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The server will:
