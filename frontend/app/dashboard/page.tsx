@@ -308,14 +308,12 @@ function QuickDeviceList() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {displayDevices.map((device) => (
           <div key={device.id} 
-            onClick={() => handleToggle(device)}
             style={{
             display: 'flex', alignItems: 'center', gap: '12px',
             padding: '8px 12px', borderRadius: '8px',
             background: 'rgba(11, 17, 32, 0.5)',
             border: '1px solid rgba(255,255,255,0.03)',
             transition: 'all 0.2s',
-            cursor: togglingId === device.id ? 'wait' : 'pointer',
             opacity: togglingId === device.id ? 0.7 : 1,
           }}>
             <span style={{ fontSize: '16px' }}>{typeIcons[device.type] || '📱'}</span>
@@ -326,8 +324,22 @@ function QuickDeviceList() {
               fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
               color: device.power_state === 'on' ? '#00E5FF' : '#64748B',
             }}>
-              {device.power_state === 'on' ? `${(device.energy_usage_kw * 1000).toFixed(0)}W` : 'OFF'}
+              {device.power_state === 'on' ? `${(device.energy_usage_kw * 1000).toFixed(0)}W` : '0W'}
             </span>
+            <button
+              onClick={() => handleToggle(device)}
+              disabled={togglingId === device.id}
+              style={{
+                background: device.power_state === 'on' ? 'rgba(0, 255, 157, 0.2)' : 'rgba(255, 77, 109, 0.2)',
+                border: `1px solid ${device.power_state === 'on' ? '#00FF9D' : '#FF4D6D'}`,
+                color: device.power_state === 'on' ? '#00FF9D' : '#FF4D6D',
+                padding: '2px 8px', borderRadius: '4px', cursor: togglingId === device.id ? 'wait' : 'pointer',
+                fontSize: '9px', fontWeight: 'bold', fontFamily: "'Orbitron', monospace",
+                minWidth: '40px',
+              }}
+            >
+              {device.power_state === 'on' ? 'ON' : 'OFF'}
+            </button>
             <div className={`status-dot ${device.status}`} />
           </div>
         ))}
