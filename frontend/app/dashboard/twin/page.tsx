@@ -18,6 +18,86 @@ import * as THREE from 'three';
 import { useDeviceStore, type Device, type Room } from '@/store';
 
 // =============================================================================
+// HOUSE SHELL COMPONENT — Roof, Foundation, and Structural Elements
+// =============================================================================
+
+function HouseShell({ rooms }: { rooms: Room[] }) {
+  if (!rooms.length) return null;
+
+  // Calculate bounding box of all rooms to size the house shell
+  const scale = 0.5;
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, maxY = 0;
+
+  rooms.forEach(r => {
+    const halfW = r.width / 2;
+    const halfD = r.depth / 2;
+    minX = Math.min(minX, r.position_x - halfW);
+    maxX = Math.max(maxX, r.position_x + halfW);
+    minZ = Math.min(minZ, r.position_z - halfD);
+    maxZ = Math.max(maxZ, r.position_z + halfD);
+    maxY = Math.max(maxY, r.height);
+  });
+
+  const width = (maxX - minX) * scale + 1; // Add padding
+  const depth = (maxZ - minZ) * scale + 1;
+  const height = maxY * scale;
+  const centerX = (minX + maxX) * scale / 2;
+  const centerZ = (minZ + maxZ) * scale / 2;
+
+  const roofHeight = 1.5;
+
+  return (
+    <group position={[centerX, 0, centerZ]}>
+      {/* Foundation Platform */}
+      <mesh position={[0, -0.1, 0]}>
+        <boxGeometry args={[width + 0.5, 0.2, depth + 0.5]} />
+        <meshStandardMaterial color="#FFFFFF" metalness={0.5} roughness={0.5} transparent opacity={0.6} />
+      </mesh>
+
+      {/* Outer Foundation Trim */}
+      <lineSegments position={[0, -0.1, 0]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(width + 0.5, 0.2, depth + 0.5)]} />
+        <lineBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
+      </lineSegments>
+
+      {/* Holographic Roof */}
+      <mesh position={[0, height + roofHeight / 2, 0]}>
+        <coneGeometry args={[Math.max(width, depth) / 1.5, roofHeight, 4]} />
+        <meshPhysicalMaterial 
+          color="#FFFFFF" 
+          transparent opacity={0.25} 
+          roughness={0.1} metalness={0.1}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* Roof Wireframe */}
+      <lineSegments position={[0, height + roofHeight / 2, 0]}>
+        <edgesGeometry args={[new THREE.ConeGeometry(Math.max(width, depth) / 1.5, roofHeight, 4)]} />
+        <lineBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
+      </lineSegments>
+
+      {/* Corner Structural Pillars */}
+      {[
+        [-width/2, -depth/2], [width/2, -depth/2], 
+        [-width/2, depth/2], [width/2, depth/2]
+      ].map(([x, z], i) => (
+        <group key={i} position={[x, height/2, z]}>
+          <mesh>
+            <cylinderGeometry args={[0.05, 0.05, height, 8]} />
+            <meshStandardMaterial color="#1a2744" metalness={0.6} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, height/2, 0]}>
+            <sphereGeometry args={[0.08, 16, 16]} />
+            <meshStandardMaterial color="#00E5FF" emissive="#00E5FF" emissiveIntensity={1} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// =============================================================================
 // ROOM COMPONENT — Glass wall enclosure
 // =============================================================================
 
@@ -52,9 +132,9 @@ function RoomMesh({ room, isHovered, onClick }: {
       <mesh ref={meshRef} onClick={onClick}>
         <boxGeometry args={size} />
         <meshPhysicalMaterial
-          color="#0a1628"
+          color="#FFFFFF"
           transparent
-          opacity={isHovered ? 0.12 : 0.06}
+          opacity={isHovered ? 0.3 : 0.15}
           roughness={0.1}
           metalness={0.1}
           envMapIntensity={0.5}
@@ -66,9 +146,9 @@ function RoomMesh({ room, isHovered, onClick }: {
       <lineSegments ref={edgeRef}>
         <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
         <lineBasicMaterial
-          color={isHovered ? '#00E5FF' : '#1a3a5a'}
+          color={isHovered ? '#00E5FF' : '#FFFFFF'}
           transparent
-          opacity={0.3}
+          opacity={0.5}
         />
       </lineSegments>
 
@@ -507,6 +587,9 @@ function DigitalTwinScene() {
         <planeGeometry args={[30, 30]} />
         <meshStandardMaterial color="#050816" metalness={0.9} roughness={0.1} transparent opacity={0.8} />
       </mesh>
+
+      {/* House Shell (Roof & Foundation) */}
+      <HouseShell rooms={displayRooms} />
 
       {/* Rooms */}
       {displayRooms.map((room) => (
