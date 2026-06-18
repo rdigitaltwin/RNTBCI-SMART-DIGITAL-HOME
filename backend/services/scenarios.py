@@ -281,9 +281,9 @@ class ScenarioManager:
                             device.power_state = PowerState.ON
 
                         # Update metadata
-                        metadata = dict(device.metadata or {})
+                        metadata = dict(device.extra_data or {})
                         metadata.update(params)
-                        device.metadata = metadata
+                        device.extra_data = metadata
                         device.last_updated = datetime.now(timezone.utc)
                         affected += 1
 

@@ -484,11 +484,11 @@ class SimulationEngine:
                     device.last_updated = now
 
                     # Update metadata with state info
-                    metadata = dict(device.metadata or {})
+                    metadata = dict(device.extra_data or {})
                     metadata["sim_state"] = tracker.current_state
                     metadata["sim_power_w"] = round(power_w, 1)
                     metadata = self._update_device_telemetry(device_type, metadata, hour, power_state)
-                    device.metadata = metadata
+                    device.extra_data = metadata
 
                     # Record energy
                     voltage = 220.0 + random.gauss(0, 2)

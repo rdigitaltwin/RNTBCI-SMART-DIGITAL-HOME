@@ -67,6 +67,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"
 
     def get_allowed_origins_list(self) -> list[str]:
         """Parse comma-separated origins into a list."""

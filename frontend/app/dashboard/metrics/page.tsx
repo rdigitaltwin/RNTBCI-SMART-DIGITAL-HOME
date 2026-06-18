@@ -10,7 +10,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Gauge, Activity, Cpu, Zap, Timer, Wifi, Server,
-  BarChart3, TrendingUp, ThermometerSun, DollarSign, Radio,
+  BarChart3, TrendingUp, ThermometerSun, IndianRupee, Radio,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -162,7 +162,7 @@ export default function MetricsPage() {
         <RealtimeCounter label="Events/Second" value={(metrics.events_per_second || 3.5).toFixed(1)} unit="e/s" color="#FFC857" icon={Activity} />
         <RealtimeCounter label="Avg Temperature" value="23.4" unit="°C" color="#F97316" icon={ThermometerSun} />
         <RealtimeCounter label="Network Quality" value="97" unit="%" color="#00B4D8" icon={Wifi} />
-        <RealtimeCounter label="Electricity Cost" value={`$${(metrics.electricity_cost_usd || 2.14).toFixed(2)}`} color="#00FF9D" icon={DollarSign} />
+        <RealtimeCounter label="Electricity Cost" value={`₹${(metrics.electricity_cost_usd || 2.14).toFixed(2)}`} color="#00FF9D" icon={IndianRupee} />
         <RealtimeCounter label="Energy (kWh)" value={(metrics.total_energy_kwh || 18.4).toFixed(1)} unit="kWh" color="#8B5CF6" icon={Zap} />
       </div>
 

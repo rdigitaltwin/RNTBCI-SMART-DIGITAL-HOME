@@ -84,7 +84,7 @@ async def get_realtime_dashboard(
             event_type=e.event_type,
             severity=e.severity.value if isinstance(e.severity, EventSeverity) else e.severity,
             message=e.message,
-            metadata=e.metadata or {},
+            metadata=e.extra_data or {},
             timestamp=e.timestamp,
         )
         for e in recent_events_result.scalars().all()

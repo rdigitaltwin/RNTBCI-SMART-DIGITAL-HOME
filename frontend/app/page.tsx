@@ -45,7 +45,7 @@ function ParticleField({ count = 2000 }: { count?: number }) {
         if (Math.abs(positions.current[idx]) > 20) velocities.current[idx] *= -1;
       }
     }
-    pos.array = positions.current;
+    (pos.array as Float32Array).set(positions.current);
     pos.needsUpdate = true;
   });
 
@@ -54,9 +54,7 @@ function ParticleField({ count = 2000 }: { count?: number }) {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={count}
-          array={positions.current}
-          itemSize={3}
+          args={[positions.current, 3]}
         />
       </bufferGeometry>
       <pointsMaterial size={0.03} color="#00E5FF" transparent opacity={0.6} sizeAttenuation />

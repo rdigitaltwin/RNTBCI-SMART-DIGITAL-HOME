@@ -245,7 +245,7 @@ class Room(Base):
     width: Mapped[float] = mapped_column(Float, default=4.0)
     depth: Mapped[float] = mapped_column(Float, default=4.0)
     height: Mapped[float] = mapped_column(Float, default=3.0)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
     )
@@ -278,7 +278,7 @@ class Device(Base):
     )
     energy_usage_kw: Mapped[float] = mapped_column(Float, default=0.0)
     efficiency_percent: Mapped[float] = mapped_column(Float, default=100.0)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     position_x: Mapped[float] = mapped_column(Float, default=0.0)
     position_y: Mapped[float] = mapped_column(Float, default=0.0)
     position_z: Mapped[float] = mapped_column(Float, default=0.0)
@@ -346,7 +346,7 @@ class DeviceEvent(Base):
         Enum(EventSeverity), default=EventSeverity.INFO
     )
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -417,7 +417,7 @@ class Alert(Base):
     acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -439,7 +439,7 @@ class AuditLog(Base):
     )
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     resource: Mapped[str] = mapped_column(String(200), nullable=False)
-    details: Mapped[dict] = mapped_column(JSONB, default=dict)
+    details: Mapped[dict] = mapped_column("details", JSONB, default=dict)
     ip_address: Mapped[str] = mapped_column(String(45), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True

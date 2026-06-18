@@ -60,7 +60,7 @@ def _device_to_response(device: Device) -> DeviceResponse:
         connectivity=device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity,
         energy_usage_kw=device.energy_usage_kw,
         efficiency_percent=device.efficiency_percent,
-        metadata=device.metadata or {},
+        metadata=device.extra_data or {},
         position_x=device.position_x,
         position_y=device.position_y,
         position_z=device.position_z,
@@ -253,7 +253,7 @@ async def update_device(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
         device.room_id = data.room_id
     if data.metadata is not None:
-        device.metadata = data.metadata
+        device.extra_data = data.metadata
     if data.position_x is not None:
         device.position_x = data.position_x
     if data.position_y is not None:
@@ -368,9 +368,9 @@ async def control_device(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
     # Apply control command
-    new_metadata = dict(device.metadata or {})
+    new_metadata = dict(device.extra_data or {})
     new_metadata.update(data.parameters)
-    device.metadata = new_metadata
+    device.extra_data = new_metadata
     device.last_updated = datetime.now(timezone.utc)
 
     # Save new state
@@ -541,7 +541,7 @@ async def get_device_events(
                 event_type=e.event_type,
                 severity=e.severity.value if isinstance(e.severity, EventSeverity) else e.severity,
                 message=e.message,
-                metadata=e.metadata or {},
+                metadata=e.extra_data or {},
                 timestamp=e.timestamp,
             )
             for e in events

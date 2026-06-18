@@ -9,7 +9,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import {
-  Zap, DollarSign, TrendingUp, TrendingDown, Battery, AlertTriangle,
+  Zap, IndianRupee, TrendingUp, TrendingDown, Battery, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Clock,
 } from 'lucide-react';
 import {
@@ -99,9 +99,9 @@ function TariffIndicator() {
   const hour = new Date().getHours();
   const period = hour >= 22 || hour < 6 ? 'off_peak' : hour >= 14 && hour < 18 ? 'on_peak' : 'mid_peak';
   const config = {
-    off_peak: { label: 'Off-Peak', rate: '$0.08/kWh', color: '#00FF9D', icon: '🌙' },
-    mid_peak: { label: 'Mid-Peak', rate: '$0.12/kWh', color: '#FFC857', icon: '☀️' },
-    on_peak: { label: 'On-Peak', rate: '$0.18/kWh', color: '#FF4D6D', icon: '🔥' },
+    off_peak: { label: 'Off-Peak', rate: '₹0.08/kWh', color: '#00FF9D', icon: '🌙' },
+    mid_peak: { label: 'Mid-Peak', rate: '₹0.12/kWh', color: '#FFC857', icon: '☀️' },
+    on_peak: { label: 'On-Peak', rate: '₹0.18/kWh', color: '#FF4D6D', icon: '🔥' },
   }[period];
 
   return (
@@ -146,8 +146,8 @@ export default function EnergyPage() {
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
         <MetricCard label="Current Draw" value={totalPower.toFixed(2)} unit="kW" icon={Zap} color="#FFC857" trend={{ value: '+3.2%', direction: 'up' }} />
-        <MetricCard label="Today's Cost" value={`$${dailyCost}`} icon={DollarSign} color="#00E5FF" subtitle="Based on current rate" />
-        <MetricCard label="Monthly Est." value={`$${monthlyEstimate}`} icon={TrendingUp} color="#6366F1" trend={{ value: '-5.1%', direction: 'down' }} />
+        <MetricCard label="Today's Cost" value={`₹${dailyCost}`} icon={IndianRupee} color="#00E5FF" subtitle="Based on current rate" />
+        <MetricCard label="Monthly Est." value={`₹${monthlyEstimate}`} icon={TrendingUp} color="#6366F1" trend={{ value: '-5.1%', direction: 'down' }} />
         <MetricCard label="Peak Today" value="5.2" unit="kW" icon={AlertTriangle} color="#FF4D6D" subtitle="At 2:34 PM" />
         <MetricCard label="Efficiency" value="92.4" unit="%" icon={Battery} color="#00FF9D" />
       </div>
@@ -229,8 +229,8 @@ export default function EnergyPage() {
               </linearGradient>
             </defs>
             <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v: any) => [`$${Number(v).toFixed(3)}`, 'Cost']} />
+            <YAxis tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(v: any) => [`₹${Number(v).toFixed(3)}`, 'Cost']} />
             <Area type="monotone" dataKey="cost" stroke="#10B981" strokeWidth={2} fill="url(#costGrad)" />
           </AreaChart>
         </ResponsiveContainer>

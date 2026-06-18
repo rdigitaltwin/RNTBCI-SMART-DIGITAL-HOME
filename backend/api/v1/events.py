@@ -78,7 +78,7 @@ async def list_events(
                 event_type=e.event_type,
                 severity=e.severity.value if isinstance(e.severity, EventSeverity) else e.severity,
                 message=e.message,
-                metadata=e.metadata or {},
+                metadata=e.extra_data or {},
                 timestamp=e.timestamp,
             )
             for e in events
@@ -158,7 +158,7 @@ async def list_alerts(
             severity=a.severity.value if isinstance(a.severity, EventSeverity) else a.severity,
             message=a.message,
             acknowledged=a.acknowledged,
-            metadata=a.metadata or {},
+            metadata=a.extra_data or {},
             timestamp=a.timestamp,
         )
         for a in alerts
@@ -205,6 +205,6 @@ async def acknowledge_alert(
         severity=alert.severity.value if isinstance(alert.severity, EventSeverity) else alert.severity,
         message=alert.message,
         acknowledged=alert.acknowledged,
-        metadata=alert.metadata or {},
+        metadata=alert.extra_data or {},
         timestamp=alert.timestamp,
     )
