@@ -23,7 +23,7 @@ interface Scenario {
   built_in: boolean;
 }
 
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, any> = {
   sunrise: Sunrise, moon: Moon, plane: Plane,
   'alert-triangle': AlertTriangle, battery: Battery, film: Film,
   settings: Settings,

@@ -25,7 +25,7 @@ function StatCard({ label, value, unit, icon: Icon, color, change, trend }: {
   label: string;
   value: string | number;
   unit?: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ size?: number; color?: string; className?: string }>;
   color: string;
   change?: string;
   trend?: 'up' | 'down';
@@ -255,7 +255,7 @@ function RoomEnergyBreakdown() {
               borderRadius: '8px', fontSize: '12px', fontFamily: "'JetBrains Mono', monospace",
               color: '#F8FAFC',
             }}
-            formatter={(value: number) => [`${value}W`, 'Power']}
+            formatter={(value: any) => [`${value}W`, 'Power']}
           />
           <Bar dataKey="energy" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
         </BarChart>

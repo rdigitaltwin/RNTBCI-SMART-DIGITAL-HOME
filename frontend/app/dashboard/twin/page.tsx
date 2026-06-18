@@ -278,8 +278,8 @@ function DeviceModel({ device, isSelected, onClick }: {
       case 'camera':
         return (
           <group>
-            <mesh position={[0, 0.35, 0]}>
-              <cylinderGeometry args={[0.04, 0.05, 0.06, 16]} rotation={[Math.PI / 2, 0, 0]} />
+            <mesh position={[0, 0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.04, 0.05, 0.06, 16]} />
               <meshStandardMaterial color="#2a3142" metalness={0.7} roughness={0.2} />
             </mesh>
             {/* Lens */}

@@ -65,7 +65,7 @@ function AnimatedGauge({ value, max, label, unit, color, size = 120 }: {
 // =============================================================================
 
 function RealtimeCounter({ label, value, unit, color, icon: Icon }: {
-  label: string; value: string | number; unit?: string; color: string; icon: React.ElementType;
+  label: string; value: string | number; unit?: string; color: string; icon: React.ComponentType<{ size?: number; color?: string; className?: string }>;
 }) {
   return (
     <div style={{

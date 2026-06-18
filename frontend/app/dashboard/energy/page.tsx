@@ -57,7 +57,7 @@ function generateWeeklyData() {
 // =============================================================================
 
 function MetricCard({ label, value, unit, icon: Icon, color, subtitle, trend }: {
-  label: string; value: string | number; unit?: string; icon: React.ElementType;
+  label: string; value: string | number; unit?: string; icon: React.ComponentType<{ size?: number; color?: string; className?: string }>;
   color: string; subtitle?: string; trend?: { value: string; direction: 'up' | 'down' };
 }) {
   return (
@@ -230,7 +230,7 @@ export default function EnergyPage() {
             </defs>
             <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`$${v.toFixed(3)}`, 'Cost']} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(v: any) => [`$${Number(v).toFixed(3)}`, 'Cost']} />
             <Area type="monotone" dataKey="cost" stroke="#10B981" strokeWidth={2} fill="url(#costGrad)" />
           </AreaChart>
         </ResponsiveContainer>

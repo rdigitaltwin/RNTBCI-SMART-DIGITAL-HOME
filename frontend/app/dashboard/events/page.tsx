@@ -12,7 +12,7 @@ import { Activity, Filter, Search, Download, AlertTriangle, Info, XCircle, Alert
 import { useEventStore, type DeviceEvent } from '@/store';
 import api from '@/services/api';
 
-const SEVERITY_CONFIG: Record<string, { color: string; icon: React.ElementType; bg: string }> = {
+const SEVERITY_CONFIG: Record<string, { color: string; icon: any; bg: string }> = {
   info: { color: '#00E5FF', icon: Info, bg: 'rgba(0, 229, 255, 0.08)' },
   warning: { color: '#FFC857', icon: AlertTriangle, bg: 'rgba(255, 200, 87, 0.08)' },
   error: { color: '#FF4D6D', icon: XCircle, bg: 'rgba(255, 77, 109, 0.08)' },
