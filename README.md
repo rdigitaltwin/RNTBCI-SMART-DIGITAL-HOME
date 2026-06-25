@@ -10,11 +10,6 @@
   <strong>Enterprise-Grade Smart Home Digital Twin Platform</strong><br/>
   Real-time 3D visualization · Intelligent simulation · Energy management · Immersive automation
 </p>
-
-<p align="center">
-  <em>Inspired by NVIDIA Omniverse · Tesla Energy · Samsung SmartThings · Iron Man JARVIS · Apple Vision Pro</em>
-</p>
-
 ---
 
 ## Overview
