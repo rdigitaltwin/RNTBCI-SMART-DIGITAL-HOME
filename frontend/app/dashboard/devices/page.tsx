@@ -42,6 +42,7 @@ const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; color: 
 
 function DeviceCard({ device }: { device: Device }) {
   const [toggling, setToggling] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const config = DEVICE_TYPE_CONFIG[device.type] || { emoji: '📱', label: device.type, color: '#94A3B8' };
   const isOn = device.power_state === 'on';
   const meta = device.metadata || {};
@@ -54,6 +55,19 @@ function DeviceCard({ device }: { device: Device }) {
       useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
     } catch { /* API not connected */ }
     setToggling(false);
+  };
+
+  const handleControl = async (command: string, params: Record<string, unknown> = {}) => {
+    // Optimistic UI update
+    const currentMeta = device.metadata || {};
+    const newMeta = { ...currentMeta, ...params };
+    useDeviceStore.getState().updateDevice(device.id, { metadata: newMeta });
+    
+    try {
+      await api.controlDevice(device.id, command, params);
+    } catch {
+      // API not connected
+    }
   };
 
   const getDeviceInfo = () => {
@@ -133,30 +147,149 @@ function DeviceCard({ device }: { device: Device }) {
           <span style={{ fontSize: '11px', color: '#64748B' }}>W</span>
         </div>
 
-        <button
-          onClick={handlePowerToggle}
-          disabled={toggling}
-          style={{
-            width: '48px', height: '28px', borderRadius: '14px',
-            background: isOn
-              ? `linear-gradient(135deg, ${config.color}, ${config.color}CC)`
-              : 'rgba(100, 116, 139, 0.2)',
-            border: `1px solid ${isOn ? config.color + '50' : 'rgba(100, 116, 139, 0.3)'}`,
-            cursor: 'pointer', position: 'relative',
-            transition: 'all 0.3s',
-            boxShadow: isOn ? `0 0 12px ${config.color}40` : 'none',
-            opacity: toggling ? 0.5 : 1,
-          }}
-        >
-          <div style={{
-            width: '22px', height: '22px', borderRadius: '50%',
-            background: '#FFF', position: 'absolute', top: '2px',
-            left: isOn ? '23px' : '2px',
-            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-          }} />
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button 
+            onClick={() => setExpanded(!expanded)} 
+            style={{ 
+              background: 'none', border: '1px solid rgba(255,255,255,0.1)', 
+              borderRadius: '14px', width: '28px', height: '28px', 
+              color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              cursor: 'pointer', transition: 'all 0.3s',
+              background: expanded ? 'rgba(255,255,255,0.05)' : 'transparent'
+            }}
+          >
+            <ChevronDown size={14} style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+          </button>
+          
+          <button
+            onClick={handlePowerToggle}
+            disabled={toggling}
+            style={{
+              width: '48px', height: '28px', borderRadius: '14px',
+              background: isOn
+                ? `linear-gradient(135deg, ${config.color}, ${config.color}CC)`
+                : 'rgba(100, 116, 139, 0.2)',
+              border: `1px solid ${isOn ? config.color + '50' : 'rgba(100, 116, 139, 0.3)'}`,
+              cursor: 'pointer', position: 'relative',
+              transition: 'all 0.3s',
+              boxShadow: isOn ? `0 0 12px ${config.color}40` : 'none',
+              opacity: toggling ? 0.5 : 1,
+            }}
+          >
+            <div style={{
+              width: '22px', height: '22px', borderRadius: '50%',
+              background: '#FFF', position: 'absolute', top: '2px',
+              left: isOn ? '23px' : '2px',
+              transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            }} />
+          </button>
+        </div>
       </div>
+
+      {/* Advanced Controls Dropdown */}
+      {expanded && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', animation: 'fadeIn 0.2s ease-out' }}>
+          {device.type === 'smart_light' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Brightness</span>
+                  <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.brightness as number || 0}%</span>
+                </div>
+                <input type="range" min="0" max="100" value={meta.brightness as number || 0} onChange={(e) => handleControl('set_brightness', { brightness: parseInt(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Color Temp</span>
+                  <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.color_temperature as number || 4000}K</span>
+                </div>
+                <input type="range" min="2700" max="6500" step="100" value={meta.color_temperature as number || 4000} onChange={(e) => handleControl('set_color_temp', { color_temperature: parseInt(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
+              </div>
+            </div>
+          )}
+
+          {device.type === 'hvac' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Target Temp</span>
+                  <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.target_temperature as number || 22}°C</span>
+                </div>
+                <input type="range" min="16" max="30" step="0.5" value={meta.target_temperature as number || 22} onChange={(e) => handleControl('set_temperature', { target_temperature: parseFloat(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <select value={meta.mode as string || 'cooling'} onChange={(e) => handleControl('set_mode', { mode: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
+                  <option value="cooling">Cooling</option>
+                  <option value="heating">Heating</option>
+                  <option value="auto">Auto</option>
+                  <option value="fan_only">Fan Only</option>
+                </select>
+                <select value={meta.fan_speed as string || 'auto'} onChange={(e) => handleControl('set_fan', { fan_speed: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {device.type === 'door_lock' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Lock State</span>
+                <button onClick={() => handleControl(meta.lock_state === 'locked' ? 'unlock' : 'lock', { lock_state: meta.lock_state === 'locked' ? 'unlocked' : 'locked' })} style={{ padding: '6px 12px', borderRadius: '6px', background: meta.lock_state === 'locked' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)', border: `1px solid ${meta.lock_state === 'locked' ? '#3B82F6' : '#EF4444'}`, color: meta.lock_state === 'locked' ? '#3B82F6' : '#EF4444', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                  {meta.lock_state === 'locked' ? 'LOCKED' : 'UNLOCKED'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Auto-Lock</span>
+                <button onClick={() => handleControl('set_auto_lock', { auto_lock: !meta.auto_lock })} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  {meta.auto_lock ? <ToggleRight size={24} color={config.color} /> : <ToggleLeft size={24} color="#64748B" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {device.type === 'camera' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Recording</span>
+                <button onClick={() => handleControl('set_recording', { recording: !meta.recording })} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  {meta.recording ? <ToggleRight size={24} color={config.color} /> : <ToggleLeft size={24} color="#64748B" />}
+                </button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Night Vision</span>
+                <button onClick={() => handleControl('set_night_vision', { night_vision: !meta.night_vision })} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  {meta.night_vision ? <ToggleRight size={24} color={config.color} /> : <ToggleLeft size={24} color="#64748B" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {device.type === 'washing_machine' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Cycle Mode</span>
+                <select value={meta.wash_mode as string || 'normal'} onChange={(e) => handleControl('set_wash_mode', { wash_mode: e.target.value })} style={{ width: '120px', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
+                  <option value="normal">Normal</option>
+                  <option value="quick">Quick Wash</option>
+                  <option value="heavy">Heavy Duty</option>
+                  <option value="delicate">Delicate</option>
+                </select>
+              </div>
+            </div>
+          )}
+          
+          {!['smart_light', 'hvac', 'door_lock', 'camera', 'washing_machine'].includes(device.type) && (
+            <div style={{ textAlign: 'center', color: '#64748B', fontSize: '12px', padding: '8px' }}>
+              No advanced controls available for this device type.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Efficiency bar */}
       <div style={{ marginTop: '12px' }}>
