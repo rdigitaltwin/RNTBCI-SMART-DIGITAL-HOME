@@ -1,0 +1,644 @@
+WARNING:root:JWT_SECRET_KEY not found in environment or jwt_secret.txt. Generating ephemeral secret. This instance will be isolated - tokens will NOT be valid across restarts or multiple instances.
+INFO:     Started server process [17603]
+INFO:     Waiting for application startup.
+2026-06-25 15:01:51,477 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+INFO:sqlalchemy.engine.Engine:select pg_catalog.version()
+2026-06-25 15:01:51,477 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-06-25 15:01:51,478 INFO sqlalchemy.engine.Engine select current_schema()
+INFO:sqlalchemy.engine.Engine:select current_schema()
+2026-06-25 15:01:51,478 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-06-25 15:01:51,479 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+INFO:sqlalchemy.engine.Engine:show standard_conforming_strings
+2026-06-25 15:01:51,479 INFO sqlalchemy.engine.Engine [raw sql] ()
+INFO:sqlalchemy.engine.Engine:[raw sql] ()
+2026-06-25 15:01:51,480 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-06-25 15:01:51,482 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,482 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ('roles', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[generated in 0.00014s] ('roles', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,486 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,486 INFO sqlalchemy.engine.Engine [cached since 0.003638s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.003638s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,486 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,486 INFO sqlalchemy.engine.Engine [cached since 0.004199s ago] ('permissions', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.004199s ago] ('permissions', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,487 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,487 INFO sqlalchemy.engine.Engine [cached since 0.004643s ago] ('rooms', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.004643s ago] ('rooms', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,487 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,487 INFO sqlalchemy.engine.Engine [cached since 0.005068s ago] ('devices', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.005068s ago] ('devices', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,488 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,488 INFO sqlalchemy.engine.Engine [cached since 0.005475s ago] ('device_states', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.005475s ago] ('device_states', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,488 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,488 INFO sqlalchemy.engine.Engine [cached since 0.005903s ago] ('device_events', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.005903s ago] ('device_events', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,488 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,488 INFO sqlalchemy.engine.Engine [cached since 0.006165s ago] ('energy_history', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.006165s ago] ('energy_history', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine [cached since 0.006428s ago] ('alerts', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.006428s ago] ('alerts', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine [cached since 0.00669s ago] ('audit_logs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.00669s ago] ('audit_logs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine [cached since 0.006953s ago] ('notifications', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.006953s ago] ('notifications', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-06-25 15:01:51,489 INFO sqlalchemy.engine.Engine [cached since 0.007215s ago] ('websocket_sessions', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.007215s ago] ('websocket_sessions', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-06-25 15:01:51,490 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,490 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ('rolename', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[generated in 0.00008s] ('rolename', 'pg_catalog')
+2026-06-25 15:01:51,491 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,492 INFO sqlalchemy.engine.Engine [cached since 0.001163s ago] ('roomtype', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.001163s ago] ('roomtype', 'pg_catalog')
+2026-06-25 15:01:51,492 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,492 INFO sqlalchemy.engine.Engine [cached since 0.001753s ago] ('devicetype', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.001753s ago] ('devicetype', 'pg_catalog')
+2026-06-25 15:01:51,493 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,493 INFO sqlalchemy.engine.Engine [cached since 0.002225s ago] ('devicestatus', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.002225s ago] ('devicestatus', 'pg_catalog')
+2026-06-25 15:01:51,493 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,493 INFO sqlalchemy.engine.Engine [cached since 0.002763s ago] ('powerstate', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.002763s ago] ('powerstate', 'pg_catalog')
+2026-06-25 15:01:51,494 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,494 INFO sqlalchemy.engine.Engine [cached since 0.003329s ago] ('connectivitystatus', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.003329s ago] ('connectivitystatus', 'pg_catalog')
+2026-06-25 15:01:51,494 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,494 INFO sqlalchemy.engine.Engine [cached since 0.003881s ago] ('eventseverity', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.003881s ago] ('eventseverity', 'pg_catalog')
+2026-06-25 15:01:51,495 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+INFO:sqlalchemy.engine.Engine:SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2026-06-25 15:01:51,495 INFO sqlalchemy.engine.Engine [cached since 0.004323s ago] ('alerttype', 'pg_catalog')
+INFO:sqlalchemy.engine.Engine:[cached since 0.004323s ago] ('alerttype', 'pg_catalog')
+2026-06-25 15:01:51,495 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+2026-06-25 15:01:51,496 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-06-25 15:01:51,510 INFO sqlalchemy.engine.Engine SELECT roles.id, roles.name, roles.description, roles.created_at 
+FROM roles
+INFO:sqlalchemy.engine.Engine:SELECT roles.id, roles.name, roles.description, roles.created_at 
+FROM roles
+2026-06-25 15:01:51,510 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ()
+INFO:sqlalchemy.engine.Engine:[generated in 0.00009s] ()
+2026-06-25 15:01:51,523 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:sqlalchemy.engine.Engine:ROLLBACK
+WARNING:backend.redis.client:Redis connection failed: Error 61 connecting to localhost:6379. Connection refused.. Operating without Redis.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2026-06-25 15:01:51,525 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-06-25 15:01:51,526 INFO sqlalchemy.engine.Engine SELECT devices.id, devices.name, devices.type, devices.room_id, devices.status, devices.power_state, devices.connectivity, devices.energy_usage_kw, devices.efficiency_percent, devices.metadata, devices.position_x, devices.position_y, devices.position_z, devices.last_updated, devices.created_at 
+FROM devices
+INFO:sqlalchemy.engine.Engine:SELECT devices.id, devices.name, devices.type, devices.room_id, devices.status, devices.power_state, devices.connectivity, devices.energy_usage_kw, devices.efficiency_percent, devices.metadata, devices.position_x, devices.position_y, devices.position_z, devices.last_updated, devices.created_at 
+FROM devices
+2026-06-25 15:01:51,526 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ()
+INFO:sqlalchemy.engine.Engine:[generated in 0.00008s] ()
+2026-06-25 15:01:51,534 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:51,534 INFO sqlalchemy.engine.Engine [generated in 0.00016s] (0.0519, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 51.9, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00016s] (0.0519, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 51.9, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'))
+2026-06-25 15:01:51,535 INFO sqlalchemy.engine.Engine UPDATE devices SET metadata=$1::JSONB, last_updated=$2::TIMESTAMP WITH TIME ZONE WHERE devices.id = $3::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET metadata=$1::JSONB, last_updated=$2::TIMESTAMP WITH TIME ZONE WHERE devices.id = $3::UUID
+2026-06-25 15:01:51,535 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('{"volume": 50, "sim_state": "idle", "sim_power_w": 0.0}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00009s] ('{"volume": 50, "sim_state": "idle", "sim_power_w": 0.0}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'))
+2026-06-25 15:01:51,535 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:51,535 INFO sqlalchemy.engine.Engine [generated in 0.00008s] [(0.0447, '{"sim_state": "idle", "door_state": "closed", "sim_power_w": 44.7, "temperature": 4.0, "cooling_status": "standby"}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d')), (0.03, '{"sim_state": "idle", "sim_power_w": 30.0, "temperature": 20}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'))]
+INFO:sqlalchemy.engine.Engine:[generated in 0.00008s] [(0.0447, '{"sim_state": "idle", "door_state": "closed", "sim_power_w": 44.7, "temperature": 4.0, "cooling_status": "standby"}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d')), (0.03, '{"sim_state": "idle", "sim_power_w": 30.0, "temperature": 20}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'))]
+2026-06-25 15:01:51,536 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:51,536 INFO sqlalchemy.engine.Engine [generated in 0.00007s] (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('269b696c-557a-4154-baf6-ce172db607b4'))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00007s] (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('269b696c-557a-4154-baf6-ce172db607b4'))
+2026-06-25 15:01:51,536 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:51,536 INFO sqlalchemy.engine.Engine [cached since 0.003008s ago] (0.0089, '{"sim_state": "idle", "packet_loss": 0.96, "sim_power_w": 8.9, "upload_speed": 27.7, "download_speed": 88.1, "signal_quality": 80.0, "internet_status": "connected", "connected_clients": 15}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.003008s ago] (0.0089, '{"sim_state": "idle", "packet_loss": 0.96, "sim_power_w": 8.9, "upload_speed": 27.7, "download_speed": 88.1, "signal_quality": 80.0, "internet_status": "connected", "connected_clients": 15}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'))
+2026-06-25 15:01:51,537 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:51,537 INFO sqlalchemy.engine.Engine [generated in 0.00007s] [(datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('3f1741a5-c196-4519-858c-63c9040ae0b5')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('404e1f8a-b843-4010-9b1b-cc7f9e3bcae0')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'))]
+INFO:sqlalchemy.engine.Engine:[generated in 0.00007s] [(datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('3f1741a5-c196-4519-858c-63c9040ae0b5')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('404e1f8a-b843-4010-9b1b-cc7f9e3bcae0')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7')), (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'))]
+2026-06-25 15:01:51,538 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:51,538 INFO sqlalchemy.engine.Engine [cached since 0.004189s ago] (0.0556, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 55.6, "temperature": 16.0, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.004189s ago] (0.0556, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 55.6, "temperature": 16.0, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'))
+2026-06-25 15:01:51,538 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:51,538 INFO sqlalchemy.engine.Engine [cached since 0.001993s ago] (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.001993s ago] (datetime.datetime(2026, 6, 25, 9, 31, 51, 531625, tzinfo=datetime.timezone.utc), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'))
+2026-06-25 15:01:51,539 INFO sqlalchemy.engine.Engine INSERT INTO energy_history (id, device_id, power_kw, voltage, current_amps, cost_usd, timestamp) VALUES ($1::UUID, $2::UUID, $3::FLOAT, $4::FLOAT, $5::FLOAT, $6::FLOAT, $7::TIMESTAMP WITH TIME ZONE), ($8::UUID, $9::UUID, $10::FLOAT, $11::FLOAT, $12:: ... 1404 characters truncated ... UID, $107::UUID, $108::FLOAT, $109::FLOAT, $110::FLOAT, $111::FLOAT, $112::TIMESTAMP WITH TIME ZONE)
+INFO:sqlalchemy.engine.Engine:INSERT INTO energy_history (id, device_id, power_kw, voltage, current_amps, cost_usd, timestamp) VALUES ($1::UUID, $2::UUID, $3::FLOAT, $4::FLOAT, $5::FLOAT, $6::FLOAT, $7::TIMESTAMP WITH TIME ZONE), ($8::UUID, $9::UUID, $10::FLOAT, $11::FLOAT, $12:: ... 1404 characters truncated ... UID, $107::UUID, $108::FLOAT, $109::FLOAT, $110::FLOAT, $111::FLOAT, $112::TIMESTAMP WITH TIME ZONE)
+2026-06-25 15:01:51,539 INFO sqlalchemy.engine.Engine [generated in 0.00019s (insertmanyvalues) 1/1 (unordered)] (UUID('29b40ecd-55ed-4023-a7f3-23936f08a070'), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'), 0.0, 219.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539615, tzinfo=datetime.timezone.utc), UUID('9db7b86e-d2b1-435f-a01f-1e3556faa703'), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d'), 0.0447, 220.1, 0.203, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539624, tzinfo=datetime.timezone.utc), UUID('5bf5751e-8b2d-48e0-9a15-d17f5e80b2fe'), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'), 0.03, 220.4, 0.136, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539629, tzinfo=datetime.timezone.utc), UUID('28a3d051-f618-4ea6-afde-30daaaf421f5'), UUID('269b696c-557a-4154-baf6-ce172db607b4'), 0.0, 220.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539633, tzinfo=datetime.timezone.utc), UUID('92403e84-22a9-445c-8ab3-ca9882fe5517'), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'), 0.0089, 220.5, 0.04, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539636, tzinfo=datetime.timezone.utc), UUID('15a5c45a-548b-4ee4-be5a-a59271aff8ec'), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca'), 0.0, 220.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539640, tzinfo=datetime.timezone.utc), UUID('19ecf46f-4e64-4465-9825-1675daf3390f'), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0'), 0.0, 220.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539643, tzinfo=datetime.timezone.utc), UUID('17956276-7c72-4258-906f-62b389dfa51c') ... 12 parameters truncated ... datetime.datetime(2026, 6, 25, 9, 31, 51, 539650, tzinfo=datetime.timezone.utc), UUID('78caa37e-45f8-4c33-a8e1-8fb8f7710962'), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444'), 0.0, 222.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539654, tzinfo=datetime.timezone.utc), UUID('eeb6483f-8f2e-4d7e-a8ff-be38ad17b19b'), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa'), 0.0, 219.6, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539657, tzinfo=datetime.timezone.utc), UUID('b687ae21-ec28-40b3-87ea-7e3dc06c785a'), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'), 0.0519, 217.5, 0.238, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539660, tzinfo=datetime.timezone.utc), UUID('40649847-16bc-42c6-913c-4f5dd79ae0b1'), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7'), 0.0, 224.7, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539663, tzinfo=datetime.timezone.utc), UUID('da077b23-06b6-4deb-8324-6c9a75c630e2'), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'), 0.0, 216.6, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539667, tzinfo=datetime.timezone.utc), UUID('abd8995a-6124-4700-b605-1d89ef9b3285'), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'), 0.0556, 221.8, 0.251, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539670, tzinfo=datetime.timezone.utc), UUID('7834aa10-f04e-4856-ba46-559218ff243b'), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'), 0.0, 218.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539673, tzinfo=datetime.timezone.utc))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00019s (insertmanyvalues) 1/1 (unordered)] (UUID('29b40ecd-55ed-4023-a7f3-23936f08a070'), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'), 0.0, 219.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539615, tzinfo=datetime.timezone.utc), UUID('9db7b86e-d2b1-435f-a01f-1e3556faa703'), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d'), 0.0447, 220.1, 0.203, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539624, tzinfo=datetime.timezone.utc), UUID('5bf5751e-8b2d-48e0-9a15-d17f5e80b2fe'), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'), 0.03, 220.4, 0.136, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539629, tzinfo=datetime.timezone.utc), UUID('28a3d051-f618-4ea6-afde-30daaaf421f5'), UUID('269b696c-557a-4154-baf6-ce172db607b4'), 0.0, 220.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539633, tzinfo=datetime.timezone.utc), UUID('92403e84-22a9-445c-8ab3-ca9882fe5517'), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'), 0.0089, 220.5, 0.04, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539636, tzinfo=datetime.timezone.utc), UUID('15a5c45a-548b-4ee4-be5a-a59271aff8ec'), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca'), 0.0, 220.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539640, tzinfo=datetime.timezone.utc), UUID('19ecf46f-4e64-4465-9825-1675daf3390f'), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0'), 0.0, 220.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539643, tzinfo=datetime.timezone.utc), UUID('17956276-7c72-4258-906f-62b389dfa51c') ... 12 parameters truncated ... datetime.datetime(2026, 6, 25, 9, 31, 51, 539650, tzinfo=datetime.timezone.utc), UUID('78caa37e-45f8-4c33-a8e1-8fb8f7710962'), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444'), 0.0, 222.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539654, tzinfo=datetime.timezone.utc), UUID('eeb6483f-8f2e-4d7e-a8ff-be38ad17b19b'), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa'), 0.0, 219.6, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539657, tzinfo=datetime.timezone.utc), UUID('b687ae21-ec28-40b3-87ea-7e3dc06c785a'), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'), 0.0519, 217.5, 0.238, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539660, tzinfo=datetime.timezone.utc), UUID('40649847-16bc-42c6-913c-4f5dd79ae0b1'), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7'), 0.0, 224.7, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539663, tzinfo=datetime.timezone.utc), UUID('da077b23-06b6-4deb-8324-6c9a75c630e2'), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'), 0.0, 216.6, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539667, tzinfo=datetime.timezone.utc), UUID('abd8995a-6124-4700-b605-1d89ef9b3285'), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'), 0.0556, 221.8, 0.251, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 51, 539670, tzinfo=datetime.timezone.utc), UUID('7834aa10-f04e-4856-ba46-559218ff243b'), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'), 0.0, 218.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 51, 539673, tzinfo=datetime.timezone.utc))
+2026-06-25 15:01:51,542 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+2026-06-25 15:01:52,526 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-06-25 15:01:52,527 INFO sqlalchemy.engine.Engine SELECT devices.id, devices.name, devices.type, devices.room_id, devices.status, devices.power_state, devices.connectivity, devices.energy_usage_kw, devices.efficiency_percent, devices.metadata, devices.position_x, devices.position_y, devices.position_z, devices.last_updated, devices.created_at 
+FROM devices
+INFO:sqlalchemy.engine.Engine:SELECT devices.id, devices.name, devices.type, devices.room_id, devices.status, devices.power_state, devices.connectivity, devices.energy_usage_kw, devices.efficiency_percent, devices.metadata, devices.position_x, devices.position_y, devices.position_z, devices.last_updated, devices.created_at 
+FROM devices
+2026-06-25 15:01:52,527 INFO sqlalchemy.engine.Engine [cached since 1.001s ago] ()
+INFO:sqlalchemy.engine.Engine:[cached since 1.001s ago] ()
+2026-06-25 15:01:52,530 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:52,531 INFO sqlalchemy.engine.Engine [cached since 0.9971s ago] (0.0449, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 44.9, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.9971s ago] (0.0449, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 44.9, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'))
+2026-06-25 15:01:52,531 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:52,531 INFO sqlalchemy.engine.Engine [cached since 0.9953s ago] (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.9953s ago] (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'))
+2026-06-25 15:01:52,532 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:52,532 INFO sqlalchemy.engine.Engine [cached since 0.9964s ago] [(0.0337, '{"sim_state": "idle", "door_state": "closed", "sim_power_w": 33.7, "temperature": 4.0, "cooling_status": "standby"}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d')), (0.0323, '{"sim_state": "idle", "sim_power_w": 32.3, "temperature": 20}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'))]
+INFO:sqlalchemy.engine.Engine:[cached since 0.9964s ago] [(0.0337, '{"sim_state": "idle", "door_state": "closed", "sim_power_w": 33.7, "temperature": 4.0, "cooling_status": "standby"}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d')), (0.0323, '{"sim_state": "idle", "sim_power_w": 32.3, "temperature": 20}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'))]
+2026-06-25 15:01:52,532 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:52,532 INFO sqlalchemy.engine.Engine [cached since 0.9962s ago] (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('269b696c-557a-4154-baf6-ce172db607b4'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.9962s ago] (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('269b696c-557a-4154-baf6-ce172db607b4'))
+2026-06-25 15:01:52,532 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:52,533 INFO sqlalchemy.engine.Engine [cached since 0.9991s ago] (0.0076, '{"sim_state": "idle", "packet_loss": 0.71, "sim_power_w": 7.6, "upload_speed": 30.1, "download_speed": 108.7, "signal_quality": 86.0, "internet_status": "connected", "connected_clients": 5}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.9991s ago] (0.0076, '{"sim_state": "idle", "packet_loss": 0.71, "sim_power_w": 7.6, "upload_speed": 30.1, "download_speed": 108.7, "signal_quality": 86.0, "internet_status": "connected", "connected_clients": 5}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'))
+2026-06-25 15:01:52,533 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:52,533 INFO sqlalchemy.engine.Engine [cached since 0.9961s ago] [(datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('3f1741a5-c196-4519-858c-63c9040ae0b5')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('404e1f8a-b843-4010-9b1b-cc7f9e3bcae0')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'))]
+INFO:sqlalchemy.engine.Engine:[cached since 0.9961s ago] [(datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('3f1741a5-c196-4519-858c-63c9040ae0b5')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('404e1f8a-b843-4010-9b1b-cc7f9e3bcae0')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7')), (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'))]
+2026-06-25 15:01:52,533 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:52,534 INFO sqlalchemy.engine.Engine [cached since 1s ago] (0.0497, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 49.7, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'))
+INFO:sqlalchemy.engine.Engine:[cached since 1s ago] (0.0497, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 49.7, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'))
+2026-06-25 15:01:52,534 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:52,534 INFO sqlalchemy.engine.Engine [cached since 0.9983s ago] (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'))
+INFO:sqlalchemy.engine.Engine:[cached since 0.9983s ago] (datetime.datetime(2026, 6, 25, 9, 31, 52, 528836, tzinfo=datetime.timezone.utc), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'))
+2026-06-25 15:01:52,535 INFO sqlalchemy.engine.Engine INSERT INTO energy_history (id, device_id, power_kw, voltage, current_amps, cost_usd, timestamp) VALUES ($1::UUID, $2::UUID, $3::FLOAT, $4::FLOAT, $5::FLOAT, $6::FLOAT, $7::TIMESTAMP WITH TIME ZONE), ($8::UUID, $9::UUID, $10::FLOAT, $11::FLOAT, $12:: ... 1404 characters truncated ... UID, $107::UUID, $108::FLOAT, $109::FLOAT, $110::FLOAT, $111::FLOAT, $112::TIMESTAMP WITH TIME ZONE)
+INFO:sqlalchemy.engine.Engine:INSERT INTO energy_history (id, device_id, power_kw, voltage, current_amps, cost_usd, timestamp) VALUES ($1::UUID, $2::UUID, $3::FLOAT, $4::FLOAT, $5::FLOAT, $6::FLOAT, $7::TIMESTAMP WITH TIME ZONE), ($8::UUID, $9::UUID, $10::FLOAT, $11::FLOAT, $12:: ... 1404 characters truncated ... UID, $107::UUID, $108::FLOAT, $109::FLOAT, $110::FLOAT, $111::FLOAT, $112::TIMESTAMP WITH TIME ZONE)
+2026-06-25 15:01:52,535 INFO sqlalchemy.engine.Engine [cached since 0.9962s ago (insertmanyvalues) 1/1 (unordered)] (UUID('9a6d8a4b-c050-43fa-9c97-798667e20c5d'), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'), 0.0, 223.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535657, tzinfo=datetime.timezone.utc), UUID('b75812bf-52cf-4703-8eb1-84a528bfa8f3'), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d'), 0.0337, 220.3, 0.153, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535666, tzinfo=datetime.timezone.utc), UUID('ea3a77e6-9b02-42e2-a9ed-e036776759ec'), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'), 0.0323, 220.5, 0.147, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535671, tzinfo=datetime.timezone.utc), UUID('267423cf-e2e9-4da1-8ce6-47f011e44847'), UUID('269b696c-557a-4154-baf6-ce172db607b4'), 0.0, 219.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535676, tzinfo=datetime.timezone.utc), UUID('693d283d-db74-48bd-ac75-ac20b1f059dd'), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'), 0.0076, 221.2, 0.034, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535681, tzinfo=datetime.timezone.utc), UUID('adc3b83c-7330-4820-9275-62e394b409d9'), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca'), 0.0, 221.5, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535688, tzinfo=datetime.timezone.utc), UUID('4f658691-938c-4d59-8b8f-678ae2238da1'), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0'), 0.0, 219.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535693, tzinfo=datetime.timezone.utc), UUID('326e5078-a36b-4bbe-9377-a8c426e60d27') ... 12 parameters truncated ... datetime.datetime(2026, 6, 25, 9, 31, 52, 535701, tzinfo=datetime.timezone.utc), UUID('a6102e95-e248-458a-9982-4f8b20b448f5'), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444'), 0.0, 220.3, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535705, tzinfo=datetime.timezone.utc), UUID('63eb2784-7ca4-469d-bca8-58d977dbfe55'), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa'), 0.0, 219.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535710, tzinfo=datetime.timezone.utc), UUID('4dec11a1-0f05-46c8-b210-8c4ed7f1bf53'), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'), 0.0449, 220.2, 0.204, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535715, tzinfo=datetime.timezone.utc), UUID('4553abcc-c250-4362-a36a-d7ed389fdbd0'), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7'), 0.0, 221.9, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535719, tzinfo=datetime.timezone.utc), UUID('99f839a6-5a30-4a52-ab76-7963b7178b7b'), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'), 0.0, 223.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535723, tzinfo=datetime.timezone.utc), UUID('2c95815a-c59f-4fac-8f41-9551eca05112'), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'), 0.0497, 219.6, 0.226, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535728, tzinfo=datetime.timezone.utc), UUID('ccb12b1b-9a66-488a-86f6-e7a37fd15f0e'), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'), 0.0, 223.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535732, tzinfo=datetime.timezone.utc))
+INFO:sqlalchemy.engine.Engine:[cached since 0.9962s ago (insertmanyvalues) 1/1 (unordered)] (UUID('9a6d8a4b-c050-43fa-9c97-798667e20c5d'), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'), 0.0, 223.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535657, tzinfo=datetime.timezone.utc), UUID('b75812bf-52cf-4703-8eb1-84a528bfa8f3'), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d'), 0.0337, 220.3, 0.153, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535666, tzinfo=datetime.timezone.utc), UUID('ea3a77e6-9b02-42e2-a9ed-e036776759ec'), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'), 0.0323, 220.5, 0.147, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535671, tzinfo=datetime.timezone.utc), UUID('267423cf-e2e9-4da1-8ce6-47f011e44847'), UUID('269b696c-557a-4154-baf6-ce172db607b4'), 0.0, 219.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535676, tzinfo=datetime.timezone.utc), UUID('693d283d-db74-48bd-ac75-ac20b1f059dd'), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'), 0.0076, 221.2, 0.034, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535681, tzinfo=datetime.timezone.utc), UUID('adc3b83c-7330-4820-9275-62e394b409d9'), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca'), 0.0, 221.5, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535688, tzinfo=datetime.timezone.utc), UUID('4f658691-938c-4d59-8b8f-678ae2238da1'), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0'), 0.0, 219.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535693, tzinfo=datetime.timezone.utc), UUID('326e5078-a36b-4bbe-9377-a8c426e60d27') ... 12 parameters truncated ... datetime.datetime(2026, 6, 25, 9, 31, 52, 535701, tzinfo=datetime.timezone.utc), UUID('a6102e95-e248-458a-9982-4f8b20b448f5'), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444'), 0.0, 220.3, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535705, tzinfo=datetime.timezone.utc), UUID('63eb2784-7ca4-469d-bca8-58d977dbfe55'), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa'), 0.0, 219.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535710, tzinfo=datetime.timezone.utc), UUID('4dec11a1-0f05-46c8-b210-8c4ed7f1bf53'), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'), 0.0449, 220.2, 0.204, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535715, tzinfo=datetime.timezone.utc), UUID('4553abcc-c250-4362-a36a-d7ed389fdbd0'), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7'), 0.0, 221.9, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535719, tzinfo=datetime.timezone.utc), UUID('99f839a6-5a30-4a52-ab76-7963b7178b7b'), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'), 0.0, 223.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535723, tzinfo=datetime.timezone.utc), UUID('2c95815a-c59f-4fac-8f41-9551eca05112'), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'), 0.0497, 219.6, 0.226, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 52, 535728, tzinfo=datetime.timezone.utc), UUID('ccb12b1b-9a66-488a-86f6-e7a37fd15f0e'), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'), 0.0, 223.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 52, 535732, tzinfo=datetime.timezone.utc))
+2026-06-25 15:01:52,537 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+2026-06-25 15:01:53,526 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-06-25 15:01:53,527 INFO sqlalchemy.engine.Engine SELECT devices.id, devices.name, devices.type, devices.room_id, devices.status, devices.power_state, devices.connectivity, devices.energy_usage_kw, devices.efficiency_percent, devices.metadata, devices.position_x, devices.position_y, devices.position_z, devices.last_updated, devices.created_at 
+FROM devices
+INFO:sqlalchemy.engine.Engine:SELECT devices.id, devices.name, devices.type, devices.room_id, devices.status, devices.power_state, devices.connectivity, devices.energy_usage_kw, devices.efficiency_percent, devices.metadata, devices.position_x, devices.position_y, devices.position_z, devices.last_updated, devices.created_at 
+FROM devices
+2026-06-25 15:01:53,527 INFO sqlalchemy.engine.Engine [cached since 2.001s ago] ()
+INFO:sqlalchemy.engine.Engine:[cached since 2.001s ago] ()
+2026-06-25 15:01:53,529 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:53,529 INFO sqlalchemy.engine.Engine [cached since 1.995s ago] (0.0416, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 41.6, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'))
+INFO:sqlalchemy.engine.Engine:[cached since 1.995s ago] (0.0416, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 41.6, "temperature": 16, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'))
+2026-06-25 15:01:53,529 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:53,529 INFO sqlalchemy.engine.Engine [cached since 1.993s ago] (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'))
+INFO:sqlalchemy.engine.Engine:[cached since 1.993s ago] (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'))
+2026-06-25 15:01:53,530 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:53,530 INFO sqlalchemy.engine.Engine [cached since 1.994s ago] [(0.0384, '{"sim_state": "idle", "door_state": "closed", "sim_power_w": 38.4, "temperature": 4.0, "cooling_status": "standby"}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d')), (0.031, '{"sim_state": "idle", "sim_power_w": 31.0, "temperature": 20}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'))]
+INFO:sqlalchemy.engine.Engine:[cached since 1.994s ago] [(0.0384, '{"sim_state": "idle", "door_state": "closed", "sim_power_w": 38.4, "temperature": 4.0, "cooling_status": "standby"}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d')), (0.031, '{"sim_state": "idle", "sim_power_w": 31.0, "temperature": 20}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'))]
+2026-06-25 15:01:53,530 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:53,530 INFO sqlalchemy.engine.Engine [cached since 1.994s ago] (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('269b696c-557a-4154-baf6-ce172db607b4'))
+INFO:sqlalchemy.engine.Engine:[cached since 1.994s ago] (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('269b696c-557a-4154-baf6-ce172db607b4'))
+2026-06-25 15:01:53,530 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:53,530 INFO sqlalchemy.engine.Engine [cached since 1.997s ago] (0.007, '{"sim_state": "idle", "packet_loss": 0.72, "sim_power_w": 7.0, "upload_speed": 41.1, "download_speed": 97.7, "signal_quality": 88.0, "internet_status": "connected", "connected_clients": 10}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'))
+INFO:sqlalchemy.engine.Engine:[cached since 1.997s ago] (0.007, '{"sim_state": "idle", "packet_loss": 0.72, "sim_power_w": 7.0, "upload_speed": 41.1, "download_speed": 97.7, "signal_quality": 88.0, "internet_status": "connected", "connected_clients": 10}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'))
+2026-06-25 15:01:53,531 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:53,531 INFO sqlalchemy.engine.Engine [cached since 1.994s ago] [(datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('3f1741a5-c196-4519-858c-63c9040ae0b5')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('404e1f8a-b843-4010-9b1b-cc7f9e3bcae0')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'))]
+INFO:sqlalchemy.engine.Engine:[cached since 1.994s ago] [(datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('3f1741a5-c196-4519-858c-63c9040ae0b5')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('404e1f8a-b843-4010-9b1b-cc7f9e3bcae0')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7')), (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'))]
+2026-06-25 15:01:53,531 INFO sqlalchemy.engine.Engine UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET energy_usage_kw=$1::FLOAT, metadata=$2::JSONB, last_updated=$3::TIMESTAMP WITH TIME ZONE WHERE devices.id = $4::UUID
+2026-06-25 15:01:53,531 INFO sqlalchemy.engine.Engine [cached since 1.998s ago] (0.0481, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 48.1, "temperature": 16.0, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'))
+INFO:sqlalchemy.engine.Engine:[cached since 1.998s ago] (0.0481, '{"fan_speed": "high", "sim_state": "idle", "sim_power_w": 48.1, "temperature": 16.0, "outdoor_temperature": 15.3}', datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'))
+2026-06-25 15:01:53,532 INFO sqlalchemy.engine.Engine UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+INFO:sqlalchemy.engine.Engine:UPDATE devices SET last_updated=$1::TIMESTAMP WITH TIME ZONE WHERE devices.id = $2::UUID
+2026-06-25 15:01:53,532 INFO sqlalchemy.engine.Engine [cached since 1.996s ago] (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'))
+INFO:sqlalchemy.engine.Engine:[cached since 1.996s ago] (datetime.datetime(2026, 6, 25, 9, 31, 53, 528055, tzinfo=datetime.timezone.utc), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'))
+2026-06-25 15:01:53,532 INFO sqlalchemy.engine.Engine INSERT INTO energy_history (id, device_id, power_kw, voltage, current_amps, cost_usd, timestamp) VALUES ($1::UUID, $2::UUID, $3::FLOAT, $4::FLOAT, $5::FLOAT, $6::FLOAT, $7::TIMESTAMP WITH TIME ZONE), ($8::UUID, $9::UUID, $10::FLOAT, $11::FLOAT, $12:: ... 1404 characters truncated ... UID, $107::UUID, $108::FLOAT, $109::FLOAT, $110::FLOAT, $111::FLOAT, $112::TIMESTAMP WITH TIME ZONE)
+INFO:sqlalchemy.engine.Engine:INSERT INTO energy_history (id, device_id, power_kw, voltage, current_amps, cost_usd, timestamp) VALUES ($1::UUID, $2::UUID, $3::FLOAT, $4::FLOAT, $5::FLOAT, $6::FLOAT, $7::TIMESTAMP WITH TIME ZONE), ($8::UUID, $9::UUID, $10::FLOAT, $11::FLOAT, $12:: ... 1404 characters truncated ... UID, $107::UUID, $108::FLOAT, $109::FLOAT, $110::FLOAT, $111::FLOAT, $112::TIMESTAMP WITH TIME ZONE)
+2026-06-25 15:01:53,532 INFO sqlalchemy.engine.Engine [cached since 1.993s ago (insertmanyvalues) 1/1 (unordered)] (UUID('f82dd722-d7ca-4bdb-90f3-429b0969aa15'), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'), 0.0, 221.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532648, tzinfo=datetime.timezone.utc), UUID('6dd544d6-b607-4979-ad40-28032800be60'), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d'), 0.0384, 220.3, 0.174, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532654, tzinfo=datetime.timezone.utc), UUID('cda3eb0e-7746-4919-b50c-c51729651453'), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'), 0.031, 222.0, 0.139, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532658, tzinfo=datetime.timezone.utc), UUID('aac8d45b-6253-4880-a975-fc99976c4806'), UUID('269b696c-557a-4154-baf6-ce172db607b4'), 0.0, 219.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532662, tzinfo=datetime.timezone.utc), UUID('fe519d3b-d9c0-4705-b0c4-dcf0fb643906'), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'), 0.007, 219.3, 0.032, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532665, tzinfo=datetime.timezone.utc), UUID('af566b9d-8c78-4842-82c2-57fee750829d'), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca'), 0.0, 220.5, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532668, tzinfo=datetime.timezone.utc), UUID('76f20312-9172-4dcf-8e0c-15ecffebe9c6'), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0'), 0.0, 219.2, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532671, tzinfo=datetime.timezone.utc), UUID('2d07b6d8-7354-49af-9b79-9cbb97f27e41') ... 12 parameters truncated ... datetime.datetime(2026, 6, 25, 9, 31, 53, 532677, tzinfo=datetime.timezone.utc), UUID('fcf29ef2-f088-4916-b112-2c1cecfe3843'), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444'), 0.0, 215.7, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532680, tzinfo=datetime.timezone.utc), UUID('642ebb47-11cc-4d84-b0b9-8e7077fe4d7d'), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa'), 0.0, 222.7, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532684, tzinfo=datetime.timezone.utc), UUID('c12ddc67-9997-4a39-b152-61b46e813e84'), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'), 0.0416, 217.7, 0.191, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532687, tzinfo=datetime.timezone.utc), UUID('1f810b3c-fe20-4e75-a52e-cc8aba07bd63'), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7'), 0.0, 219.6, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532690, tzinfo=datetime.timezone.utc), UUID('8b94a505-8099-40a9-945f-dbb38dbadb62'), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'), 0.0, 224.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532693, tzinfo=datetime.timezone.utc), UUID('9f9fed9d-8a12-4e2b-b944-bc147b83d81a'), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'), 0.0481, 218.5, 0.22, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532696, tzinfo=datetime.timezone.utc), UUID('f5644417-728a-4549-bce0-6b27baa4e8fb'), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'), 0.0, 219.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532699, tzinfo=datetime.timezone.utc))
+INFO:sqlalchemy.engine.Engine:[cached since 1.993s ago (insertmanyvalues) 1/1 (unordered)] (UUID('f82dd722-d7ca-4bdb-90f3-429b0969aa15'), UUID('0e0f385d-eb60-4cb9-9a3c-763482a3e167'), 0.0, 221.1, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532648, tzinfo=datetime.timezone.utc), UUID('6dd544d6-b607-4979-ad40-28032800be60'), UUID('0f2f63d2-a54e-49d6-b6d0-d1f6d5fdfc6d'), 0.0384, 220.3, 0.174, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532654, tzinfo=datetime.timezone.utc), UUID('cda3eb0e-7746-4919-b50c-c51729651453'), UUID('2650ab7c-a3f1-4139-9f41-d10f3f2a7a62'), 0.031, 222.0, 0.139, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532658, tzinfo=datetime.timezone.utc), UUID('aac8d45b-6253-4880-a975-fc99976c4806'), UUID('269b696c-557a-4154-baf6-ce172db607b4'), 0.0, 219.4, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532662, tzinfo=datetime.timezone.utc), UUID('fe519d3b-d9c0-4705-b0c4-dcf0fb643906'), UUID('2badd7ee-f4c4-48a8-896e-2922472dbf4b'), 0.007, 219.3, 0.032, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532665, tzinfo=datetime.timezone.utc), UUID('af566b9d-8c78-4842-82c2-57fee750829d'), UUID('3739bf30-e451-4af7-843f-b708a0ec1cca'), 0.0, 220.5, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532668, tzinfo=datetime.timezone.utc), UUID('76f20312-9172-4dcf-8e0c-15ecffebe9c6'), UUID('37ceec35-80bd-4c7e-9493-39a10a2bdba0'), 0.0, 219.2, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532671, tzinfo=datetime.timezone.utc), UUID('2d07b6d8-7354-49af-9b79-9cbb97f27e41') ... 12 parameters truncated ... datetime.datetime(2026, 6, 25, 9, 31, 53, 532677, tzinfo=datetime.timezone.utc), UUID('fcf29ef2-f088-4916-b112-2c1cecfe3843'), UUID('6cb06251-4226-40c2-aa21-a4d2d1d0a444'), 0.0, 215.7, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532680, tzinfo=datetime.timezone.utc), UUID('642ebb47-11cc-4d84-b0b9-8e7077fe4d7d'), UUID('87592630-469b-4a48-aeb3-3d79ddc245aa'), 0.0, 222.7, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532684, tzinfo=datetime.timezone.utc), UUID('c12ddc67-9997-4a39-b152-61b46e813e84'), UUID('01c77ecf-f367-4c45-b5d9-6b0bfb33d703'), 0.0416, 217.7, 0.191, 1e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532687, tzinfo=datetime.timezone.utc), UUID('1f810b3c-fe20-4e75-a52e-cc8aba07bd63'), UUID('ac645f07-df1d-439b-b7a5-d1602e8bf6a7'), 0.0, 219.6, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532690, tzinfo=datetime.timezone.utc), UUID('8b94a505-8099-40a9-945f-dbb38dbadb62'), UUID('caeb6c4a-cc6d-4dbe-b7d7-f7c6680d89d4'), 0.0, 224.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532693, tzinfo=datetime.timezone.utc), UUID('9f9fed9d-8a12-4e2b-b944-bc147b83d81a'), UUID('cc8ac9ac-dd43-4a22-980e-e71477d4033b'), 0.0481, 218.5, 0.22, 2e-06, datetime.datetime(2026, 6, 25, 9, 31, 53, 532696, tzinfo=datetime.timezone.utc), UUID('f5644417-728a-4549-bce0-6b27baa4e8fb'), UUID('d368a767-a2fe-4c85-916b-069fdc74b6cc'), 0.0, 219.8, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 532699, tzinfo=datetime.timezone.utc))
+2026-06-25 15:01:53,534 INFO sqlalchemy.engine.Engine COMMIT
+INFO:sqlalchemy.engine.Engine:COMMIT
+2026-06-25 15:01:53,827 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2026-06-25 15:01:53,829 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.username, users.password_hash, users.first_name, users.last_name, users.role_id, users.is_active, users.last_login, users.created_at, users.updated_at 
+FROM users JOIN roles ON roles.id = users.role_id 
+WHERE roles.name = $1::rolename
+INFO:sqlalchemy.engine.Engine:SELECT users.id, users.email, users.username, users.password_hash, users.first_name, users.last_name, users.role_id, users.is_active, users.last_login, users.created_at, users.updated_at 
+FROM users JOIN roles ON roles.id = users.role_id 
+WHERE roles.name = $1::rolename
+2026-06-25 15:01:53,829 INFO sqlalchemy.engine.Engine [generated in 0.00015s] ('ADMIN',)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00015s] ('ADMIN',)
+2026-06-25 15:01:53,832 INFO sqlalchemy.engine.Engine SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.created_at AS roles_created_at 
+FROM roles 
+WHERE roles.id IN ($1::UUID)
+INFO:sqlalchemy.engine.Engine:SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.created_at AS roles_created_at 
+FROM roles 
+WHERE roles.id IN ($1::UUID)
+2026-06-25 15:01:53,832 INFO sqlalchemy.engine.Engine [generated in 0.00014s] (UUID('20839067-91b3-4107-a3f9-dba9c8673a55'),)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00014s] (UUID('20839067-91b3-4107-a3f9-dba9c8673a55'),)
+2026-06-25 15:01:53,835 INFO sqlalchemy.engine.Engine SELECT rooms.id, rooms.name, rooms.type, rooms.floor, rooms.position_x, rooms.position_y, rooms.position_z, rooms.width, rooms.depth, rooms.height, rooms.metadata, rooms.created_at 
+FROM rooms 
+WHERE rooms.id = $1::UUID
+INFO:sqlalchemy.engine.Engine:SELECT rooms.id, rooms.name, rooms.type, rooms.floor, rooms.position_x, rooms.position_y, rooms.position_z, rooms.width, rooms.depth, rooms.height, rooms.metadata, rooms.created_at 
+FROM rooms 
+WHERE rooms.id = $1::UUID
+2026-06-25 15:01:53,835 INFO sqlalchemy.engine.Engine [generated in 0.00009s] (UUID('473a8d77-54f9-4147-b8d7-564cdc448aaf'),)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00009s] (UUID('473a8d77-54f9-4147-b8d7-564cdc448aaf'),)
+2026-06-25 15:01:53,843 INFO sqlalchemy.engine.Engine INSERT INTO audit_logs (id, user_id, action, resource, details, ip_address, timestamp) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::VARCHAR, $5::JSONB, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE)
+INFO:sqlalchemy.engine.Engine:INSERT INTO audit_logs (id, user_id, action, resource, details, ip_address, timestamp) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::VARCHAR, $5::JSONB, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE)
+2026-06-25 15:01:53,843 INFO sqlalchemy.engine.Engine [generated in 0.00018s] (UUID('83324030-3d91-4e40-a0d7-5888981c3b8c'), UUID('501f49c1-1899-4131-98a7-97962717d8cf'), 'create_device', 'devices', '{"device_name": "Test Device", "device_type": "smart_tv", "room": "Living Room"}', '127.0.0.1', datetime.datetime(2026, 6, 25, 9, 31, 53, 843248, tzinfo=datetime.timezone.utc))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00018s] (UUID('83324030-3d91-4e40-a0d7-5888981c3b8c'), UUID('501f49c1-1899-4131-98a7-97962717d8cf'), 'create_device', 'devices', '{"device_name": "Test Device", "device_type": "smart_tv", "room": "Living Room"}', '127.0.0.1', datetime.datetime(2026, 6, 25, 9, 31, 53, 843248, tzinfo=datetime.timezone.utc))
+2026-06-25 15:01:53,844 INFO sqlalchemy.engine.Engine INSERT INTO devices (id, name, type, room_id, status, power_state, connectivity, energy_usage_kw, efficiency_percent, metadata, position_x, position_y, position_z, last_updated, created_at) VALUES ($1::UUID, $2::VARCHAR, $3::devicetype, $4::UUID, $5::devicestatus, $6::powerstate, $7::connectivitystatus, $8::FLOAT, $9::FLOAT, $10::JSONB, $11::FLOAT, $12::FLOAT, $13::FLOAT, $14::TIMESTAMP WITH TIME ZONE, $15::TIMESTAMP WITH TIME ZONE)
+INFO:sqlalchemy.engine.Engine:INSERT INTO devices (id, name, type, room_id, status, power_state, connectivity, energy_usage_kw, efficiency_percent, metadata, position_x, position_y, position_z, last_updated, created_at) VALUES ($1::UUID, $2::VARCHAR, $3::devicetype, $4::UUID, $5::devicestatus, $6::powerstate, $7::connectivitystatus, $8::FLOAT, $9::FLOAT, $10::JSONB, $11::FLOAT, $12::FLOAT, $13::FLOAT, $14::TIMESTAMP WITH TIME ZONE, $15::TIMESTAMP WITH TIME ZONE)
+2026-06-25 15:01:53,844 INFO sqlalchemy.engine.Engine [generated in 0.00016s] (UUID('4193f6d0-2b9c-4557-8d5d-fd61faa4efe7'), 'Test Device', 'SMART_TV', UUID('473a8d77-54f9-4147-b8d7-564cdc448aaf'), 'ONLINE', 'OFF', 'CONNECTED', 0.0, 100.0, '{}', 0.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 844735, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 6, 25, 9, 31, 53, 844737, tzinfo=datetime.timezone.utc))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00016s] (UUID('4193f6d0-2b9c-4557-8d5d-fd61faa4efe7'), 'Test Device', 'SMART_TV', UUID('473a8d77-54f9-4147-b8d7-564cdc448aaf'), 'ONLINE', 'OFF', 'CONNECTED', 0.0, 100.0, '{}', 0.0, 0.0, 0.0, datetime.datetime(2026, 6, 25, 9, 31, 53, 844735, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 6, 25, 9, 31, 53, 844737, tzinfo=datetime.timezone.utc))
+2026-06-25 15:01:53,846 INFO sqlalchemy.engine.Engine INSERT INTO device_events (id, device_id, event_type, severity, message, metadata, timestamp) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::eventseverity, $5::VARCHAR, $6::JSONB, $7::TIMESTAMP WITH TIME ZONE)
+INFO:sqlalchemy.engine.Engine:INSERT INTO device_events (id, device_id, event_type, severity, message, metadata, timestamp) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::eventseverity, $5::VARCHAR, $6::JSONB, $7::TIMESTAMP WITH TIME ZONE)
+2026-06-25 15:01:53,846 INFO sqlalchemy.engine.Engine [generated in 0.00012s] (UUID('070caeb4-d058-436b-9c2f-0db8f031888f'), None, 'device_registered', 'INFO', "Device 'Test Device' registered to Living Room", '{"type": "smart_tv", "room": "Living Room"}', datetime.datetime(2026, 6, 25, 9, 31, 53, 846396, tzinfo=datetime.timezone.utc))
+INFO:sqlalchemy.engine.Engine:[generated in 0.00012s] (UUID('070caeb4-d058-436b-9c2f-0db8f031888f'), None, 'device_registered', 'INFO', "Device 'Test Device' registered to Living Room", '{"type": "smart_tv", "room": "Living Room"}', datetime.datetime(2026, 6, 25, 9, 31, 53, 846396, tzinfo=datetime.timezone.utc))
+2026-06-25 15:01:53,852 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:sqlalchemy.engine.Engine:ROLLBACK
+INFO:     127.0.0.1:57273 - "POST /api/v1/devices HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 545, in _prepare_and_execute
+    self._rows = deque(await prepared_stmt.fetch(*parameters))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/asyncpg/prepared_stmt.py", line 176, in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/asyncpg/prepared_stmt.py", line 267, in __bind_execute
+    data, status, _ = await self.__do_execute(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+        lambda protocol: protocol.bind_execute(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self._state, args, '', limit, True, timeout))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/asyncpg/prepared_stmt.py", line 256, in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 206, in bind_execute
+asyncpg.exceptions.NotNullViolationError: null value in column "device_id" of relation "device_events" violates not-null constraint
+DETAIL:  Failing row contains (070caeb4-d058-436b-9c2f-0db8f031888f, null, device_registered, INFO, Device 'Test Device' registered to Living Room, {"room": "Living Room", "type": "smart_tv"}, 2026-06-25 15:01:53.846396+05:30).
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.NotNullViolationError'>: null value in column "device_id" of relation "device_events" violates not-null constraint
+DETAIL:  Failing row contains (070caeb4-d058-436b-9c2f-0db8f031888f, null, device_registered, INFO, Device 'Test Device' registered to Living Room, {"room": "Living Room", "type": "smart_tv"}, 2026-06-25 15:01:53.846396+05:30).
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/applications.py", line 112, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 187, in __call__
+    raise exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 176, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.14/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/_utils.py", line 82, in collapse_excgroups
+    raise exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 178, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/middleware/security.py", line 83, in log_requests
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 176, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.14/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/_utils.py", line 82, in collapse_excgroups
+    raise exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 178, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/middleware/security.py", line 44, in security_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/slowapi/extension.py", line 734, in async_wrapper
+    response = await func(*args, **kwargs)  # type: ignore
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/api/v1/devices.py", line 183, in create_device
+    await db.flush()
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/ext/asyncio/session.py", line 801, in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/arnavpuggal/Programs/RNTBCI_FINAL/backend/venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.NotNullViolationError'>: null value in column "device_id" of relation "device_events" violates not-null constraint
+DETAIL:  Failing row contains (070caeb4-d058-436b-9c2f-0db8f031888f, null, device_registered, INFO, Device 'Test Device' registered to Living Room, {"room": "Living Room", "type": "smart_tv"}, 2026-06-25 15:01:53.846396+05:30).
+[SQL: INSERT INTO device_events (id, device_id, event_type, severity, message, metadata, timestamp) VALUES ($1::UUID, $2::UUID, $3::VARCHAR, $4::eventseverity, $5::VARCHAR, $6::JSONB, $7::TIMESTAMP WITH TIME ZONE)]
+[parameters: (UUID('070caeb4-d058-436b-9c2f-0db8f031888f'), None, 'device_registered', 'INFO', "Device 'Test Device' registered to Living Room", '{"type": "smart_tv", "room": "Living Room"}', datetime.datetime(2026, 6, 25, 9, 31, 53, 846396, tzinfo=datetime.timezone.utc))]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [17603]

@@ -24,60 +24,25 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Extract and validate the current user from the Authorization header.
 
-    Checks:
-    1. Token is valid JWT with correct algorithm
-    2. Token type is 'access' (not refresh)
-    3. Token is not blacklisted (logout)
-    4. User exists and is active
+    Modified for DEMO MODE: Bypasses JWT and automatically returns the first Admin user.
     """
-    token = credentials.credentials
-
-    try:
-        payload = decode_token(token)
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Verify token type
-    if payload.get("type") != ACCESS_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Check if token is blacklisted (logged out)
-    jti = payload.get("jti")
-    if jti and await redis_client.is_token_blacklisted(jti):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has been revoked",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Get user
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user = await get_user_by_id(db, uuid.UUID(user_id))
+    from sqlalchemy import select
+    from backend.models import Role, RoleName
+    from sqlalchemy.orm import selectinload
+    
+    result = await db.execute(
+        select(User).join(Role).where(Role.name == RoleName.ADMIN).options(selectinload(User.role))
+    )
+    user = result.scalars().first()
+    
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Admin user not found or inactive. Please run seed.py",
         )
 
     return user

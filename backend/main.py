@@ -132,7 +132,7 @@ async def list_rooms():
                 "width": r.width,
                 "depth": r.depth,
                 "height": r.height,
-                "metadata": r.metadata or {},
+                "metadata": r.extra_data or {},
             }
             for r in rooms
         ]

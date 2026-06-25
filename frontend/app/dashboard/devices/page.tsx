@@ -151,7 +151,7 @@ function DeviceCard({ device }: { device: Device }) {
           <button 
             onClick={() => setExpanded(!expanded)} 
             style={{ 
-              background: 'none', border: '1px solid rgba(255,255,255,0.1)', 
+              border: '1px solid rgba(255,255,255,0.1)', 
               borderRadius: '14px', width: '28px', height: '28px', 
               color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', 
               cursor: 'pointer', transition: 'all 0.3s',
@@ -335,7 +335,14 @@ function DeviceOnboardingModal({ isOpen, onClose, onAdd }: { isOpen: boolean; on
   // Initialize room_id if rooms are loaded
   useEffect(() => {
     if (rooms.length > 0 && !formData.room_id) {
-      setFormData(prev => ({ ...prev, room_id: rooms[0].id }));
+      const room = rooms[0];
+      setFormData(prev => ({ 
+        ...prev, 
+        room_id: room.id,
+        position_x: room.position_x,
+        position_y: room.position_y,
+        position_z: room.position_z
+      }));
     }
   }, [rooms, formData.room_id]);
 
@@ -414,7 +421,20 @@ function DeviceOnboardingModal({ isOpen, onClose, onAdd }: { isOpen: boolean; on
             <div>
               <label style={{ display: 'block', fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>Room</label>
               <select 
-                value={formData.room_id} onChange={(e) => setFormData({...formData, room_id: e.target.value})}
+                value={formData.room_id} 
+                onChange={(e) => {
+                  const roomId = e.target.value;
+                  const room = rooms.find(r => r.id === roomId);
+                  setFormData(prev => ({
+                    ...prev, 
+                    room_id: roomId,
+                    ...(room ? { 
+                      position_x: room.position_x, 
+                      position_y: room.position_y, 
+                      position_z: room.position_z 
+                    } : {})
+                  }));
+                }}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '14px', outline: 'none', appearance: 'none' }}
               >
                 {rooms.map(room => (

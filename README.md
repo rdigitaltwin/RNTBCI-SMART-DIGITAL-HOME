@@ -312,17 +312,18 @@ cp .env.example .env
 
 ### 2. Backend Setup
 
+From the root directory (`RNTBCI_FINAL`), create and activate a virtual environment for the backend:
+
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+python -m venv backend/venv
+source backend/venv/bin/activate
+pip install -r backend/requirements.txt
 
 # Database setup (PostgreSQL must be running)
 # Tables are auto-created on startup via SQLAlchemy
 
 # Start the API server
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The server will:

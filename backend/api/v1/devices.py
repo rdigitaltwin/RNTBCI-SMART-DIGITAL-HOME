@@ -145,12 +145,13 @@ async def create_device(
         name=data.name,
         type=device_type,
         room_id=data.room_id,
-        metadata=data.metadata,
+        extra_data=data.metadata,
         position_x=data.position_x,
         position_y=data.position_y,
         position_z=data.position_z,
     )
     db.add(device)
+    await db.flush()
 
     # Create initial state
     initial_state = _get_default_state(device_type)
@@ -165,8 +166,8 @@ async def create_device(
         device_id=device.id,
         event_type="device_registered",
         severity=EventSeverity.INFO,
-        message=f"Device '{data.name}' registered in {room.name}",
-        metadata={"type": data.type, "room": room.name},
+        message=f"Device '{data.name}' registered to {room.name}",
+        extra_data={"type": data.type, "room": room.name},
     )
     db.add(event)
 
@@ -385,8 +386,8 @@ async def control_device(
         device_id=device.id,
         event_type="control_command",
         severity=EventSeverity.INFO,
-        message=f"Command '{data.command}' sent to {device.name}",
-        metadata={"command": data.command, "parameters": data.parameters, "user": current_user.username},
+        message=f"Command '{data.command}' received from {current_user.username}",
+        extra_data={"command": data.command, "parameters": data.parameters, "user": current_user.username},
     )
     db.add(event)
 
@@ -451,8 +452,8 @@ async def toggle_power(
         device_id=device.id,
         event_type="power_toggle",
         severity=EventSeverity.INFO,
-        message=f"{device.name}: {old_state} → {data.power_state}",
-        metadata={"old_state": old_state, "new_state": data.power_state, "user": current_user.username},
+        message=f"Power state changed from {old_state} to {data.power_state} by {current_user.username}",
+        extra_data={"old_state": old_state, "new_state": data.power_state, "user": current_user.username},
     )
     db.add(event)
 
