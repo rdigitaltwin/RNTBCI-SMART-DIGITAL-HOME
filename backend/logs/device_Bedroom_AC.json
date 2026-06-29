@@ -1,0 +1,239 @@
+{
+    "deviceType": {
+        "id": "0x010A",
+        "name": "Bedroom AC",
+        "device_id": "cc8ac9ac-dd43-4a22-980e-e71477d4033b",
+        "revision": 4,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "clusters": [
+            {
+                "id": "0x0003",
+                "name": "Identify",
+                "side": "server",
+                "conformance": "mandatory",
+                "commands": [
+                    {
+                        "id": "0x0040",
+                        "name": "TriggerEffect",
+                        "conformance": "mandatory"
+                    }
+                ]
+            },
+            {
+                "id": "0x0004",
+                "name": "Groups",
+                "side": "server",
+                "conformance": "mandatory"
+            },
+            {
+                "id": "0x0006",
+                "name": "On/Off",
+                "side": "server",
+                "conformance": "mandatory",
+                "features": [
+                    {
+                        "code": "LT",
+                        "name": "Lighting",
+                        "conformance": "mandatory"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "id": "0x0000",
+                        "name": "OnOff",
+                        "type": "bool",
+                        "conformance": "mandatory"
+                    },
+                    {
+                        "id": "0x4000",
+                        "name": "GlobalSceneControl",
+                        "type": "bool",
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ]
+                    },
+                    {
+                        "id": "0x4001",
+                        "name": "OnTime",
+                        "type": "uint16",
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ]
+                    },
+                    {
+                        "id": "0x4002",
+                        "name": "OffWaitTime",
+                        "type": "uint16",
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ]
+                    },
+                    {
+                        "id": "0x4003",
+                        "name": "StartUpOnOff",
+                        "type": "enum(StartUpOnOffEnum)",
+                        "values": [
+                            "Off",
+                            "On",
+                            "Toggle"
+                        ],
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ]
+                    }
+                ],
+                "commands": [
+                    {
+                        "id": "0x00",
+                        "name": "Off",
+                        "conformance": "mandatory"
+                    },
+                    {
+                        "id": "0x01",
+                        "name": "On",
+                        "conformance": "mandatory"
+                    },
+                    {
+                        "id": "0x02",
+                        "name": "Toggle",
+                        "conformance": "mandatory"
+                    },
+                    {
+                        "id": "0x40",
+                        "name": "OffWithEffect",
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ],
+                        "fields": [
+                            {
+                                "name": "EffectIdentifier",
+                                "type": "enum",
+                                "values": [
+                                    "DelayedAllOff",
+                                    "DyingLight"
+                                ]
+                            },
+                            {
+                                "name": "EffectVariant",
+                                "type": "enum"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "0x41",
+                        "name": "OnWithRecallGlobalScene",
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ]
+                    },
+                    {
+                        "id": "0x42",
+                        "name": "OnWithTimedOff",
+                        "conformance": "mandatory",
+                        "requires": [
+                            "LT"
+                        ],
+                        "fields": [
+                            {
+                                "name": "OnOffControl",
+                                "type": "bitmap",
+                                "range": [
+                                    0,
+                                    1
+                                ]
+                            },
+                            {
+                                "name": "OnTime",
+                                "type": "uint16",
+                                "max": 65534
+                            },
+                            {
+                                "name": "OffWaitTime",
+                                "type": "uint16",
+                                "max": 65534
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "0x0008",
+                "name": "Level Control",
+                "side": "server",
+                "conformance": "optional",
+                "features": [
+                    {
+                        "code": "OO",
+                        "conformance": "mandatory"
+                    },
+                    {
+                        "code": "LT",
+                        "conformance": "mandatory"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "id": "0x0000",
+                        "name": "CurrentLevel",
+                        "type": "uint8",
+                        "constraint": {
+                            "min": 1,
+                            "max": 254
+                        }
+                    },
+                    {
+                        "id": "0x0002",
+                        "name": "MinLevel",
+                        "type": "uint8",
+                        "constraint": {
+                            "allowed": 1
+                        }
+                    },
+                    {
+                        "id": "0x0003",
+                        "name": "MaxLevel",
+                        "type": "uint8",
+                        "constraint": {
+                            "allowed": 254
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-06-29T10:19:23.305463+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-06-29T10:19:28.444671+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-06-29T10:19:29.002743+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        }
+    ]
+}
