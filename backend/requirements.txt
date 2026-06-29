@@ -35,3 +35,6 @@ httpx==0.28.1
 # Testing
 pytest==8.3.5
 pytest-asyncio==0.25.3
+
+# Logging
+python-json-logger==3.2.1

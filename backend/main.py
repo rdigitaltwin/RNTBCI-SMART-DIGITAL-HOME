@@ -14,10 +14,28 @@ from backend.services.simulation import device_simulator
 from backend.utils.seed import seed_database
 from backend.websockets.manager import ws_manager
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+import os
+from pythonjsonlogger import jsonlogger
+
+# Set up JSON logging to file
+log_dir = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "system.log")
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+# JSON File Handler
+file_handler = logging.FileHandler(log_file)
+formatter = jsonlogger.JsonFormatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+file_handler.setFormatter(formatter)
+root_logger.addHandler(file_handler)
+
+# Standard Console Handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+root_logger.addHandler(console_handler)
+
 logger = logging.getLogger(__name__)
 settings = get_settings()
 

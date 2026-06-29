@@ -343,7 +343,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to see the cinematic landing page.
 
-### 4. Default Credentials
+### 4. Mobile App Setup (Flutter)
+
+```bash
+cd mobile_app
+flutter pub get
+flutter run
+```
+
+Ensure you have a device connected or an emulator/simulator running.
+
+### 5. Default Credentials
 
 | Role | Email | Password |
 |---|---|---|

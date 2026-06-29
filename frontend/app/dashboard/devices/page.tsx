@@ -288,6 +288,24 @@ function DeviceCard({ device }: { device: Device }) {
               No advanced controls available for this device type.
             </div>
           )}
+
+          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center' }}>
+            <button 
+              onClick={() => window.open(`http://localhost:8000/api/v1/system/logs/device/${device.id}/download`, '_blank')}
+              style={{
+                background: 'rgba(0, 229, 255, 0.1)',
+                border: '1px solid rgba(0, 229, 255, 0.3)',
+                color: '#00E5FF',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              Download Device JSON Logs
+            </button>
+          </div>
         </div>
       )}
 

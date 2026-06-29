@@ -91,6 +91,31 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ))}
+              <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>System Logs</h4>
+                <p style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '16px' }}>
+                  Download the comprehensive JSON-formatted system logs for debugging and analysis.
+                </p>
+                <button
+                  onClick={() => window.open('http://localhost:8000/api/v1/system/logs/download', '_blank')}
+                  style={{
+                    background: 'rgba(0, 229, 255, 0.1)',
+                    border: '1px solid rgba(0, 229, 255, 0.3)',
+                    color: '#00E5FF',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <Settings size={16} />
+                  Download System Logs
+                </button>
+              </div>
             </div>
           )}
           {!['general', 'system'].includes(activeTab) && (

@@ -15,6 +15,7 @@ from backend.api.v1.enterprise import (
     timetravel_router,
 )
 from backend.api.v1.events import alerts_router, events_router
+from backend.api.v1.system import router as system_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -25,6 +26,7 @@ api_v1_router.include_router(dashboard_router)
 api_v1_router.include_router(energy_router)
 api_v1_router.include_router(events_router)
 api_v1_router.include_router(alerts_router)
+api_v1_router.include_router(system_router)
 
 # Enterprise modules
 api_v1_router.include_router(simulation_router)
