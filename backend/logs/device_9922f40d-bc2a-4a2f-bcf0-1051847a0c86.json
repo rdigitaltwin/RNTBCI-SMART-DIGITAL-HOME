@@ -1,1 +1,0 @@
-{"asctime": "2026-06-29 15:38:38,433", "levelname": "INFO", "name": "device.9922f40d-bc2a-4a2f-bcf0-1051847a0c86", "message": "Device 9922f40d-bc2a-4a2f-bcf0-1051847a0c86 communication", "device_id": "9922f40d-bc2a-4a2f-bcf0-1051847a0c86", "action": "power_toggle", "payload": {"power_state": "on"}, "source": "api"}

@@ -24,13 +24,14 @@ async def download_system_logs():
         filename="system_logs.json"
     )
 
-@router.get("/logs/device/{device_id}/download", summary="Download device logs")
-async def download_device_logs(device_id: str):
+@router.get("/logs/device/{device_name}/download", summary="Download device logs")
+async def download_device_logs(device_name: str):
     """Download the JSON-formatted communication log file for a specific device."""
+    safe_name = device_name.replace(" ", "_")
     log_file_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
         "logs", 
-        f"device_{device_id}.json"
+        f"device_{safe_name}.json"
     )
     
     if not os.path.exists(log_file_path):
@@ -39,5 +40,5 @@ async def download_device_logs(device_id: str):
     return FileResponse(
         path=log_file_path,
         media_type="application/json",
-        filename=f"device_{device_id}_logs.json"
+        filename=f"device_{safe_name}_logs.json"
     )

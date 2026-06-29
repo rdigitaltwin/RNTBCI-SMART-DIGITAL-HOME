@@ -291,7 +291,7 @@ function DeviceCard({ device }: { device: Device }) {
 
           <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center' }}>
             <button 
-              onClick={() => window.open(`http://localhost:8000/api/v1/system/logs/device/${device.id}/download`, '_blank')}
+              onClick={() => window.open(`http://localhost:8000/api/v1/system/logs/device/${encodeURIComponent(device.name)}/download`, '_blank')}
               style={{
                 background: 'rgba(0, 229, 255, 0.1)',
                 border: '1px solid rgba(0, 229, 255, 0.3)',

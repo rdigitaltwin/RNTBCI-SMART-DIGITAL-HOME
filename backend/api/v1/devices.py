@@ -266,7 +266,7 @@ async def update_device(
     await db.commit()
 
     # Log device update communication
-    DeviceLogger.log_communication(str(device.id), "update_device", data.model_dump(exclude_unset=True))
+    DeviceLogger.log_communication(str(device.id), device.name, "update_device", data.model_dump(exclude_unset=True))
 
     # Reload room relationship
     await db.refresh(device, ["room"])
@@ -398,7 +398,7 @@ async def control_device(
     await db.commit()
 
     # Log device communication
-    DeviceLogger.log_communication(str(device.id), "control_command", {"command": data.command, "parameters": data.parameters})
+    DeviceLogger.log_communication(str(device.id), device.name, "control_command", {"command": data.command, "parameters": data.parameters})
 
     # Cache and publish
     await redis_client.set_device_state(str(device.id), {
@@ -467,7 +467,7 @@ async def toggle_power(
     await db.commit()
 
     # Log device communication
-    DeviceLogger.log_communication(str(device.id), "power_toggle", {"power_state": data.power_state})
+    DeviceLogger.log_communication(str(device.id), device.name, "power_toggle", {"power_state": data.power_state})
 
     device_resp = _device_to_response(device)
     await redis_client.publish_device_update(str(device.id), {
