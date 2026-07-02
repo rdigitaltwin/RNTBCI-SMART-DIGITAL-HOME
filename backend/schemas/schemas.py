@@ -157,6 +157,12 @@ class DevicePowerRequest(BaseModel):
     power_state: str = Field(..., pattern="^(on|off|standby)$")
 
 
+class DeviceStateRequest(BaseModel):
+    """Device state toggle."""
+
+    status: str = Field(..., pattern="^(ON|OFF)$")
+
+
 class DeviceResponse(BaseModel):
     """Device data response."""
 

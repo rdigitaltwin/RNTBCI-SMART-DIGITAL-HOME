@@ -591,7 +591,7 @@ export function DigitalTwinScene() {
     { id: '6', name: 'Garage Door', type: 'garage_door', status: 'online', power_state: 'on', energy_usage_kw: 0.005, efficiency_percent: 90, metadata: { position: 'closed' }, position_x: -5.5, position_y: 0, position_z: 2.5, room_id: '4', connectivity: 'connected', last_updated: '' },
     { id: '7', name: 'Door Lock', type: 'door_lock', status: 'online', power_state: 'on', energy_usage_kw: 0.003, efficiency_percent: 99, metadata: { lock_state: 'locked' }, position_x: 3, position_y: 1, position_z: 0, room_id: '5', connectivity: 'connected', last_updated: '' },
     { id: '8', name: 'Security Camera', type: 'camera', status: 'online', power_state: 'on', energy_usage_kw: 0.015, efficiency_percent: 96, metadata: { recording: true }, position_x: -3, position_y: 2.5, position_z: 0, room_id: '4', connectivity: 'connected', last_updated: '' },
-  ] as Device[];
+  ] as unknown as Device[];
 
   return (
     <>

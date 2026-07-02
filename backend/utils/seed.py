@@ -202,7 +202,7 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
     devices = []
     device_configs = [
         # Living Room
-        ("Living Room Main Light", DeviceType.SMART_LIGHT, "living_room", PowerState.ON, 0.012,
+        ("Living Room Main Light", DeviceType.SMART_LIGHT, "living_room", PowerState.OFF, 0.012,
          {"brightness": 85, "rgb": {"r": 255, "g": 240, "b": 220}, "color_temperature": 4000}, 1.0, 2.8, 1.0),
         ("Living Room AC", DeviceType.HVAC, "living_room", PowerState.OFF, 2.1,
          {"temperature": 23.5, "target_temperature": 22, "mode": "cooling", "fan_speed": "medium"}, 0.5, 2.5, 0.0),

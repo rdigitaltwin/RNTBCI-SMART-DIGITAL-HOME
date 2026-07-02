@@ -111,6 +111,10 @@ class APIClient {
     return this.request(`/api/v1/devices/${id}/power`, { method: 'PATCH', body: { power_state: powerState } });
   }
 
+  async toggleState(id: string, status: string) {
+    return this.request(`/api/v1/devices/${id}/state`, { method: 'PATCH', body: { status } });
+  }
+
   async getDeviceState(id: string) {
     return this.request(`/api/v1/devices/${id}/state`);
   }

@@ -15,365 +15,9 @@ import {
 import api from '@/services/api';
 import { useDeviceStore, type Device } from '@/store';
 
-// =============================================================================
-// DEVICE TYPE CONFIG
-// =============================================================================
-
-const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
-  smart_light: { emoji: '💡', label: 'Smart Light', color: '#FFC857' },
-  smart_switch: { emoji: '🔌', label: 'Smart Switch', color: '#94A3B8' },
-  smart_plug: { emoji: '🔌', label: 'Smart Plug', color: '#8B5CF6' },
-  door_lock: { emoji: '🔒', label: 'Door Lock', color: '#3B82F6' },
-  garage_door: { emoji: '🚗', label: 'Garage Door', color: '#6366F1' },
-  hvac: { emoji: '❄️', label: 'HVAC', color: '#00B4D8' },
-  washing_machine: { emoji: '🧺', label: 'Washing Machine', color: '#06B6D4' },
-  dishwasher: { emoji: '🍽️', label: 'Dishwasher', color: '#14B8A6' },
-  refrigerator: { emoji: '🧊', label: 'Refrigerator', color: '#22D3EE' },
-  water_heater: { emoji: '🔥', label: 'Water Heater', color: '#F97316' },
-  nebulizer: { emoji: '💨', label: 'Nebulizer', color: '#A78BFA' },
-  router: { emoji: '📡', label: 'Router', color: '#10B981' },
-  camera: { emoji: '📷', label: 'Camera', color: '#EF4444' },
-  smart_tv: { emoji: '📺', label: 'Smart TV', color: '#EC4899' },
-};
-
-// =============================================================================
-// DEVICE CARD
-// =============================================================================
-
-function DeviceCard({ device }: { device: Device }) {
-  const [toggling, setToggling] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const config = DEVICE_TYPE_CONFIG[device.type] || { emoji: '📱', label: device.type, color: '#94A3B8' };
-  const isOn = device.power_state === 'on';
-  const meta = device.metadata || {};
-
-  const handlePowerToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setToggling(true);
-    try {
-      const newState = isOn ? 'off' : 'on';
-      // Optimistic update
-      useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
-      await api.togglePower(device.id, newState);
-    } catch { 
-      // Revert if API fails
-      useDeviceStore.getState().updateDevice(device.id, { power_state: isOn ? 'on' : 'off' });
-    }
-    setToggling(false);
-  };
-
-  const handleControl = async (command: string, params: Record<string, unknown> = {}) => {
-    // Optimistic UI update
-    const currentMeta = device.metadata || {};
-    const newMeta = { ...currentMeta, ...params };
-    useDeviceStore.getState().updateDevice(device.id, { metadata: newMeta });
-    
-    try {
-      await api.controlDevice(device.id, command, params);
-    } catch {
-      // API not connected
-    }
-  };
-
-  const getDeviceInfo = () => {
-    switch (device.type) {
-      case 'hvac':
-        return `${(meta.temperature as number)?.toFixed(1) || '—'}°C → ${meta.target_temperature || '—'}°C • ${meta.fan_speed || 'auto'}`;
-      case 'refrigerator':
-        return `${(meta.temperature as number)?.toFixed(1) || '—'}°C • ${meta.cooling_status || 'standby'}`;
-      case 'router':
-        return `↓${meta.download_speed || '—'} ↑${meta.upload_speed || '—'} Mbps • ${meta.connected_clients || 0} clients`;
-      case 'smart_light':
-        return `Brightness: ${meta.brightness || 0}% • ${(meta.color_temperature as number) || 4000}K`;
-      case 'water_heater':
-        return `${(meta.temperature as number)?.toFixed(1) || '—'}°C → ${meta.target_temperature || '—'}°C`;
-      case 'door_lock':
-        return `${meta.lock_state || 'unknown'} • Auto-lock: ${meta.auto_lock ? 'ON' : 'OFF'}`;
-      case 'camera':
-        return `Recording: ${meta.recording ? 'ON' : 'OFF'} • Night: ${meta.night_vision ? 'ON' : 'OFF'}`;
-      case 'smart_tv':
-        return `Volume: ${meta.volume || 0} • Source: ${meta.input_source || 'hdmi1'}`;
-      case 'washing_machine':
-        return meta.running ? `Running • ${meta.remaining_time || 0}s remaining` : 'Idle';
-      case 'garage_door':
-        return `Position: ${meta.position || 'closed'}`;
-      default:
-        return isOn ? 'Active' : 'Standby';
-    }
-  };
-
-  return (
-    <>
-    <div className={`device-card ${device.status}`} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setExpanded(true)}>
-      {/* Status indicator line */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
-        background: `linear-gradient(90deg, transparent, ${config.color}, transparent)`,
-        opacity: isOn ? 1 : 0.3,
-      }} />
-
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '44px', height: '44px', borderRadius: '12px',
-            background: `${config.color}15`, border: `1px solid ${config.color}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '22px',
-          }}>
-            {config.emoji}
-          </div>
-          <div>
-            <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', lineHeight: 1.3 }}>{device.name}</h4>
-            <span style={{ fontSize: '11px', color: '#64748B' }}>{config.label}</span>
-          </div>
-        </div>
-        <div className={`status-dot ${device.status}`} />
-      </div>
-
-      {/* Device Info */}
-      <div style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        color: '#94A3B8', marginBottom: '16px', lineHeight: 1.5,
-        minHeight: '32px',
-      }}>
-        {getDeviceInfo()}
-      </div>
-
-      {/* Power & Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Zap size={14} color={isOn ? '#FFC857' : '#64748B'} />
-          <span style={{
-            fontFamily: "'Orbitron', monospace", fontSize: '16px', fontWeight: 700,
-            color: isOn ? '#F8FAFC' : '#64748B',
-          }}>
-            {isOn ? `${(device.energy_usage_kw * 1000).toFixed(0)}` : '0'}
-          </span>
-          <span style={{ fontSize: '11px', color: '#64748B' }}>W</span>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button
-            onClick={handlePowerToggle}
-            disabled={toggling}
-            style={{
-              width: '48px', height: '28px', borderRadius: '14px',
-              background: isOn
-                ? `linear-gradient(135deg, ${config.color}, ${config.color}CC)`
-                : 'rgba(100, 116, 139, 0.2)',
-              border: `1px solid ${isOn ? config.color + '50' : 'rgba(100, 116, 139, 0.3)'}`,
-              cursor: 'pointer', position: 'relative',
-              transition: 'all 0.3s',
-              boxShadow: isOn ? `0 0 12px ${config.color}40` : 'none',
-              opacity: toggling ? 0.5 : 1,
-            }}
-          >
-            <div style={{
-              width: '22px', height: '22px', borderRadius: '50%',
-              background: '#FFF', position: 'absolute', top: '2px',
-              left: isOn ? '23px' : '2px',
-              transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-            }} />
-          </button>
-        </div>
-      </div>
-      {/* Advanced Controls Dropdown / Popup */}
-      {expanded && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backdropFilter: 'blur(8px)'
-        }} onClick={(e) => { e.stopPropagation(); setExpanded(false); }}>
-          <div style={{
-            width: '400px', background: 'rgba(11, 17, 32, 0.95)', border: `1px solid ${config.color}50`,
-            borderRadius: '16px', padding: '24px', boxShadow: `0 0 20px ${config.color}20`,
-            maxHeight: '80vh', overflowY: 'auto'
-          }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px' }}>{config.emoji}</span>
-                <h3 style={{ margin: 0, color: '#F8FAFC', fontSize: '16px' }}>{device.name} Controls</h3>
-              </div>
-              <button onClick={() => setExpanded(false)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={20} />
-              </button>
-            </div>
-          
-          {/* Telemetry Stats */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '11px', color: '#64748B' }}>Turned On At</span>
-              <span style={{ fontSize: '13px', color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                {device.turned_on_at ? new Date(device.turned_on_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
-              <span style={{ fontSize: '11px', color: '#64748B' }}>Total Energy</span>
-              <span style={{ fontSize: '13px', color: '#00E5FF', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
-                {device.total_energy_kwh ? device.total_energy_kwh.toFixed(4) : '0.0000'} kWh
-              </span>
-            </div>
-          </div>
-
-          {device.type === 'smart_light' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Brightness</span>
-                  <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.brightness as number || 0}%</span>
-                </div>
-                <input type="range" min="0" max="100" value={meta.brightness as number || 0} onChange={(e) => handleControl('set_brightness', { brightness: parseInt(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Color Temp</span>
-                  <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.color_temperature as number || 4000}K</span>
-                </div>
-                <input type="range" min="2700" max="6500" step="100" value={meta.color_temperature as number || 4000} onChange={(e) => handleControl('set_color_temp', { color_temperature: parseInt(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
-              </div>
-              <div style={{ marginTop: '4px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Light Mode</span>
-                </div>
-                <select value={meta.sim_state as string || 'on'} onChange={(e) => handleControl('set_light_mode', { sim_state: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
-                  <option value="on">On (Normal)</option>
-                  <option value="dim">Dim</option>
-                  <option value="medium">Medium</option>
-                  <option value="high_intensity">High Intensity</option>
-                  <option value="blinking">Blinking</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {device.type === 'hvac' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Target Temp</span>
-                  <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.target_temperature as number || 22}°C</span>
-                </div>
-                <input type="range" min="16" max="30" step="0.5" value={meta.target_temperature as number || 22} onChange={(e) => handleControl('set_temperature', { target_temperature: parseFloat(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <select value={meta.mode as string || 'cooling'} onChange={(e) => handleControl('set_mode', { mode: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
-                  <option value="cooling">Cooling</option>
-                  <option value="heating">Heating</option>
-                  <option value="auto">Auto</option>
-                  <option value="fan_only">Fan Only</option>
-                </select>
-                <select value={meta.fan_speed as string || 'auto'} onChange={(e) => handleControl('set_fan', { fan_speed: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="auto">Auto</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {device.type === 'door_lock' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Lock State</span>
-                <button onClick={() => handleControl(meta.lock_state === 'locked' ? 'unlock' : 'lock', { lock_state: meta.lock_state === 'locked' ? 'unlocked' : 'locked' })} style={{ padding: '6px 12px', borderRadius: '6px', background: meta.lock_state === 'locked' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)', border: `1px solid ${meta.lock_state === 'locked' ? '#3B82F6' : '#EF4444'}`, color: meta.lock_state === 'locked' ? '#3B82F6' : '#EF4444', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
-                  {meta.lock_state === 'locked' ? 'LOCKED' : 'UNLOCKED'}
-                </button>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Auto-Lock</span>
-                <button onClick={() => handleControl('set_auto_lock', { auto_lock: !meta.auto_lock })} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  {meta.auto_lock ? <ToggleRight size={24} color={config.color} /> : <ToggleLeft size={24} color="#64748B" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {device.type === 'camera' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Recording</span>
-                <button onClick={() => handleControl('set_recording', { recording: !meta.recording })} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  {meta.recording ? <ToggleRight size={24} color={config.color} /> : <ToggleLeft size={24} color="#64748B" />}
-                </button>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Night Vision</span>
-                <button onClick={() => handleControl('set_night_vision', { night_vision: !meta.night_vision })} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  {meta.night_vision ? <ToggleRight size={24} color={config.color} /> : <ToggleLeft size={24} color="#64748B" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {device.type === 'washing_machine' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Cycle Mode</span>
-                <select value={meta.wash_mode as string || 'normal'} onChange={(e) => handleControl('set_wash_mode', { wash_mode: e.target.value })} style={{ width: '120px', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
-                  <option value="normal">Normal</option>
-                  <option value="quick">Quick Wash</option>
-                  <option value="heavy">Heavy Duty</option>
-                  <option value="delicate">Delicate</option>
-                </select>
-              </div>
-            </div>
-          )}
-          
-          {!['smart_light', 'hvac', 'door_lock', 'camera', 'washing_machine'].includes(device.type) && (
-            <div style={{ textAlign: 'center', color: '#64748B', fontSize: '12px', padding: '8px' }}>
-              No advanced controls available for this device type.
-            </div>
-          )}
-
-          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center' }}>
-            <button 
-              onClick={() => window.open(`http://localhost:8000/api/v1/system/logs/device/${encodeURIComponent(device.name)}/download`, '_blank')}
-              style={{
-                background: 'rgba(0, 229, 255, 0.1)',
-                border: '1px solid rgba(0, 229, 255, 0.3)',
-                color: '#00E5FF',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '11px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Download Device JSON Logs
-            </button>
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* Efficiency bar */}
-      <div style={{ marginTop: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span style={{ fontSize: '10px', color: '#64748B' }}>Efficiency</span>
-          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", color: '#94A3B8' }}>
-            {device.efficiency_percent?.toFixed(0) || 90}%
-          </span>
-        </div>
-        <div style={{
-          width: '100%', height: '3px', borderRadius: '2px',
-          background: 'rgba(255,255,255,0.05)',
-        }}>
-          <div style={{
-            width: `${device.efficiency_percent || 90}%`, height: '100%',
-            borderRadius: '2px',
-            background: `linear-gradient(90deg, ${config.color}, ${config.color}80)`,
-            transition: 'width 0.5s',
-          }} />
-        </div>
-      </div>
-    </div>
-    </>
-  );
-}
-
+import DeviceCard from './components/DeviceCard';
+import DevicePanel from './components/DevicePanel';
+import { DEVICE_TYPE_CONFIG } from './constants';
 // =============================================================================
 // DEVICE ONBOARDING MODAL
 // =============================================================================
@@ -541,6 +185,7 @@ export default function DevicesPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -669,14 +314,13 @@ export default function DevicesPage() {
         </select>
       </div>
 
-      {/* Device Grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         gap: '16px',
       }}>
         {displayDevices.map((device) => (
-          <DeviceCard key={device.id} device={device} />
+          <DeviceCard key={device.id} device={device} onClick={() => setSelectedDevice(device)} />
         ))}
       </div>
 
@@ -684,6 +328,11 @@ export default function DevicesPage() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onAdd={(device) => addDevice(device)} 
+      />
+
+      <DevicePanel 
+        device={selectedDevice} 
+        onClose={() => setSelectedDevice(null)} 
       />
     </div>
   );

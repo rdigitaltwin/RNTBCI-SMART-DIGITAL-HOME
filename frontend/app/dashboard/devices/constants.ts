@@ -1,0 +1,16 @@
+export const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
+  smart_light: { emoji: '💡', label: 'Smart Light', color: '#FFC857' },
+  smart_switch: { emoji: '🔌', label: 'Smart Switch', color: '#94A3B8' },
+  smart_plug: { emoji: '🔌', label: 'Smart Plug', color: '#8B5CF6' },
+  door_lock: { emoji: '🔒', label: 'Door Lock', color: '#3B82F6' },
+  garage_door: { emoji: '🚗', label: 'Garage Door', color: '#6366F1' },
+  hvac: { emoji: '❄️', label: 'HVAC', color: '#00B4D8' },
+  washing_machine: { emoji: '🧺', label: 'Washing Machine', color: '#06B6D4' },
+  dishwasher: { emoji: '🍽️', label: 'Dishwasher', color: '#14B8A6' },
+  refrigerator: { emoji: '🧊', label: 'Refrigerator', color: '#22D3EE' },
+  water_heater: { emoji: '🔥', label: 'Water Heater', color: '#F97316' },
+  nebulizer: { emoji: '💨', label: 'Nebulizer', color: '#A78BFA' },
+  router: { emoji: '📡', label: 'Router', color: '#10B981' },
+  camera: { emoji: '📷', label: 'Camera', color: '#EF4444' },
+  smart_tv: { emoji: '📺', label: 'Smart TV', color: '#EC4899' },
+};

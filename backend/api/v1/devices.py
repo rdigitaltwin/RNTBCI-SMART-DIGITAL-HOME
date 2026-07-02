@@ -33,6 +33,7 @@ from backend.schemas import (
     DeviceEventResponse,
     DeviceListResponse,
     DevicePowerRequest,
+    DeviceStateRequest,
     DeviceResponse,
     DeviceStateResponse,
     DeviceUpdateRequest,
@@ -480,6 +481,84 @@ async def toggle_power(
         "event_type": "power_toggle",
         "severity": "info",
         "message": f"{device.name}: {old_state} → {data.power_state}",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    return device_resp
+
+
+@router.patch("/{device_id}/state", response_model=DeviceResponse)
+@limiter.limit("60/minute")
+async def toggle_state(
+    request: Request,
+    device_id: uuid.UUID,
+    data: DeviceStateRequest,
+    current_user: User = Depends(require_user_or_admin),
+    db: AsyncSession = Depends(get_db),
+) -> DeviceResponse:
+    """Toggle device state (ON/OFF)."""
+    result = await db.execute(
+        select(Device)
+        .options(selectinload(Device.room))
+        .where(Device.id == device_id)
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+
+    power_state_str = "on" if data.status == "ON" else "off"
+    old_state = device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state
+    device.power_state = PowerState(power_state_str)
+    device.last_updated = datetime.now(timezone.utc)
+
+    # Typical power load estimations based on device type
+    typical_loads = {
+        DeviceType.HVAC: 2100.0,
+        DeviceType.WATER_HEATER: 1500.0,
+        DeviceType.SMART_TV: 120.0,
+        DeviceType.ROUTER: 12.0,
+        DeviceType.SMART_LIGHT: 15.0,
+        DeviceType.WASHING_MACHINE: 500.0,
+        DeviceType.REFRIGERATOR: 150.0,
+    }
+    
+    # Update energy usage based on power state
+    if power_state_str == "off":
+        device.energy_usage_kw = 0.0
+    else:
+        # If no specific load, we just leave it or set a generic fallback
+        default_load = typical_loads.get(device.type, 50.0) / 1000.0
+        device.energy_usage_kw = default_load
+
+    # Log event
+    event = DeviceEvent(
+        device_id=device.id,
+        event_type="power_toggle",
+        severity=EventSeverity.INFO,
+        message=f"Power state changed from {old_state} to {power_state_str} by {current_user.username}",
+        extra_data={"old_state": old_state, "new_state": power_state_str, "user": current_user.username},
+    )
+    db.add(event)
+
+    await db.commit()
+
+    # Log device communication
+    DeviceLogger.log_communication(str(device.id), device.name, "power_toggle", {"power_state": power_state_str})
+
+    device_resp = _device_to_response(device)
+    
+    # The user specifically requested this event structure if websockets exist
+    await redis_client.publish_device_update(str(device.id), {
+        "action": "device.updated",
+        "device": device_resp.model_dump(mode="json"),
+    })
+    
+    await redis_client.publish_event({
+        "device_id": str(device.id),
+        "device_name": device.name,
+        "event_type": "power_toggle",
+        "severity": "info",
+        "message": f"{device.name} turned {data.status}. Power usage dropped by {int(device.energy_usage_kw * 1000)}W" if data.status == "OFF" else f"{device.name} turned {data.status}. Power usage increased by {int(device.energy_usage_kw * 1000)}W",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
 
