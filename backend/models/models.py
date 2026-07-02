@@ -277,7 +277,11 @@ class Device(Base):
         Enum(ConnectivityStatus), default=ConnectivityStatus.CONNECTED
     )
     energy_usage_kw: Mapped[float] = mapped_column(Float, default=0.0)
+    total_energy_kwh: Mapped[float] = mapped_column(Float, default=0.0)
     efficiency_percent: Mapped[float] = mapped_column(Float, default=100.0)
+    turned_on_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     position_x: Mapped[float] = mapped_column(Float, default=0.0)
     position_y: Mapped[float] = mapped_column(Float, default=0.0)
@@ -377,7 +381,7 @@ class EnergyHistory(Base):
         UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
     )
     power_kw: Mapped[float] = mapped_column(Float, nullable=False)
-    voltage: Mapped[float] = mapped_column(Float, default=220.0)
+    voltage: Mapped[float] = mapped_column(Float, default=230.0)
     current_amps: Mapped[float] = mapped_column(Float, default=0.0)
     cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
     timestamp: Mapped[datetime] = mapped_column(

@@ -169,11 +169,13 @@ class DeviceResponse(BaseModel):
     power_state: str
     connectivity: str
     energy_usage_kw: float
+    total_energy_kwh: float
     efficiency_percent: float
     metadata: dict
     position_x: float
     position_y: float
     position_z: float
+    turned_on_at: datetime | None
     last_updated: datetime
     created_at: datetime
 

@@ -247,7 +247,7 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
         ("Washing Machine", DeviceType.WASHING_MACHINE, "utility_room", PowerState.OFF, 0.0,
          {"wash_mode": "normal", "spin_speed": 1000, "remaining_time": 0, "running": False}, 7.5, 0.5, 5.0),
         ("Smart Plug - Dryer", DeviceType.SMART_PLUG, "utility_room", PowerState.ON, 0.8,
-         {"voltage": 220, "current": 3.6, "energy_usage": 0.8}, 7.5, 0.5, 4.0),
+         {"voltage": 230, "current": 3.4, "energy_usage": 0.8}, 7.5, 0.5, 4.0),
         ("Utility Light", DeviceType.SMART_LIGHT, "utility_room", PowerState.ON, 0.01,
          {"brightness": 60, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 4500}, 8.0, 2.8, 5.5),
 
@@ -330,7 +330,7 @@ async def _seed_energy_history(db: AsyncSession, devices: list[Device]) -> None:
                     power += random.gauss(0, power * 0.1)
                     power = max(0, power)
 
-                    voltage = 220 + random.gauss(0, 2)
+                    voltage = 230 + random.gauss(0, 2)
                     current = (power * 1000) / voltage if voltage > 0 else 0
                     cost = power * 0.25 * 0.12  # 15 min = 0.25 hr
 

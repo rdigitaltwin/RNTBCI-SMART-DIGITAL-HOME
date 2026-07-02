@@ -35,6 +35,8 @@ export interface Device {
   position_x: number;
   position_y: number;
   position_z: number;
+  turned_on_at: string | null;
+  total_energy_kwh: number;
   last_updated: string;
 }
 

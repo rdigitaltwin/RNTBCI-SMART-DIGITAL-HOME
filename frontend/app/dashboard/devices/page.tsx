@@ -190,6 +190,23 @@ function DeviceCard({ device }: { device: Device }) {
       {/* Advanced Controls Dropdown */}
       {expanded && (
         <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', animation: 'fadeIn 0.2s ease-out' }}>
+          
+          {/* Telemetry Stats */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#64748B' }}>Turned On At</span>
+              <span style={{ fontSize: '13px', color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                {device.turned_on_at ? new Date(device.turned_on_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
+              <span style={{ fontSize: '11px', color: '#64748B' }}>Total Energy</span>
+              <span style={{ fontSize: '13px', color: '#00E5FF', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
+                {device.total_energy_kwh ? device.total_energy_kwh.toFixed(4) : '0.0000'} kWh
+              </span>
+            </div>
+          </div>
+
           {device.type === 'smart_light' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
@@ -205,6 +222,18 @@ function DeviceCard({ device }: { device: Device }) {
                   <span style={{ fontSize: '11px', color: '#F8FAFC' }}>{meta.color_temperature as number || 4000}K</span>
                 </div>
                 <input type="range" min="2700" max="6500" step="100" value={meta.color_temperature as number || 4000} onChange={(e) => handleControl('set_color_temp', { color_temperature: parseInt(e.target.value) })} style={{ width: '100%', accentColor: config.color }} />
+              </div>
+              <div style={{ marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', color: '#94A3B8' }}>Light Mode</span>
+                </div>
+                <select value={meta.sim_state as string || 'on'} onChange={(e) => handleControl('set_light_mode', { sim_state: e.target.value })} style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(11, 17, 32, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: '#F8FAFC', fontSize: '11px', outline: 'none' }}>
+                  <option value="on">On (Normal)</option>
+                  <option value="dim">Dim</option>
+                  <option value="medium">Medium</option>
+                  <option value="high_intensity">High Intensity</option>
+                  <option value="blinking">Blinking</option>
+                </select>
               </div>
             </div>
           )}

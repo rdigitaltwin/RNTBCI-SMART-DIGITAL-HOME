@@ -117,7 +117,10 @@ LOAD_PROFILES = {
     },
     DeviceType.SMART_LIGHT: {
         "on": {"power_w": 12, "noise": 1},
-        "dimmed": {"power_w": 5, "noise": 0.5},
+        "dim": {"power_w": 5, "noise": 0.5},
+        "medium": {"power_w": 10, "noise": 0.8},
+        "high_intensity": {"power_w": 15, "noise": 1.5},
+        "blinking": {"power_w": 8, "noise": 4},
         "off": {"power_w": 0.5, "noise": 0.1},
     },
     DeviceType.SMART_SWITCH: {
@@ -463,7 +466,11 @@ class SimulationEngine:
                     # Skip powered-off devices
                     if power_state == PowerState.OFF:
                         device.energy_usage_kw = 0.0
+                        device.turned_on_at = None
                         continue
+                    else:
+                        if device.turned_on_at is None:
+                            device.turned_on_at = now
 
                     # Advance state machine
                     state_change = tracker.tick(self._speed)
@@ -491,11 +498,13 @@ class SimulationEngine:
                     device.extra_data = metadata
 
                     # Record energy
-                    voltage = 220.0 + random.gauss(0, 2)
+                    voltage = 230.0 + random.gauss(0, 2)
                     current_a = power_w / voltage if voltage > 0 else 0
                     cost_per_kwh = 0.12
                     interval_hours = (1.0 * self._speed) / 3600.0
                     cost = power_kw * interval_hours * cost_per_kwh
+                    
+                    device.total_energy_kwh = (device.total_energy_kwh or 0.0) + (power_kw * interval_hours)
 
                     energy_record = EnergyHistory(
                         device_id=device.id,
