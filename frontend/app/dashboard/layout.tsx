@@ -222,6 +222,8 @@ function TopBar() {
   const wsConnected = useWSStore((s) => s.connected);
   const alerts = useEventStore((s) => s.alerts);
   const metrics = useSimulationStore((s) => s.metrics);
+  const devices = useDeviceStore((s) => s.devices);
+  const totalPower = devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0);
   const unacked = alerts.filter((a) => !a.acknowledged).length;
   const pathname = usePathname();
 
@@ -255,7 +257,7 @@ function TopBar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Zap size={14} color="#FFC857" />
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: '#FFC857' }}>
-            {((metrics.total_power_w || 0) / 1000).toFixed(1)}kW
+            {totalPower.toFixed(1)}kW
           </span>
         </div>
 

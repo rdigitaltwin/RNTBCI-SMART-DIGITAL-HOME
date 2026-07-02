@@ -204,17 +204,17 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
         # Living Room
         ("Living Room Main Light", DeviceType.SMART_LIGHT, "living_room", PowerState.ON, 0.012,
          {"brightness": 85, "rgb": {"r": 255, "g": 240, "b": 220}, "color_temperature": 4000}, 1.0, 2.8, 1.0),
-        ("Living Room AC", DeviceType.HVAC, "living_room", PowerState.ON, 2.1,
+        ("Living Room AC", DeviceType.HVAC, "living_room", PowerState.OFF, 2.1,
          {"temperature": 23.5, "target_temperature": 22, "mode": "cooling", "fan_speed": "medium"}, 0.5, 2.5, 0.0),
-        ("Smart TV 65\"", DeviceType.SMART_TV, "living_room", PowerState.ON, 0.12,
+        ("Smart TV 65\"", DeviceType.SMART_TV, "living_room", PowerState.OFF, 0.12,
          {"volume": 35, "channel": 1, "input_source": "hdmi1"}, 3.0, 0.1, 1.2),
-        ("Living Room Switch", DeviceType.SMART_SWITCH, "living_room", PowerState.ON, 0.001,
+        ("Living Room Switch", DeviceType.SMART_SWITCH, "living_room", PowerState.OFF, 0.001,
          {"state": "on"}, 0.0, 1.2, 5.0),
 
         # Kitchen
-        ("Kitchen Light", DeviceType.SMART_LIGHT, "kitchen", PowerState.ON, 0.015,
+        ("Kitchen Light", DeviceType.SMART_LIGHT, "kitchen", PowerState.OFF, 0.015,
          {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 5500}, 7.5, 2.8, 1.5),
-        ("Refrigerator", DeviceType.REFRIGERATOR, "kitchen", PowerState.ON, 0.08,
+        ("Refrigerator", DeviceType.REFRIGERATOR, "kitchen", PowerState.OFF, 0.08,
          {"temperature": 3.8, "door_state": "closed", "cooling_status": "active"}, 9.5, 0.3, 0.0),
         ("Dishwasher", DeviceType.DISHWASHER, "kitchen", PowerState.OFF, 0.0,
          {"wash_mode": "normal", "cycle": "idle"}, 8.0, 0.3, 0.0),
@@ -222,41 +222,41 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
         # Master Bedroom
         ("Bedroom Light", DeviceType.SMART_LIGHT, "master_bedroom", PowerState.OFF, 0.0,
          {"brightness": 50, "rgb": {"r": 255, "g": 200, "b": 150}, "color_temperature": 3000}, 2.0, 2.8, 7.0),
-        ("Bedroom AC", DeviceType.HVAC, "master_bedroom", PowerState.ON, 1.8,
+        ("Bedroom AC", DeviceType.HVAC, "master_bedroom", PowerState.OFF, 1.8,
          {"temperature": 21.0, "target_temperature": 21, "mode": "cooling", "fan_speed": "low"}, 0.5, 2.5, 5.5),
-        ("Door Lock", DeviceType.DOOR_LOCK, "master_bedroom", PowerState.ON, 0.003,
+        ("Door Lock", DeviceType.DOOR_LOCK, "master_bedroom", PowerState.OFF, 0.003,
          {"lock_state": "locked", "auto_lock": True, "auto_lock_delay": 30}, 0.0, 1.0, 5.5),
 
         # Bathroom
         ("Bathroom Light", DeviceType.SMART_LIGHT, "bathroom", PowerState.OFF, 0.0,
          {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 5000}, 6.5, 2.8, 6.5),
-        ("Water Heater", DeviceType.WATER_HEATER, "bathroom", PowerState.ON, 1.2,
+        ("Water Heater", DeviceType.WATER_HEATER, "bathroom", PowerState.OFF, 1.2,
          {"temperature": 48, "target_temperature": 50}, 7.5, 0.5, 5.5),
         ("Nebulizer", DeviceType.NEBULIZER, "bathroom", PowerState.OFF, 0.0,
          {"intensity": 50, "duration": 0, "running": False}, 6.0, 1.0, 7.0),
 
         # Garage
-        ("Garage Door", DeviceType.GARAGE_DOOR, "garage", PowerState.ON, 0.005,
+        ("Garage Door", DeviceType.GARAGE_DOOR, "garage", PowerState.OFF, 0.005,
          {"position": "closed"}, -5.5, 0.0, 2.5),
         ("Garage Light", DeviceType.SMART_LIGHT, "garage", PowerState.OFF, 0.0,
          {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 6000}, -5.5, 2.8, 0.0),
-        ("Security Camera", DeviceType.CAMERA, "garage", PowerState.ON, 0.015,
+        ("Security Camera", DeviceType.CAMERA, "garage", PowerState.OFF, 0.015,
          {"recording": True, "motion_detection": True, "night_vision": False}, -3.0, 2.5, 0.0),
 
         # Utility Room
         ("Washing Machine", DeviceType.WASHING_MACHINE, "utility_room", PowerState.OFF, 0.0,
          {"wash_mode": "normal", "spin_speed": 1000, "remaining_time": 0, "running": False}, 7.5, 0.5, 5.0),
-        ("Smart Plug - Dryer", DeviceType.SMART_PLUG, "utility_room", PowerState.ON, 0.8,
+        ("Smart Plug - Dryer", DeviceType.SMART_PLUG, "utility_room", PowerState.OFF, 0.8,
          {"voltage": 230, "current": 3.4, "energy_usage": 0.8}, 7.5, 0.5, 4.0),
-        ("Utility Light", DeviceType.SMART_LIGHT, "utility_room", PowerState.ON, 0.01,
+        ("Utility Light", DeviceType.SMART_LIGHT, "utility_room", PowerState.OFF, 0.01,
          {"brightness": 60, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 4500}, 8.0, 2.8, 5.5),
 
         # Hallway
-        ("Hallway Light", DeviceType.SMART_LIGHT, "hallway", PowerState.ON, 0.008,
+        ("Hallway Light", DeviceType.SMART_LIGHT, "hallway", PowerState.OFF, 0.008,
          {"brightness": 40, "rgb": {"r": 200, "g": 200, "b": 255}, "color_temperature": 4000}, 3.0, 2.8, 4.0),
-        ("WiFi Router", DeviceType.ROUTER, "hallway", PowerState.ON, 0.012,
+        ("WiFi Router", DeviceType.ROUTER, "hallway", PowerState.OFF, 0.012,
          {"upload_speed": 45, "download_speed": 95, "internet_status": "connected", "connected_clients": 8}, 3.5, 2.0, 2.5),
-        ("Front Door Lock", DeviceType.DOOR_LOCK, "hallway", PowerState.ON, 0.003,
+        ("Front Door Lock", DeviceType.DOOR_LOCK, "hallway", PowerState.OFF, 0.003,
          {"lock_state": "locked", "auto_lock": True, "auto_lock_delay": 60}, 3.0, 1.0, 0.0),
     ]
 

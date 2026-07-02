@@ -47,13 +47,18 @@ function DeviceCard({ device }: { device: Device }) {
   const isOn = device.power_state === 'on';
   const meta = device.metadata || {};
 
-  const handlePowerToggle = async () => {
+  const handlePowerToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     setToggling(true);
     try {
       const newState = isOn ? 'off' : 'on';
-      await api.togglePower(device.id, newState);
+      // Optimistic update
       useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
-    } catch { /* API not connected */ }
+      await api.togglePower(device.id, newState);
+    } catch { 
+      // Revert if API fails
+      useDeviceStore.getState().updateDevice(device.id, { power_state: isOn ? 'on' : 'off' });
+    }
     setToggling(false);
   };
 
@@ -98,7 +103,8 @@ function DeviceCard({ device }: { device: Device }) {
   };
 
   return (
-    <div className={`device-card ${device.status}`} style={{ position: 'relative' }}>
+    <>
+    <div className={`device-card ${device.status}`} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setExpanded(true)}>
       {/* Status indicator line */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
@@ -148,19 +154,6 @@ function DeviceCard({ device }: { device: Device }) {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button 
-            onClick={() => setExpanded(!expanded)} 
-            style={{ 
-              border: '1px solid rgba(255,255,255,0.1)', 
-              borderRadius: '14px', width: '28px', height: '28px', 
-              color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-              cursor: 'pointer', transition: 'all 0.3s',
-              background: expanded ? 'rgba(255,255,255,0.05)' : 'transparent'
-            }}
-          >
-            <ChevronDown size={14} style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
-          </button>
-          
           <button
             onClick={handlePowerToggle}
             disabled={toggling}
@@ -186,10 +179,27 @@ function DeviceCard({ device }: { device: Device }) {
           </button>
         </div>
       </div>
-
-      {/* Advanced Controls Dropdown */}
+      {/* Advanced Controls Dropdown / Popup */}
       {expanded && (
-        <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', animation: 'fadeIn 0.2s ease-out' }}>
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(8px)'
+        }} onClick={(e) => { e.stopPropagation(); setExpanded(false); }}>
+          <div style={{
+            width: '400px', background: 'rgba(11, 17, 32, 0.95)', border: `1px solid ${config.color}50`,
+            borderRadius: '16px', padding: '24px', boxShadow: `0 0 20px ${config.color}20`,
+            maxHeight: '80vh', overflowY: 'auto'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>{config.emoji}</span>
+                <h3 style={{ margin: 0, color: '#F8FAFC', fontSize: '16px' }}>{device.name} Controls</h3>
+              </div>
+              <button onClick={() => setExpanded(false)} style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={20} />
+              </button>
+            </div>
           
           {/* Telemetry Stats */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -336,6 +346,7 @@ function DeviceCard({ device }: { device: Device }) {
             </button>
           </div>
         </div>
+      </div>
       )}
 
       {/* Efficiency bar */}
@@ -359,6 +370,7 @@ function DeviceCard({ device }: { device: Device }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
@@ -570,7 +582,7 @@ export default function DevicesPage() {
     { id: '8', name: 'Water Heater', type: 'water_heater', status: 'online', power_state: 'on', energy_usage_kw: 1.2, efficiency_percent: 82, metadata: { temperature: 48, target_temperature: 50 }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
     { id: '9', name: 'Security Camera', type: 'camera', status: 'online', power_state: 'on', energy_usage_kw: 0.015, efficiency_percent: 96, metadata: { recording: true, night_vision: false, motion_detection: true }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
     { id: '10', name: 'Garage Door', type: 'garage_door', status: 'online', power_state: 'on', energy_usage_kw: 0.005, efficiency_percent: 90, metadata: { position: 'closed' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-  ] as Device[];
+  ] as unknown as Device[];
 
   return (
     <div className="fade-in">
