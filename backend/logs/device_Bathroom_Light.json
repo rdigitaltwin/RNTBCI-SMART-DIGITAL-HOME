@@ -226,6 +226,536 @@
                 "power_state": "on"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:05:58.524944+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:10:18.083430+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:10:20.016013+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.084840+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 99
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.090242+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 98
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.106300+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 97
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.113157+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 96
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.138307+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 95
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.147497+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 93
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.156414+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 98
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.159310+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 92
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.172003+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 91
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.188482+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 90
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.205740+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 89
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.222521+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 88
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.239561+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 87
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.256037+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 86
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.272774+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 85
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.292584+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 85
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.307897+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 84
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.325621+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 83
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.343648+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 82
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.359156+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 82
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.376550+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 82
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.396856+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.409593+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.422130+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.438219+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.456155+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.472346+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.489412+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.523186+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.541976+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.643844+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.872858+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 81
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.886620+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 80
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.899591+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 79
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.910783+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 78
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.925907+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 75
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.941926+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 73
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.958154+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 70
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.976747+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 68
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:28.992779+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 66
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:29.007882+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 63
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:29.026512+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 62
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:29.041984+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 61
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:29.059425+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 60
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:29.072927+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 59
+                }
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:17:29.090103+00:00",
+            "action": "control_command",
+            "payload": {
+                "command": "set_brightness",
+                "parameters": {
+                    "brightness": 59
+                }
+            },
+            "source": "api"
         }
     ]
 }
