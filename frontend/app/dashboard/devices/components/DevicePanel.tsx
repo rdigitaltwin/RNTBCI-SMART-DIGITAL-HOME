@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Server, Radio, Power } from 'lucide-react';
+import { X, Activity, Server, Radio, Power, Download } from 'lucide-react';
 import { type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG } from '../constants';
 import DeviceControls from './DeviceControls';
@@ -168,12 +168,38 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', 
               border: '1px solid rgba(255,255,255,0.05)',
               fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#94A3B8',
-              maxHeight: '200px', overflowY: 'auto'
+              maxHeight: '200px', overflowY: 'auto', marginBottom: '16px'
             }}>
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
                 {JSON.stringify(meta, null, 2)}
               </pre>
             </div>
+
+            <button
+              onClick={() => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(device, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", `device_${device.name.replace(/ /g, '_')}_logs.json`);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+              }}
+              style={{
+                width: '100%', padding: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px', color: '#F8FAFC',
+                fontSize: '13px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            >
+              <Download size={16} />
+              Download Device JSON Logs
+            </button>
           </div>
 
         </div>

@@ -61,11 +61,13 @@ def _device_to_response(device: Device) -> DeviceResponse:
         power_state=device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state,
         connectivity=device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity,
         energy_usage_kw=device.energy_usage_kw,
+        total_energy_kwh=device.total_energy_kwh,
         efficiency_percent=device.efficiency_percent,
         metadata=device.extra_data or {},
         position_x=device.position_x,
         position_y=device.position_y,
         position_z=device.position_z,
+        turned_on_at=device.turned_on_at,
         last_updated=device.last_updated,
         created_at=device.created_at,
     )
