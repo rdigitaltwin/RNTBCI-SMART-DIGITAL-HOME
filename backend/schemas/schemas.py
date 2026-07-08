@@ -208,6 +208,12 @@ class DeviceListResponse(BaseModel):
     per_page: int
 
 
+class WebhookRegistrationRequest(BaseModel):
+    """Webhook registration request."""
+
+    webhook_url: str = Field(..., description="The URL to send webhook events to")
+
+
 # =============================================================================
 # EVENT SCHEMAS
 # =============================================================================

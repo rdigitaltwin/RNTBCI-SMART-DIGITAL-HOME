@@ -4,7 +4,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import func, select
@@ -39,8 +39,10 @@ from backend.schemas import (
     DeviceUpdateRequest,
     EnergyRecordResponse,
     EventListResponse,
+    WebhookRegistrationRequest,
 )
 from backend.utils.device_logger import DeviceLogger
+from backend.utils.webhook import dispatch_webhook
 from backend.websockets.manager import ws_manager
 
 logger = logging.getLogger(__name__)
@@ -362,6 +364,7 @@ async def control_device(
     request: Request,
     device_id: uuid.UUID,
     data: DeviceControlRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
@@ -424,6 +427,17 @@ async def control_device(
         "message": f"Command '{data.command}' sent to {device.name}",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
+    
+    webhook_url = (device.extra_data or {}).get("webhook_url")
+    if webhook_url:
+        payload = {
+            "device_id": str(device.id),
+            "event": "control_command",
+            "command": data.command,
+            "parameters": data.parameters,
+            "state": device_resp.model_dump(mode="json")
+        }
+        background_tasks.add_task(dispatch_webhook, webhook_url, payload)
 
     return device_resp
 
@@ -434,6 +448,7 @@ async def toggle_power(
     request: Request,
     device_id: uuid.UUID,
     data: DevicePowerRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
@@ -485,6 +500,15 @@ async def toggle_power(
         "message": f"{device.name}: {old_state} → {data.power_state}",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
+    
+    webhook_url = (device.extra_data or {}).get("webhook_url")
+    if webhook_url:
+        payload = {
+            "device_id": str(device.id),
+            "event": "power_toggled",
+            "state": device_resp.model_dump(mode="json")
+        }
+        background_tasks.add_task(dispatch_webhook, webhook_url, payload)
 
     return device_resp
 
@@ -495,6 +519,7 @@ async def toggle_state(
     request: Request,
     device_id: uuid.UUID,
     data: DeviceStateRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
@@ -563,6 +588,227 @@ async def toggle_state(
         "message": f"{device.name} turned {data.status}. Power usage dropped by {int(device.energy_usage_kw * 1000)}W" if data.status == "OFF" else f"{device.name} turned {data.status}. Power usage increased by {int(device.energy_usage_kw * 1000)}W",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
+    
+    webhook_url = (device.extra_data or {}).get("webhook_url")
+    if webhook_url:
+        payload = {
+            "device_id": str(device.id),
+            "event": "state_changed",
+            "state": device_resp.model_dump(mode="json")
+        }
+        background_tasks.add_task(dispatch_webhook, webhook_url, payload)
+
+    return device_resp
+
+@router.post("/public/light/{device_id}/webhook", response_model=dict)
+@limiter.limit("10/minute")
+async def public_register_webhook(
+    request: Request,
+    device_id: uuid.UUID,
+    data: WebhookRegistrationRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Register a webhook URL for a light device publicly."""
+    result = await db.execute(
+        select(Device).where(Device.id == device_id)
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+        
+    if device.type != DeviceType.SMART_LIGHT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only SMART_LIGHT devices can register webhooks via this endpoint.")
+
+    metadata = dict(device.extra_data or {})
+    metadata["webhook_url"] = data.webhook_url
+    device.extra_data = metadata
+    await db.commit()
+
+    return {"status": "success", "message": f"Webhook URL registered for {device.name}"}
+
+
+@router.get("/public/light/{device_id}", response_model=DeviceResponse)
+@limiter.limit("100/minute")
+async def public_get_light(
+    request: Request,
+    device_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> DeviceResponse:
+    """Get a single smart light device by ID publicly."""
+    result = await db.execute(
+        select(Device)
+        .options(selectinload(Device.room))
+        .where(Device.id == device_id)
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device not found",
+        )
+    if device.type != DeviceType.SMART_LIGHT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only SMART_LIGHT devices can be accessed via this public endpoint.")
+    
+    return _device_to_response(device)
+
+
+@router.patch("/public/light/{device_id}/state", response_model=DeviceResponse)
+@limiter.limit("60/minute")
+async def public_toggle_light_state(
+    request: Request,
+    device_id: uuid.UUID,
+    data: DeviceStateRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> DeviceResponse:
+    """Toggle a smart light state publicly."""
+    result = await db.execute(
+        select(Device)
+        .options(selectinload(Device.room))
+        .where(Device.id == device_id)
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+        
+    if device.type != DeviceType.SMART_LIGHT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only SMART_LIGHT devices can be controlled via this public endpoint.")
+
+    power_state_str = "on" if data.status == "ON" else "off"
+    old_state = device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state
+    device.power_state = PowerState(power_state_str)
+    device.last_updated = datetime.now(timezone.utc)
+
+    default_load = 15.0 / 1000.0
+    
+    if power_state_str == "off":
+        device.energy_usage_kw = 0.0
+    else:
+        device.energy_usage_kw = default_load
+
+    event = DeviceEvent(
+        device_id=device.id,
+        event_type="power_toggle",
+        severity=EventSeverity.INFO,
+        message=f"Power state changed from {old_state} to {power_state_str} via public API",
+        extra_data={"old_state": old_state, "new_state": power_state_str, "user": "public_api"},
+    )
+    db.add(event)
+
+    await db.commit()
+
+    DeviceLogger.log_communication(str(device.id), device.name, "power_toggle", {"power_state": power_state_str})
+
+    device_resp = _device_to_response(device)
+    
+    await redis_client.publish_device_update(str(device.id), {
+        "action": "device.updated",
+        "device": device_resp.model_dump(mode="json"),
+    })
+    
+    await redis_client.publish_event({
+        "device_id": str(device.id),
+        "device_name": device.name,
+        "event_type": "power_toggle",
+        "severity": "info",
+        "message": f"{device.name} turned {data.status} via public API. Power usage dropped by {int(device.energy_usage_kw * 1000)}W" if data.status == "OFF" else f"{device.name} turned {data.status} via public API. Power usage increased by {int(device.energy_usage_kw * 1000)}W",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    webhook_url = (device.extra_data or {}).get("webhook_url")
+    if webhook_url:
+        payload = {
+            "device_id": str(device.id),
+            "event": "state_changed",
+            "state": device_resp.model_dump(mode="json")
+        }
+        background_tasks.add_task(dispatch_webhook, webhook_url, payload)
+
+    return device_resp
+
+
+@router.patch("/public/light/{device_id}/control", response_model=DeviceResponse)
+@limiter.limit("60/minute")
+async def public_control_light(
+    request: Request,
+    device_id: uuid.UUID,
+    data: DeviceControlRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> DeviceResponse:
+    """Send a control command to a smart light publicly."""
+    result = await db.execute(
+        select(Device)
+        .options(selectinload(Device.room))
+        .where(Device.id == device_id)
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+        
+    if device.type != DeviceType.SMART_LIGHT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only SMART_LIGHT devices can be controlled via this public endpoint.")
+
+    # Apply control command
+    new_metadata = dict(device.extra_data or {})
+    new_metadata.update(data.parameters)
+    device.extra_data = new_metadata
+    device.last_updated = datetime.now(timezone.utc)
+
+    # Save new state
+    state = DeviceState(
+        device_id=device.id,
+        state_json={"command": data.command, "parameters": data.parameters, **new_metadata},
+    )
+    db.add(state)
+
+    # Log event
+    event = DeviceEvent(
+        device_id=device.id,
+        event_type="control_command",
+        severity=EventSeverity.INFO,
+        message=f"Command '{data.command}' received via public API",
+        extra_data={"command": data.command, "parameters": data.parameters, "user": "public_api"},
+    )
+    db.add(event)
+
+    await db.commit()
+
+    # Log device communication
+    DeviceLogger.log_communication(str(device.id), device.name, "control_command", {"command": data.command, "parameters": data.parameters})
+
+    # Cache and publish
+    await redis_client.set_device_state(str(device.id), {
+        "id": str(state.id),
+        "state_json": state.state_json,
+        "timestamp": state.timestamp.isoformat(),
+    })
+
+    device_resp = _device_to_response(device)
+    await redis_client.publish_device_update(str(device.id), {
+        "action": "device_controlled",
+        "command": data.command,
+        "device": device_resp.model_dump(mode="json"),
+    })
+    await redis_client.publish_event({
+        "device_id": str(device.id),
+        "device_name": device.name,
+        "event_type": "control_command",
+        "severity": "info",
+        "message": f"Command '{data.command}' sent to {device.name} via public API",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    webhook_url = (device.extra_data or {}).get("webhook_url")
+    if webhook_url:
+        payload = {
+            "device_id": str(device.id),
+            "event": "control_command",
+            "command": data.command,
+            "parameters": data.parameters,
+            "state": device_resp.model_dump(mode="json")
+        }
+        background_tasks.add_task(dispatch_webhook, webhook_url, payload)
 
     return device_resp
 
