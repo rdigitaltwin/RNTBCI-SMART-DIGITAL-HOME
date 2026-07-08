@@ -905,6 +905,96 @@ async def public_control_light(
     return device_resp
 
 
+@router.get("/public/device-data", response_model=dict)
+@limiter.limit("30/minute")
+async def public_list_device_data(
+    request: Request,
+) -> dict:
+    """List all available device data files publicly.
+
+    Returns a list of device names that can be queried via
+    GET /api/v1/devices/public/device-data/{device_name}
+    """
+    logs_dir = os.path.join(os.path.dirname(__file__), "../../logs")
+    logs_dir = os.path.normpath(logs_dir)
+
+    devices = []
+    if os.path.isdir(logs_dir):
+        for filename in sorted(os.listdir(logs_dir)):
+            if filename.startswith("device_") and filename.endswith(".json"):
+                device_name = filename[len("device_"):-len(".json")]
+                devices.append({
+                    "name": device_name,
+                    "url": f"/api/v1/devices/public/device-data/{device_name}",
+                })
+
+    return {
+        "count": len(devices),
+        "devices": devices,
+    }
+
+
+@router.get("/public/device-data/{device_name}")
+@limiter.limit("30/minute")
+async def public_get_device_data(
+    request: Request,
+    device_name: str,
+) -> dict:
+    """Get the full Matter-compliant JSON data for a device by name publicly.
+
+    The device_name should match the file naming convention, e.g.:
+    - Bathroom_Light
+    - Kitchen_Light
+    - Living_Room_AC
+    - Front_Door_Lock
+    - Dishwasher
+    - Nebulizer
+
+    Returns the complete device type definition and communication history.
+    """
+    # Sanitize device_name to prevent path traversal
+    safe_name = os.path.basename(device_name)
+    if safe_name != device_name or ".." in device_name or "/" in device_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid device name. Use names like 'Bathroom_Light' or 'Kitchen_Light'.",
+        )
+
+    logs_dir = os.path.join(os.path.dirname(__file__), "../../logs")
+    logs_dir = os.path.normpath(logs_dir)
+    file_path = os.path.join(logs_dir, f"device_{safe_name}.json")
+
+    # Verify resolved path is still inside logs_dir
+    resolved = os.path.realpath(file_path)
+    if not resolved.startswith(os.path.realpath(logs_dir)):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid device name.",
+        )
+
+    if not os.path.isfile(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Device data file not found for '{device_name}'. "
+                   f"Use GET /api/v1/devices/public/device-data to see available devices.",
+        )
+
+    try:
+        with open(file_path, "r") as f:
+            data = json.load(f)
+        return data
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Device data file for '{device_name}' contains invalid JSON.",
+        )
+    except OSError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to read device data file for '{device_name}'.",
+        )
+
+
 @router.get("/{device_id}/energy", response_model=list[EnergyRecordResponse])
 @limiter.limit("100/minute")
 async def get_device_energy(
