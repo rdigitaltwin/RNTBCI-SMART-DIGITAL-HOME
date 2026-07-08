@@ -756,6 +756,38 @@
                 }
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-07-08T09:28:30.769102+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-08T09:28:37.132573+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-08T09:50:54.694820+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-08T09:50:55.473773+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
         }
     ]
 }

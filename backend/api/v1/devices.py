@@ -2,9 +2,13 @@
 
 import logging
 import uuid
+import os
+import json
+import csv
+import io
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import func, select
@@ -625,6 +629,94 @@ async def public_register_webhook(
     await db.commit()
 
     return {"status": "success", "message": f"Webhook URL registered for {device.name}"}
+
+@router.get("/public/export/csv")
+@limiter.limit("10/minute")
+async def public_export_devices_csv(
+    request: Request,
+    device_type_filter: str = Query(None, alias="type", description="Filter by device type name (e.g., 'light')")
+) -> Response:
+    """Export all device JSON files into a generic Excel CSV sheet, optionally filtered by type."""
+    logs_dir = os.path.join(os.path.dirname(__file__), "../../logs")
+    
+    csv_data = []
+    
+    if os.path.exists(logs_dir):
+        device_files = [f for f in os.listdir(logs_dir) if f.startswith("device_") and f.endswith(".json")]
+        
+        for filename in device_files:
+            filepath = os.path.join(logs_dir, filename)
+            try:
+                with open(filepath, "r") as f:
+                    data = json.load(f)
+                    
+                device_type = data.get("deviceType", {})
+                device_name = device_type.get("name", "")
+                
+                # Filter by device type if requested
+                if device_type_filter and device_type_filter.lower() not in device_name.lower() and device_type_filter.lower() not in filename.lower():
+                    continue
+
+                classification = device_type.get("classification", {})
+                clusters = device_type.get("clusters", [])
+                history = data.get("communication_history", [])
+                
+                last_event_time = ""
+                if history:
+                    last_event_time = history[-1].get("timestamp", "")
+                    
+                csv_data.append({
+                    "Filename": filename,
+                    "Device Name": device_name,
+                    "Device ID (Hex)": device_type.get("id", ""),
+                    "UUID": device_type.get("device_id", ""),
+                    "Revision": device_type.get("revision", ""),
+                    "Class": classification.get("class", ""),
+                    "Scope": classification.get("scope", ""),
+                    "Number of Clusters": len(clusters),
+                    "Number of Events": len(history),
+                    "Last Event Timestamp": last_event_time
+                })
+            except Exception as e:
+                logger.error(f"Error parsing {filename} for CSV export: {e}")
+
+    fieldnames = [
+        "Filename", "Device Name", "Device ID (Hex)", "UUID", 
+        "Revision", "Class", "Scope", "Number of Clusters", 
+        "Number of Events", "Last Event Timestamp"
+    ]
+
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(csv_data)
+    
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=devices_summary.csv"}
+    )
+
+
+@router.get("/public/export/postman")
+@limiter.limit("10/minute")
+async def public_export_postman_collection(
+    request: Request
+) -> Response:
+    """Export the Postman collection JSON file."""
+    filepath = os.path.join(os.path.dirname(__file__), "../../../light_device_postman_collection.json")
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Postman collection not found")
+        
+    with open(filepath, "r") as f:
+        content = f.read()
+        
+    return Response(
+        content=content,
+        media_type="application/json",
+        headers={"Content-Disposition": "attachment; filename=light_device_postman_collection.json"}
+    )
+
 
 
 @router.get("/public/light/{device_id}", response_model=DeviceResponse)

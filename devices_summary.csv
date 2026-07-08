@@ -1,0 +1,10 @@
+Filename,Device Name,Device ID (Hex),UUID,Revision,Class,Scope,Number of Clusters,Number of Events,Last Event Timestamp
+device_Living_Room_AC.json,Living Room AC,0x010A,01c77ecf-f367-4c45-b5d9-6b0bfb33d703,4,simple,endpoint,4,2,2026-07-01T08:41:18.489099+00:00
+device_Bedroom_AC.json,Bedroom AC,0x010A,cc8ac9ac-dd43-4a22-980e-e71477d4033b,4,simple,endpoint,4,3,2026-06-29T10:19:29.002743+00:00
+device_Living_Room_Switch.json,Living Room Switch,0x010A,3739bf30-e451-4af7-843f-b708a0ec1cca,4,simple,endpoint,4,4,2026-07-01T08:46:53.925049+00:00
+device_Dishwasher.json,Dishwasher,0x010A,072745c9-1b5a-4d0e-b5f9-9706bae475c6,4,simple,endpoint,4,4,2026-07-02T10:21:52.521484+00:00
+device_Bathroom_Light.json,Bathroom Light,0x010A,9922f40d-bc2a-4a2f-bcf0-1051847a0c86,4,simple,endpoint,4,51,2026-07-02T10:17:29.090103+00:00
+device_Nebulizer.json,Nebulizer,0x010A,ed3367d0-60b2-480f-acbd-cf4a2000a865,4,simple,endpoint,4,2,2026-07-01T08:44:19.556867+00:00
+device_Door_Lock.json,Door Lock,0x010A,6cb06251-4226-40c2-aa21-a4d2d1d0a444,4,simple,endpoint,4,2,2026-06-29T10:19:29.982229+00:00
+device_Kitchen_Light.json,Kitchen Light,0x010A,269b696c-557a-4154-baf6-ce172db607b4,4,simple,endpoint,4,2,2026-07-01T08:41:09.971644+00:00
+device_Front_Door_Lock.json,Front Door Lock,0x010A,3f1741a5-c196-4519-858c-63c9040ae0b5,4,simple,endpoint,4,2,2026-06-29T10:19:31.333483+00:00

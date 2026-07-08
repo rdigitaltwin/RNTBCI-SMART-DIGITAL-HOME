@@ -122,6 +122,34 @@
 				"description": "Registers a webhook URL to receive real-time POST requests whenever the light state changes."
 			},
 			"response": []
+		},
+		{
+			"name": "Export All Devices to CSV",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/devices/public/export/csv?type=light",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"devices",
+						"public",
+						"export",
+						"csv"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "light",
+							"description": "Filter by device type name"
+						}
+					]
+				},
+				"description": "Export all device JSON files into a generic Excel-compatible CSV sheet, optionally filtered by type."
+			},
+			"response": []
 		}
 	],
 	"variable": [
