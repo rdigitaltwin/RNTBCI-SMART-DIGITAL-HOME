@@ -1343,3 +1343,48 @@ def _get_default_state(device_type: DeviceType) -> dict:
         },
     }
     return defaults.get(device_type, {})
+
+
+@router.post("/public/matter/migrate-schemas")
+@limiter.limit("5/minute")
+async def migrate_all_schemas(request: Request) -> dict:
+    """Force migrate all JSON schemas in the logs directory to the new Matter format."""
+    logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../logs"))
+    if not os.path.isdir(logs_dir):
+        return {"status": "error", "message": "Logs directory not found"}
+        
+    migrated_count = 0
+    total_count = 0
+    
+    for filename in os.listdir(logs_dir):
+        if filename.startswith("device_") and filename.endswith(".json"):
+            total_count += 1
+            file_path = os.path.join(logs_dir, filename)
+            try:
+                with open(file_path, "r") as f:
+                    schema = json.load(f)
+                    
+                if schema and "endpoints" not in schema.get("deviceType", {}):
+                    # It's an old schema! We need to migrate it.
+                    safe_name = filename[len("device_"): -len(".json")]
+                    device_name = safe_name.replace("_", " ")
+                    
+                    device_id = schema.get("deviceType", {}).get("device_id", "")
+                    history = schema.get("communication_history", [])
+                    
+                    new_schema = DeviceLogger._get_matter_schema(device_name, device_id)
+                    new_schema["communication_history"] = history
+                    
+                    with open(file_path, "w") as f:
+                        json.dump(new_schema, f, indent=4)
+                        
+                    migrated_count += 1
+            except Exception as e:
+                pass
+                
+    return {
+        "status": "success",
+        "message": f"Successfully migrated {migrated_count} out of {total_count} device schemas.",
+        "migrated_count": migrated_count,
+        "total_count": total_count
+    }
