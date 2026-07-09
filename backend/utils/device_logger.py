@@ -634,6 +634,13 @@ class DeviceLogger:
             try:
                 with open(log_file, "r") as f:
                     schema = json.load(f)
+                    
+                # Auto-migrate old schemas that might be stuck on Railway's persistent volume
+                if schema and "endpoints" not in schema.get("deviceType", {}):
+                    # Keep the history, but upgrade the schema format
+                    history = schema.get("communication_history", [])
+                    schema = cls._get_matter_schema(device_name, device_id)
+                    schema["communication_history"] = history
             except json.JSONDecodeError:
                 pass
                 
