@@ -6,7 +6,7 @@ import os
 import json
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks, Response
 from slowapi import Limiter
@@ -1103,9 +1103,10 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict) ->
     
     # Specific responses based on spec
     if action.lower() == "capturesnapshot":
+        IST = timezone(timedelta(hours=5, minutes=30))
         return {
             "snapshotUrl": f"/media/{device_name.replace(' ', '_')}/snapshot.jpg",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(IST).isoformat()
         }
         
     return {"status": "success", "command": action}

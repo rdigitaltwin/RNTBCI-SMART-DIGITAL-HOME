@@ -645,8 +645,10 @@ class DeviceLogger:
             schema["communication_history"] = []
             
         # Append the new event
+        # Use IST (Indian Standard Time, UTC+5:30)
+        IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
         event = {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "timestamp": datetime.datetime.now(IST).isoformat(),
             "action": action,
             "payload": payload,
             "source": source
