@@ -1049,6 +1049,8 @@ async def matter_post_command_path(
     endpoint: int,
     cluster: str,
     command_path: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Matter Protocol POST endpoint for commands specified in URL (e.g. /cluster/OnOff/On)."""
     try:
@@ -1059,7 +1061,7 @@ async def matter_post_command_path(
     # Try to extract actual command name
     command = payload.get("command", command_path)
     
-    return await _handle_matter_command(identifier, action=command, payload=payload)
+    return await _handle_matter_command(identifier, action=command, payload=payload, db=db, background_tasks=background_tasks)
 
 
 @router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/command")
@@ -1069,6 +1071,8 @@ async def matter_post_command_body(
     identifier: str,
     endpoint: int,
     cluster: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Matter Protocol POST endpoint for commands specified in body (e.g. {"command": "On"})."""
     try:
@@ -1080,10 +1084,10 @@ async def matter_post_command_body(
     if not command:
         raise HTTPException(status_code=400, detail="Missing 'command' in body")
         
-    return await _handle_matter_command(identifier, action=command, payload=payload)
+    return await _handle_matter_command(identifier, action=command, payload=payload, db=db, background_tasks=background_tasks)
 
 
-async def _handle_matter_command(identifier: str, action: str, payload: dict) -> dict:
+async def _handle_matter_command(identifier: str, action: str, payload: dict, db: AsyncSession, background_tasks: BackgroundTasks) -> dict:
     """Internal handler for Matter commands."""
     file_path = _find_device_file(identifier)
     if not file_path:
@@ -1098,9 +1102,64 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict) ->
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
         
-    # Log it
+    # Log it to JSON
     DeviceLogger.log_communication(device_id, device_name, action, payload, source="matter_api")
     
+    # Also update Postgres DB and fire websockets if it's a known state command
+    try:
+        device_uuid = uuid.UUID(device_id)
+        result = await db.execute(
+            select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid)
+        )
+        device = result.scalar_one_or_none()
+        
+        if device:
+            action_lower = action.lower()
+            power_changed = False
+            power_state_str = None
+            
+            if action_lower == "on":
+                power_state_str = "on"
+                power_changed = True
+            elif action_lower == "off":
+                power_state_str = "off"
+                power_changed = True
+            elif action_lower == "toggle":
+                old_state = device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state
+                power_state_str = "off" if old_state == "on" else "on"
+                power_changed = True
+                
+            if power_changed:
+                device.power_state = PowerState(power_state_str)
+                device.last_updated = datetime.now(timezone.utc)
+                
+                # Simple energy logic
+                if power_state_str == "off":
+                    device.energy_usage_kw = 0.0
+                else:
+                    device.energy_usage_kw = 0.05
+                    
+                await db.commit()
+                
+                # Dispatch WebSockets
+                device_resp = _device_to_response(device)
+                await redis_client.publish_device_update(str(device.id), {
+                    "action": "device.updated",
+                    "device": device_resp.model_dump(mode="json"),
+                })
+                
+                webhook_url = (device.extra_data or {}).get("webhook_url")
+                if webhook_url:
+                    hook_payload = {
+                        "device_id": str(device.id),
+                        "event": "state_changed",
+                        "state": device_resp.model_dump(mode="json")
+                    }
+                    background_tasks.add_task(dispatch_webhook, webhook_url, hook_payload)
+    except Exception as e:
+        # Don't block the Matter API if DB sync fails
+        pass
+
     # Specific responses based on spec
     if action.lower() == "capturesnapshot":
         IST = timezone(timedelta(hours=5, minutes=30))
@@ -1108,6 +1167,12 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict) ->
             "snapshotUrl": f"/media/{device_name.replace(' ', '_')}/snapshot.jpg",
             "timestamp": datetime.now(IST).isoformat()
         }
+    elif action.lower() == "off":
+        return {"id": "0x00", "name": "Off"}
+    elif action.lower() == "on":
+        return {"id": "0x01", "name": "On"}
+    elif action.lower() == "toggle":
+        return {"id": "0x02", "name": "Toggle"}
         
     return {"status": "success", "command": action}
 
