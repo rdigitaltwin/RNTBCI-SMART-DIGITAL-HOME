@@ -1,210 +1,92 @@
 {
     "deviceType": {
-        "id": "0x010A",
+        "id": "0x0075",
         "name": "Dishwasher",
+        "device_name": "Dishwasher",
         "device_id": "072745c9-1b5a-4d0e-b5f9-9706bae475c6",
-        "revision": 4,
+        "revision": 2,
         "classification": {
             "class": "simple",
             "scope": "endpoint"
         },
-        "clusters": [
+        "endpoints": [
             {
-                "id": "0x0003",
-                "name": "Identify",
-                "side": "server",
-                "conformance": "mandatory",
-                "commands": [
+                "endpointId": 1,
+                "deviceType": "Dishwasher",
+                "clusters": [
                     {
-                        "id": "0x0040",
-                        "name": "TriggerEffect",
-                        "conformance": "mandatory"
-                    }
-                ]
-            },
-            {
-                "id": "0x0004",
-                "name": "Groups",
-                "side": "server",
-                "conformance": "mandatory"
-            },
-            {
-                "id": "0x0006",
-                "name": "On/Off",
-                "side": "server",
-                "conformance": "mandatory",
-                "features": [
-                    {
-                        "code": "LT",
-                        "name": "Lighting",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
+                        "clusterId": "0x0006",
                         "name": "OnOff",
-                        "type": "bool",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x4000",
-                        "name": "GlobalSceneControl",
-                        "type": "bool",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4001",
-                        "name": "OnTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4002",
-                        "name": "OffWaitTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4003",
-                        "name": "StartUpOnOff",
-                        "type": "enum(StartUpOnOffEnum)",
-                        "values": [
-                            "Off",
-                            "On",
-                            "Toggle"
-                        ],
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    }
-                ],
-                "commands": [
-                    {
-                        "id": "0x00",
-                        "name": "Off",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x01",
-                        "name": "On",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x02",
-                        "name": "Toggle",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x40",
-                        "name": "OffWithEffect",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ],
-                        "fields": [
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
                             {
-                                "name": "EffectIdentifier",
-                                "type": "enum",
-                                "values": [
-                                    "DelayedAllOff",
-                                    "DyingLight"
-                                ]
-                            },
-                            {
-                                "name": "EffectVariant",
-                                "type": "enum"
+                                "name": "PowerState",
+                                "type": "bool"
                             }
                         ]
                     },
                     {
-                        "id": "0x41",
-                        "name": "OnWithRecallGlobalScene",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x42",
-                        "name": "OnWithTimedOff",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
+                        "clusterId": "0x0056",
+                        "name": "TemperatureControl",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "TemperatureSetpoint",
+                                "type": "temperature"
+                            },
+                            {
+                                "name": "SelectedTemperatureLevel",
+                                "type": "uint8"
+                            }
                         ],
-                        "fields": [
+                        "commands": [
                             {
-                                "name": "OnOffControl",
-                                "type": "bitmap",
-                                "range": [
-                                    0,
-                                    1
-                                ]
-                            },
-                            {
-                                "name": "OnTime",
-                                "type": "uint16",
-                                "max": 65534
-                            },
-                            {
-                                "name": "OffWaitTime",
-                                "type": "uint16",
-                                "max": 65534
+                                "name": "SetTemperature"
                             }
                         ]
-                    }
-                ]
-            },
-            {
-                "id": "0x0008",
-                "name": "Level Control",
-                "side": "server",
-                "conformance": "optional",
-                "features": [
-                    {
-                        "code": "OO",
-                        "conformance": "mandatory"
                     },
                     {
-                        "code": "LT",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
-                        "name": "CurrentLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "min": 1,
-                            "max": 254
-                        }
+                        "clusterId": "0x0059",
+                        "name": "DishwasherMode",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "CurrentMode",
+                                "type": "string"
+                            }
+                        ]
                     },
                     {
-                        "id": "0x0002",
-                        "name": "MinLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 1
-                        }
+                        "clusterId": "0x005D",
+                        "name": "DishwasherAlarm",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "AlarmStatus",
+                                "type": "bitmap"
+                            }
+                        ]
                     },
                     {
-                        "id": "0x0003",
-                        "name": "MaxLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 254
-                        }
+                        "clusterId": "0x0060",
+                        "name": "OperationalState",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentState",
+                                "type": "string"
+                            }
+                        ],
+                        "events": [
+                            {
+                                "name": "OperationCompletion"
+                            }
+                        ]
                     }
                 ]
             }

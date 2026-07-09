@@ -1,210 +1,62 @@
 {
     "deviceType": {
-        "id": "0x010A",
-        "name": "Living Room Switch",
+        "id": "0x0103",
+        "name": "OnOffLightSwitch",
+        "device_name": "Living Room Switch",
         "device_id": "3739bf30-e451-4af7-843f-b708a0ec1cca",
-        "revision": 4,
+        "revision": 3,
         "classification": {
             "class": "simple",
             "scope": "endpoint"
         },
-        "clusters": [
+        "endpoints": [
             {
-                "id": "0x0003",
-                "name": "Identify",
-                "side": "server",
-                "conformance": "mandatory",
-                "commands": [
+                "endpointId": 1,
+                "deviceType": "OnOffLightSwitch",
+                "clusters": [
                     {
-                        "id": "0x0040",
-                        "name": "TriggerEffect",
-                        "conformance": "mandatory"
-                    }
-                ]
-            },
-            {
-                "id": "0x0004",
-                "name": "Groups",
-                "side": "server",
-                "conformance": "mandatory"
-            },
-            {
-                "id": "0x0006",
-                "name": "On/Off",
-                "side": "server",
-                "conformance": "mandatory",
-                "features": [
+                        "clusterId": "0x0003",
+                        "name": "Identify",
+                        "side": "server",
+                        "mandatory": true,
+                        "commands": [
+                            {
+                                "commandId": "0x0040",
+                                "name": "TriggerEffect",
+                                "direction": "invoke",
+                                "mandatory": true,
+                                "request": {
+                                    "effectIdentifier": "uint8",
+                                    "effectVariant": "uint8"
+                                }
+                            }
+                        ]
+                    },
                     {
-                        "code": "LT",
-                        "name": "Lighting",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
+                        "clusterId": "0x0004",
+                        "name": "Groups",
+                        "side": "server",
+                        "mandatory": true
+                    },
                     {
-                        "id": "0x0000",
+                        "clusterId": "0x0006",
                         "name": "OnOff",
-                        "type": "bool",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x4000",
-                        "name": "GlobalSceneControl",
-                        "type": "bool",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4001",
-                        "name": "OnTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4002",
-                        "name": "OffWaitTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4003",
-                        "name": "StartUpOnOff",
-                        "type": "enum(StartUpOnOffEnum)",
-                        "values": [
-                            "Off",
-                            "On",
-                            "Toggle"
-                        ],
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    }
-                ],
-                "commands": [
-                    {
-                        "id": "0x00",
-                        "name": "Off",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x01",
-                        "name": "On",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x02",
-                        "name": "Toggle",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x40",
-                        "name": "OffWithEffect",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ],
-                        "fields": [
+                        "side": "client",
+                        "mandatory": true,
+                        "commands": [
                             {
-                                "name": "EffectIdentifier",
-                                "type": "enum",
-                                "values": [
-                                    "DelayedAllOff",
-                                    "DyingLight"
-                                ]
+                                "commandId": "0x0000",
+                                "name": "Off"
                             },
                             {
-                                "name": "EffectVariant",
-                                "type": "enum"
+                                "commandId": "0x0001",
+                                "name": "On"
+                            },
+                            {
+                                "commandId": "0x0002",
+                                "name": "Toggle"
                             }
                         ]
-                    },
-                    {
-                        "id": "0x41",
-                        "name": "OnWithRecallGlobalScene",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x42",
-                        "name": "OnWithTimedOff",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ],
-                        "fields": [
-                            {
-                                "name": "OnOffControl",
-                                "type": "bitmap",
-                                "range": [
-                                    0,
-                                    1
-                                ]
-                            },
-                            {
-                                "name": "OnTime",
-                                "type": "uint16",
-                                "max": 65534
-                            },
-                            {
-                                "name": "OffWaitTime",
-                                "type": "uint16",
-                                "max": 65534
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": "0x0008",
-                "name": "Level Control",
-                "side": "server",
-                "conformance": "optional",
-                "features": [
-                    {
-                        "code": "OO",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "code": "LT",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
-                        "name": "CurrentLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "min": 1,
-                            "max": 254
-                        }
-                    },
-                    {
-                        "id": "0x0002",
-                        "name": "MinLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 1
-                        }
-                    },
-                    {
-                        "id": "0x0003",
-                        "name": "MaxLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 254
-                        }
                     }
                 ]
             }

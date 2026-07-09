@@ -1,210 +1,90 @@
 {
     "deviceType": {
-        "id": "0x010A",
-        "name": "Bedroom AC",
+        "id": "0x0309",
+        "name": "HeatPump",
+        "device_name": "Bedroom AC",
         "device_id": "cc8ac9ac-dd43-4a22-980e-e71477d4033b",
-        "revision": 4,
+        "revision": 1,
         "classification": {
             "class": "simple",
             "scope": "endpoint"
         },
-        "clusters": [
+        "endpoints": [
             {
-                "id": "0x0003",
-                "name": "Identify",
-                "side": "server",
-                "conformance": "mandatory",
-                "commands": [
+                "endpointId": 1,
+                "deviceType": "HeatPump",
+                "clusters": [
                     {
-                        "id": "0x0040",
-                        "name": "TriggerEffect",
-                        "conformance": "mandatory"
-                    }
-                ]
-            },
-            {
-                "id": "0x0004",
-                "name": "Groups",
-                "side": "server",
-                "conformance": "mandatory"
-            },
-            {
-                "id": "0x0006",
-                "name": "On/Off",
-                "side": "server",
-                "conformance": "mandatory",
-                "features": [
-                    {
-                        "code": "LT",
-                        "name": "Lighting",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
-                        "name": "OnOff",
-                        "type": "bool",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x4000",
-                        "name": "GlobalSceneControl",
-                        "type": "bool",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4001",
-                        "name": "OnTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4002",
-                        "name": "OffWaitTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4003",
-                        "name": "StartUpOnOff",
-                        "type": "enum(StartUpOnOffEnum)",
-                        "values": [
-                            "Off",
-                            "On",
-                            "Toggle"
-                        ],
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    }
-                ],
-                "commands": [
-                    {
-                        "id": "0x00",
-                        "name": "Off",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x01",
-                        "name": "On",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x02",
-                        "name": "Toggle",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x40",
-                        "name": "OffWithEffect",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ],
-                        "fields": [
+                        "clusterId": "0x0201",
+                        "name": "Thermostat",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
                             {
-                                "name": "EffectIdentifier",
-                                "type": "enum",
-                                "values": [
-                                    "DelayedAllOff",
-                                    "DyingLight"
-                                ]
+                                "name": "CurrentTemperature",
+                                "type": "float",
+                                "unit": "\u00b0C"
                             },
                             {
-                                "name": "EffectVariant",
+                                "name": "TargetTemperature",
+                                "type": "float",
+                                "unit": "\u00b0C"
+                            },
+                            {
+                                "name": "Mode",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "RunningState",
                                 "type": "enum"
                             }
-                        ]
-                    },
-                    {
-                        "id": "0x41",
-                        "name": "OnWithRecallGlobalScene",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x42",
-                        "name": "OnWithTimedOff",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
                         ],
-                        "fields": [
+                        "commands": [
                             {
-                                "name": "OnOffControl",
-                                "type": "bitmap",
-                                "range": [
-                                    0,
-                                    1
-                                ]
+                                "name": "SetTargetTemperature"
                             },
                             {
-                                "name": "OnTime",
-                                "type": "uint16",
-                                "max": 65534
-                            },
-                            {
-                                "name": "OffWaitTime",
-                                "type": "uint16",
-                                "max": 65534
+                                "name": "SetMode"
                             }
                         ]
-                    }
-                ]
-            },
-            {
-                "id": "0x0008",
-                "name": "Level Control",
-                "side": "server",
-                "conformance": "optional",
-                "features": [
-                    {
-                        "code": "OO",
-                        "conformance": "mandatory"
                     },
                     {
-                        "code": "LT",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
-                        "name": "CurrentLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "min": 1,
-                            "max": 254
-                        }
+                        "clusterId": "0x0090",
+                        "name": "ElectricalPowerMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Power",
+                                "type": "float",
+                                "unit": "W"
+                            }
+                        ]
                     },
                     {
-                        "id": "0x0002",
-                        "name": "MinLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 1
-                        }
+                        "clusterId": "0x0091",
+                        "name": "ElectricalEnergyMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Energy",
+                                "type": "float",
+                                "unit": "kWh"
+                            }
+                        ]
                     },
                     {
-                        "id": "0x0003",
-                        "name": "MaxLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 254
-                        }
+                        "clusterId": "0x0041",
+                        "name": "UserLabel",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Label",
+                                "type": "string"
+                            }
+                        ]
                     }
                 ]
             }

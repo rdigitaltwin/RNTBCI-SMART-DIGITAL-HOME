@@ -995,6 +995,124 @@ async def public_get_device_data(
         )
 
 
+def _find_device_file(identifier: str) -> str | None:
+    """Find a device JSON file by its device_id or device_name (e.g. Bathroom_Light)."""
+    logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../logs"))
+    if not os.path.isdir(logs_dir):
+        return None
+        
+    # Check by exact name match first (e.g. Bathroom_Light -> device_Bathroom_Light.json)
+    safe_name = os.path.basename(identifier)
+    direct_path = os.path.join(logs_dir, f"device_{safe_name}.json")
+    if os.path.isfile(direct_path):
+        return direct_path
+        
+    # Search inside files for device_id match
+    for filename in os.listdir(logs_dir):
+        if filename.startswith("device_") and filename.endswith(".json"):
+            filepath = os.path.join(logs_dir, filename)
+            try:
+                with open(filepath, "r") as f:
+                    data = json.load(f)
+                    if data.get("deviceType", {}).get("device_id") == identifier:
+                        return filepath
+            except Exception:
+                continue
+                
+    return None
+
+
+@router.get("/public/matter/{identifier}/endpoint/{endpoint}")
+@limiter.limit("60/minute")
+async def matter_get_device(
+    request: Request,
+    identifier: str,
+    endpoint: int,
+) -> dict:
+    """Matter Protocol GET endpoint for a device."""
+    file_path = _find_device_file(identifier)
+    if not file_path:
+        raise HTTPException(status_code=404, detail="Device not found")
+        
+    try:
+        with open(file_path, "r") as f:
+            return json.load(f)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/{command_path}")
+@limiter.limit("60/minute")
+async def matter_post_command_path(
+    request: Request,
+    identifier: str,
+    endpoint: int,
+    cluster: str,
+    command_path: str,
+) -> dict:
+    """Matter Protocol POST endpoint for commands specified in URL (e.g. /cluster/OnOff/On)."""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+        
+    # Try to extract actual command name
+    command = payload.get("command", command_path)
+    
+    return await _handle_matter_command(identifier, action=command, payload=payload)
+
+
+@router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/command")
+@limiter.limit("60/minute")
+async def matter_post_command_body(
+    request: Request,
+    identifier: str,
+    endpoint: int,
+    cluster: str,
+) -> dict:
+    """Matter Protocol POST endpoint for commands specified in body (e.g. {"command": "On"})."""
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+        
+    command = payload.get("command")
+    if not command:
+        raise HTTPException(status_code=400, detail="Missing 'command' in body")
+        
+    return await _handle_matter_command(identifier, action=command, payload=payload)
+
+
+async def _handle_matter_command(identifier: str, action: str, payload: dict) -> dict:
+    """Internal handler for Matter commands."""
+    file_path = _find_device_file(identifier)
+    if not file_path:
+        raise HTTPException(status_code=404, detail="Device not found")
+        
+    # Parse file to get real device name and ID
+    try:
+        with open(file_path, "r") as f:
+            data = json.load(f)
+            device_name = data.get("deviceType", {}).get("device_name", "")
+            device_id = data.get("deviceType", {}).get("device_id", "")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+        
+    # Log it
+    DeviceLogger.log_communication(device_id, device_name, action, payload, source="matter_api")
+    
+    # Specific responses based on spec
+    if action.lower() == "capturesnapshot":
+        return {
+            "snapshotUrl": f"/media/{device_name.replace(' ', '_')}/snapshot.jpg",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    return {"status": "success", "command": action}
+
+
+
+
 @router.get("/{device_id}/energy", response_model=list[EnergyRecordResponse])
 @limiter.limit("100/minute")
 async def get_device_energy(

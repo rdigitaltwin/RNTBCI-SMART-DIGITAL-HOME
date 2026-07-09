@@ -1,210 +1,61 @@
 {
     "deviceType": {
-        "id": "0x010A",
-        "name": "Front Door Lock",
+        "id": "0x000A",
+        "name": "DoorLock",
+        "device_name": "Front Door Lock",
         "device_id": "3f1741a5-c196-4519-858c-63c9040ae0b5",
-        "revision": 4,
+        "revision": 1,
         "classification": {
             "class": "simple",
             "scope": "endpoint"
         },
-        "clusters": [
+        "endpoints": [
             {
-                "id": "0x0003",
-                "name": "Identify",
-                "side": "server",
-                "conformance": "mandatory",
-                "commands": [
+                "endpointId": 1,
+                "deviceType": "DoorLock",
+                "clusters": [
                     {
-                        "id": "0x0040",
-                        "name": "TriggerEffect",
-                        "conformance": "mandatory"
-                    }
-                ]
-            },
-            {
-                "id": "0x0004",
-                "name": "Groups",
-                "side": "server",
-                "conformance": "mandatory"
-            },
-            {
-                "id": "0x0006",
-                "name": "On/Off",
-                "side": "server",
-                "conformance": "mandatory",
-                "features": [
-                    {
-                        "code": "LT",
-                        "name": "Lighting",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
-                        "name": "OnOff",
-                        "type": "bool",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x4000",
-                        "name": "GlobalSceneControl",
-                        "type": "bool",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4001",
-                        "name": "OnTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4002",
-                        "name": "OffWaitTime",
-                        "type": "uint16",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x4003",
-                        "name": "StartUpOnOff",
-                        "type": "enum(StartUpOnOffEnum)",
-                        "values": [
-                            "Off",
-                            "On",
-                            "Toggle"
-                        ],
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    }
-                ],
-                "commands": [
-                    {
-                        "id": "0x00",
-                        "name": "Off",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x01",
-                        "name": "On",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x02",
-                        "name": "Toggle",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "id": "0x40",
-                        "name": "OffWithEffect",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ],
-                        "fields": [
+                        "clusterId": "0x0101",
+                        "name": "DoorLock",
+                        "side": "server",
+                        "mandatory": true,
+                        "features": [
                             {
-                                "name": "EffectIdentifier",
-                                "type": "enum",
-                                "values": [
-                                    "DelayedAllOff",
-                                    "DyingLight"
-                                ]
+                                "code": "PIN",
+                                "name": "PINCredential"
                             },
                             {
-                                "name": "EffectVariant",
-                                "type": "enum"
+                                "code": "RID",
+                                "name": "RFIDCredential"
+                            }
+                        ],
+                        "attributes": [
+                            {
+                                "attributeId": "0x0000",
+                                "name": "LockState",
+                                "type": "LockStateEnum"
+                            },
+                            {
+                                "attributeId": "0x0001",
+                                "name": "LockType",
+                                "type": "LockTypeEnum"
+                            },
+                            {
+                                "attributeId": "0x0002",
+                                "name": "ActuatorEnabled",
+                                "type": "bool"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "commandId": "0x0000",
+                                "name": "LockDoor"
+                            },
+                            {
+                                "commandId": "0x0001",
+                                "name": "UnlockDoor"
                             }
                         ]
-                    },
-                    {
-                        "id": "0x41",
-                        "name": "OnWithRecallGlobalScene",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ]
-                    },
-                    {
-                        "id": "0x42",
-                        "name": "OnWithTimedOff",
-                        "conformance": "mandatory",
-                        "requires": [
-                            "LT"
-                        ],
-                        "fields": [
-                            {
-                                "name": "OnOffControl",
-                                "type": "bitmap",
-                                "range": [
-                                    0,
-                                    1
-                                ]
-                            },
-                            {
-                                "name": "OnTime",
-                                "type": "uint16",
-                                "max": 65534
-                            },
-                            {
-                                "name": "OffWaitTime",
-                                "type": "uint16",
-                                "max": 65534
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": "0x0008",
-                "name": "Level Control",
-                "side": "server",
-                "conformance": "optional",
-                "features": [
-                    {
-                        "code": "OO",
-                        "conformance": "mandatory"
-                    },
-                    {
-                        "code": "LT",
-                        "conformance": "mandatory"
-                    }
-                ],
-                "attributes": [
-                    {
-                        "id": "0x0000",
-                        "name": "CurrentLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "min": 1,
-                            "max": 254
-                        }
-                    },
-                    {
-                        "id": "0x0002",
-                        "name": "MinLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 1
-                        }
-                    },
-                    {
-                        "id": "0x0003",
-                        "name": "MaxLevel",
-                        "type": "uint8",
-                        "constraint": {
-                            "allowed": 254
-                        }
                     }
                 ]
             }
