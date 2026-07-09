@@ -1093,25 +1093,40 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
     if not file_path:
         raise HTTPException(status_code=404, detail="Device not found")
         
-    # Parse file to get real device name and ID
+    # Parse file to get real device name and ID if possible
+    device_name = identifier.replace("_", " ")
+    device_id = ""
     try:
         with open(file_path, "r") as f:
             data = json.load(f)
-            device_name = data.get("deviceType", {}).get("device_name", "")
+            # Try to get from JSON, but fallback to identifier if missing
+            json_name = data.get("deviceType", {}).get("device_name", "")
+            if json_name:
+                device_name = json_name
             device_id = data.get("deviceType", {}).get("device_id", "")
     except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        pass
         
-    # Log it to JSON
-    DeviceLogger.log_communication(device_id, device_name, action, payload, source="matter_api")
-    
     # Also update Postgres DB and fire websockets if it's a known state command
     try:
-        device_uuid = uuid.UUID(device_id)
-        result = await db.execute(
-            select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid)
-        )
-        device = result.scalar_one_or_none()
+        if device_id:
+            device_uuid = uuid.UUID(device_id)
+            result = await db.execute(
+                select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid)
+            )
+            device = result.scalar_one_or_none()
+        else:
+            # Fallback: search by name
+            result = await db.execute(
+                select(Device).options(selectinload(Device.room)).where(Device.name == device_name)
+            )
+            device = result.scalar_one_or_none()
+            if device:
+                device_id = str(device.id)
+                
+        # Now log it to JSON with a guaranteed device_name and device_id
+        DeviceLogger.log_communication(device_id, device_name, action, payload, source="matter_api")
+        
         
         if device:
             action_lower = action.lower()
