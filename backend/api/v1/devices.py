@@ -1059,7 +1059,18 @@ async def matter_post_command_path(
         payload = {}
         
     # Try to extract actual command name
-    command = payload.get("command", command_path)
+    clean_command_path = command_path.strip("/")
+    
+    # If the user omitted the cluster name in the URL (e.g. /cluster/toggle instead of /cluster/OnOff/toggle)
+    # The 'cluster' variable will accidentally contain the command.
+    known_commands = ["triggereffect", "toggle", "on", "off", "setlevel", "capturesnapshot"]
+    if cluster.lower() in known_commands:
+        if clean_command_path:
+            clean_command_path = f"{cluster}/{clean_command_path}"
+        else:
+            clean_command_path = cluster
+            
+    command = payload.get("command", clean_command_path if clean_command_path else cluster)
     
     return await _handle_matter_command(identifier, action=command, payload=payload, db=db, background_tasks=background_tasks)
 
