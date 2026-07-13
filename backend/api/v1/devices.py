@@ -1041,7 +1041,7 @@ async def matter_get_device(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/{command_path}")
+@router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/{command_path:path}")
 @limiter.limit("60/minute")
 async def matter_post_command_path(
     request: Request,
@@ -1176,17 +1176,24 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
         pass
 
     # Specific responses based on spec
-    if action.lower() == "capturesnapshot":
+    action_lower = action.lower()
+    
+    if action_lower == "capturesnapshot":
         IST = timezone(timedelta(hours=5, minutes=30))
         return {
             "snapshotUrl": f"/media/{device_name.replace(' ', '_')}/snapshot.jpg",
             "timestamp": datetime.now(IST).isoformat()
         }
-    elif action.lower() == "off":
+    elif action_lower == "triggereffect":
+        return {"id": "0x0040", "name": "TriggerEffect"}
+    elif action_lower.startswith("setlevel/"):
+        level_str = action.split("/")[1]
+        return {"level": int(level_str), "transitionTime": 2}
+    elif action_lower == "off":
         return {"id": "0x00", "name": "Off"}
-    elif action.lower() == "on":
+    elif action_lower == "on":
         return {"id": "0x01", "name": "On"}
-    elif action.lower() == "toggle":
+    elif action_lower == "toggle":
         return {"id": "0x02", "name": "Toggle"}
         
     return {"status": "success", "command": action}
