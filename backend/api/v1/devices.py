@@ -1176,7 +1176,7 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
         pass
 
     # Specific responses based on spec
-    action_lower = action.lower()
+    action_lower = action.lower().rstrip("/")
     
     if action_lower == "capturesnapshot":
         IST = timezone(timedelta(hours=5, minutes=30))
