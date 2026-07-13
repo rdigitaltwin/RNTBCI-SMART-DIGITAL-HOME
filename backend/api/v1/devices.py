@@ -1194,7 +1194,7 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
         }
     elif action_lower == "triggereffect":
         response_data = {"id": "0x0040", "name": "TriggerEffect"}
-    elif action_lower == "scenemanagement/copyscene":
+    elif action_lower == "copyscene":
         response_data = {
             "mode": payload.get("mode", 1),
             "groupId": payload.get("groupId", 10),
