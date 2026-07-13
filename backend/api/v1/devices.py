@@ -1194,6 +1194,12 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
         }
     elif action_lower == "triggereffect":
         response_data = {"id": "0x0040", "name": "TriggerEffect"}
+    elif action_lower == "scenemanagement/copyscene":
+        response_data = {
+            "mode": 1,
+            "groupId": 10,
+            "sceneId": 2
+        }
     elif action_lower.startswith("setlevel/"):
         level_str = action.split("/")[1]
         response_data = {"level": int(level_str), "transitionTime": 2}
