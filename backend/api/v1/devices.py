@@ -1135,10 +1135,6 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
             if device:
                 device_id = str(device.id)
                 
-        # Now log it to JSON with a guaranteed device_name and device_id
-        DeviceLogger.log_communication(device_id, device_name, action, payload, source="matter_api")
-        
-        
         if device:
             action_lower = action.lower()
             power_changed = False
@@ -1186,28 +1182,35 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
         # Don't block the Matter API if DB sync fails
         pass
 
-    # Specific responses based on spec
+    # Compute specific responses based on spec
     action_lower = action.lower().rstrip("/")
+    response_data = {"status": "success", "command": action}
     
     if action_lower == "capturesnapshot":
         IST = timezone(timedelta(hours=5, minutes=30))
-        return {
+        response_data = {
             "snapshotUrl": f"/media/{device_name.replace(' ', '_')}/snapshot.jpg",
             "timestamp": datetime.now(IST).isoformat()
         }
     elif action_lower == "triggereffect":
-        return {"id": "0x0040", "name": "TriggerEffect"}
+        response_data = {"id": "0x0040", "name": "TriggerEffect"}
     elif action_lower.startswith("setlevel/"):
         level_str = action.split("/")[1]
-        return {"level": int(level_str), "transitionTime": 2}
+        response_data = {"level": int(level_str), "transitionTime": 2}
     elif action_lower == "off":
-        return {"id": "0x00", "name": "Off"}
+        response_data = {"id": "0x00", "name": "Off"}
     elif action_lower == "on":
-        return {"id": "0x01", "name": "On"}
+        response_data = {"id": "0x01", "name": "On"}
     elif action_lower == "toggle":
-        return {"id": "0x02", "name": "Toggle"}
+        response_data = {"id": "0x02", "name": "Toggle"}
         
-    return {"status": "success", "command": action}
+    # Now log it to JSON with the generated response as the payload
+    try:
+        DeviceLogger.log_communication(device_id, device_name, action, response_data, source="matter_api")
+    except Exception:
+        pass
+        
+    return response_data
 
 
 
