@@ -71,12 +71,6 @@ class DeviceLogger:
                             }]
                         },
                         {
-                            "clusterId": "0x0004",
-                            "name": "Groups",
-                            "side": "server",
-                            "mandatory": True
-                        },
-                        {
                             "clusterId": "0x0006",
                             "name": "OnOff",
                             "side": "server",
