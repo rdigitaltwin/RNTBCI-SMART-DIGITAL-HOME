@@ -1063,7 +1063,7 @@ async def matter_post_command_path(
     
     # If the user omitted the cluster name in the URL (e.g. /cluster/toggle instead of /cluster/OnOff/toggle)
     # The 'cluster' variable will accidentally contain the command.
-    known_commands = ["triggereffect", "toggle", "on", "off", "setlevel", "capturesnapshot"]
+    known_commands = ["triggereffect", "toggle", "on", "off", "setlevel", "capturesnapshot", "copyscene", "occupancy"]
     if cluster.lower() in known_commands:
         if clean_command_path:
             clean_command_path = f"{cluster}/{clean_command_path}"
@@ -1199,6 +1199,10 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
             "mode": payload.get("mode", 1),
             "groupId": payload.get("groupId", 10),
             "sceneId": payload.get("sceneId", 2)
+        }
+    elif action_lower == "occupancy":
+        response_data = {
+            "occupied": payload.get("occupied", True)
         }
     elif action_lower.startswith("setlevel/"):
         level_str = action.split("/")[1]
