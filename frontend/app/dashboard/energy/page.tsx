@@ -10,7 +10,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Zap, IndianRupee, TrendingUp, TrendingDown, Battery, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, Clock,
+  ArrowUpRight, ArrowDownRight, Clock, Download
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -141,8 +141,48 @@ export default function EnergyPage() {
     borderRadius: '8px', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: '#F8FAFC',
   };
 
+  const handleDownload = () => {
+    const csvContent = [
+      ['Time', 'Power (kW)', 'Cost (₹)', 'Peak Status'],
+      ...hourlyData.map(row => [
+        row.time,
+        row.power,
+        row.cost,
+        row.peak ? 'Peak' : 'Normal'
+      ])
+    ].map(e => e.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `energy_data_${new Date().toISOString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="fade-in" style={{ maxWidth: '1600px' }}>
+      {/* Header and Metrics */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#F8FAFC' }}>Energy Analytics</h2>
+        <button
+          onClick={handleDownload}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '8px 16px', borderRadius: '8px',
+            background: 'rgba(0, 229, 255, 0.1)', border: '1px solid rgba(0, 229, 255, 0.3)',
+            color: '#00E5FF', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', fontWeight: 600,
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(0, 229, 255, 0.2)')}
+          onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(0, 229, 255, 0.1)')}
+        >
+          <Download size={16} /> Download CSV
+        </button>
+      </div>
+
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
         <MetricCard label="Current Draw" value={totalPower.toFixed(2)} unit="kW" icon={Zap} color="#FFC857" trend={{ value: '+3.2%', direction: 'up' }} />
