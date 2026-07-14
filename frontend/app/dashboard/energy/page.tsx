@@ -18,39 +18,7 @@ import {
   Legend, ComposedChart,
 } from 'recharts';
 import { useDeviceStore, useSimulationStore } from '@/store';
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-function generateHourlyData() {
-  const data = [];
-  const now = new Date();
-  for (let i = 23; i >= 0; i--) {
-    const hour = new Date(now.getTime() - i * 3600000);
-    const h = hour.getHours();
-    const basePower = 2 + 2 * Math.sin((h - 6) * Math.PI / 12);
-    const power = Math.max(0.5, basePower + (Math.random() - 0.5));
-    const cost = power * 0.12;
-    data.push({
-      time: hour.toLocaleTimeString('en-US', { hour: '2-digit', hour12: false }),
-      power: parseFloat(power.toFixed(2)),
-      cost: parseFloat(cost.toFixed(3)),
-      peak: h >= 14 && h < 18 ? power * 1.2 : null,
-    });
-  }
-  return data;
-}
-
-function generateWeeklyData() {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return days.map((day, i) => ({
-    day,
-    consumption: parseFloat((40 + Math.random() * 20 + (i >= 5 ? 10 : 0)).toFixed(1)),
-    cost: parseFloat((4.8 + Math.random() * 2.4 + (i >= 5 ? 1.2 : 0)).toFixed(2)),
-    average: 48,
-  }));
-}
+import { api } from '@/services/api';
 
 // =============================================================================
 // METRIC CARD
@@ -128,11 +96,47 @@ function TariffIndicator() {
 
 export default function EnergyPage() {
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('day');
-  const hourlyData = useMemo(() => generateHourlyData(), []);
-  const weeklyData = useMemo(() => generateWeeklyData(), []);
+  const [hourlyData, setHourlyData] = useState<any[]>([]);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const devices = useDeviceStore((s) => s.devices);
 
-  const totalPower = devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0) || 4.38;
+  // Fetch real data from backend
+  useEffect(() => {
+    async function fetchEnergy() {
+      try {
+        const res = await api.getEnergySummary(period);
+        if (res.hourly_data) {
+          const formattedHourly = res.hourly_data.map((d: any) => {
+            const date = new Date(d.hour);
+            return {
+              time: date.toLocaleTimeString('en-US', { hour: '2-digit', hour12: false }),
+              power: Number(d.total_power || 0),
+              cost: Number(d.total_cost || 0),
+              peak: Number(d.total_power || 0) > 4 ? Number(d.total_power) * 1.2 : null
+            };
+          });
+          setHourlyData(formattedHourly);
+        }
+        
+        // For weekly comparison (using room breakdown as placeholder for real data)
+        if (res.room_breakdown) {
+          const formattedWeekly = res.room_breakdown.map((r: any) => ({
+            day: r.room,
+            consumption: Number(r.total_power_kw || 0),
+            cost: Number(r.total_cost_usd || 0),
+            average: Number(r.avg_power_kw || 0)
+          }));
+          setWeeklyData(formattedWeekly);
+        }
+      } catch (err) {
+        console.error("Failed to fetch energy data:", err);
+      }
+    }
+    fetchEnergy();
+  }, [period]);
+
+  // Aggregate current metrics
+  const totalPower = devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0) || 0;
   const dailyCost = (totalPower * 24 * 0.12).toFixed(2);
   const monthlyEstimate = (parseFloat(dailyCost) * 30).toFixed(2);
 

@@ -1161,6 +1161,18 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
                 else:
                     device.energy_usage_kw = 0.05
                     
+                # Log to EnergyHistory for dashboard graphs
+                from backend.models import EnergyHistory
+                energy_record = EnergyHistory(
+                    device_id=device.id,
+                    power_kw=device.energy_usage_kw,
+                    voltage=230.0,
+                    current_amps=(device.energy_usage_kw * 1000) / 230.0 if device.energy_usage_kw else 0.0,
+                    cost_usd=device.energy_usage_kw * 0.12,
+                    timestamp=datetime.now(timezone.utc)
+                )
+                db.add(energy_record)
+                
                 await db.commit()
                 
                 # Dispatch WebSockets
