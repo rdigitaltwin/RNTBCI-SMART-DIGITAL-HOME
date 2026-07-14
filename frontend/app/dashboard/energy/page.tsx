@@ -142,21 +142,31 @@ export default function EnergyPage() {
   };
 
   const handleDownload = () => {
+    // Generate IST Timestamp (hour:min:sec)
+    const istTime = new Date().toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
     const csvContent = [
-      ['Time', 'Power (kW)', 'Cost (₹)', 'Peak Status'],
-      ...hourlyData.map(row => [
-        row.time,
-        row.power,
-        row.cost,
-        row.peak ? 'Peak' : 'Normal'
-      ])
+      ['Device Name', 'Power State', 'Power Consumption (kW)', 'Timestamp (IST)'],
+      ...devices.map(d => [
+        d.name,
+        d.power_state?.toUpperCase() || 'UNKNOWN',
+        d.energy_usage_kw || 0,
+        istTime
+      ]),
+      ['TOTAL', '', totalPower.toFixed(2), istTime]
     ].map(e => e.join(",")).join("\n");
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `energy_data_${new Date().toISOString()}.csv`);
+    link.setAttribute('download', `real_power_data_${istTime.replace(/:/g, '-')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
