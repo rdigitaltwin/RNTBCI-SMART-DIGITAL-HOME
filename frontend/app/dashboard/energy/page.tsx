@@ -104,7 +104,7 @@ export default function EnergyPage() {
   useEffect(() => {
     async function fetchEnergy() {
       try {
-        const res = await api.getEnergySummary(period);
+        const res: any = await api.getEnergySummary(period);
         if (res.hourly_data) {
           const formattedHourly = res.hourly_data.map((d: any) => {
             const date = new Date(d.hour);
