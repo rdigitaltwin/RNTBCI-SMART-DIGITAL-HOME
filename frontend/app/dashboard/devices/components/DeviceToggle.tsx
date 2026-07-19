@@ -24,7 +24,8 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
     
     try {
       const status = newState.toUpperCase();
-      await api.toggleState(device.id, status);
+      const updatedDevice = await api.toggleState(device.id, status) as Partial<Device>;
+      useDeviceStore.getState().updateDevice(device.id, updatedDevice);
     } catch (err) { 
       // Revert if API fails
       console.error('Failed to toggle device state', err);

@@ -7,7 +7,7 @@
  * in Iron Man HUD-style glassmorphic cards.
  */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Zap, Activity, Cpu, AlertTriangle, TrendingUp, ThermometerSun,
   Wifi, Battery, DollarSign, ArrowUpRight, ArrowDownRight,
@@ -15,7 +15,7 @@ import {
 import { AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '@/services/api';
-import { useDeviceStore, useSimulationStore, useEventStore } from '@/store';
+import { useDeviceStore, useSimulationStore, useEventStore, type Device } from '@/store';
 
 // =============================================================================
 // STAT CARD
@@ -77,6 +77,17 @@ function StatCard({ label, value, unit, icon: Icon, color, change, trend }: {
 // =============================================================================
 
 function EnergyChart() {
+  const devices = useDeviceStore((s) => s.devices);
+  const totalPower = useMemo(() => {
+    return devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0);
+  }, [devices]);
+
+  const powerRef = useRef(totalPower);
+
+  useEffect(() => {
+    powerRef.current = totalPower;
+  }, [totalPower]);
+
   const [data, setData] = useState<Array<{ time: string; power: number }>>([]);
 
   useEffect(() => {
@@ -84,15 +95,16 @@ function EnergyChart() {
     const now = Date.now();
     const initial = Array.from({ length: 30 }, (_, i) => ({
       time: new Date(now - (29 - i) * 60000).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-      power: 2 + Math.sin(i * 0.3) * 1.5 + Math.random() * 0.5,
+      power: powerRef.current,
     }));
     setData(initial);
 
     const interval = setInterval(() => {
       setData((prev) => {
-        const last = prev[prev.length - 1];
-        const lastPower = last?.power || 2;
-        const newPower = Math.max(0.5, lastPower + (Math.random() - 0.5) * 0.3);
+        const lastPower = powerRef.current;
+        // Minor visual noise if >0, otherwise strictly 0
+        const noise = lastPower > 0 ? (Math.random() - 0.5) * 0.1 : 0;
+        const newPower = Math.max(0, lastPower + noise);
         return [
           ...prev.slice(1),
           {
@@ -277,8 +289,8 @@ function QuickDeviceList() {
     setTogglingId(device.id);
     const newState = device.power_state === 'on' ? 'off' : 'on';
     try {
-      await api.togglePower(device.id, newState);
-      useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+      const updatedDevice = await api.togglePower(device.id, newState) as Partial<Device>;
+      useDeviceStore.getState().updateDevice(device.id, updatedDevice);
     } catch { /* Ignore */ }
     setTogglingId(null);
   };
@@ -358,8 +370,8 @@ export default function DashboardOverview() {
   const alerts = useEventStore((s) => s.alerts);
 
   const totalDevices = devices.length || 22;
-  const onlineDevices = devices.filter((d) => d.status === 'online').length || 18;
-  const totalPower = devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0) || 4.38;
+  const onlineDevices = devices.length > 0 ? devices.filter((d) => d.status === 'online').length : 18;
+  const totalPower = devices.length > 0 ? devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0) : 4.38;
   const unacknowledgedAlerts = alerts.filter((a) => !a.acknowledged).length || 3;
   const efficiency = devices.length > 0
     ? (devices.reduce((sum, d) => sum + (d.efficiency_percent || 90), 0) / devices.length).toFixed(1)

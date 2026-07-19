@@ -477,8 +477,8 @@ function DeviceHUD({ device, color }: { device: Device; color: string }) {
     setToggling(true);
     try {
       const newState = isOn ? 'off' : 'on';
-      await api.togglePower(device.id, newState);
-      useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+      const updatedDevice = await api.togglePower(device.id, newState) as Partial<Device>;
+      useDeviceStore.getState().updateDevice(device.id, updatedDevice);
     } catch { /* Ignore */ }
     setToggling(false);
   };
