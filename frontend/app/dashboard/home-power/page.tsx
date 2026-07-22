@@ -5,7 +5,7 @@ import { Download, Activity, Zap, Clock } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart 
 } from 'recharts';
-import api from '@/lib/api';
+import api from '@/services/api';
 
 export default function HomePowerDashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -27,7 +27,7 @@ export default function HomePowerDashboard() {
   const fetchData = async () => {
     try {
       // Get last 24 hours of data roughly
-      const res = await api.getHomePowerHistory({ per_page: 100 });
+      const res = await api.getHomePowerHistory({ per_page: 100 }) as any;
       // Sort ascending for charts
       const sortedData = res.records.sort((a: any, b: any) => 
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
@@ -175,7 +175,7 @@ export default function HomePowerDashboard() {
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
                   itemStyle={{ color: '#10b981' }}
                   labelStyle={{ color: '#94a3b8', marginBottom: '8px' }}
-                  formatter={(value: number) => [`${value.toFixed(3)} kW`, 'Total Power']}
+                  formatter={(value: any) => [`${Number(value).toFixed(3)} kW`, 'Total Power']}
                 />
                 <Area 
                   type="monotone" 

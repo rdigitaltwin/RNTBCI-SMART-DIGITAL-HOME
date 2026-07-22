@@ -5,7 +5,7 @@ import { Download, Activity, Search, Filter } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
-import api from '@/lib/api';
+import api from '@/services/api';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
@@ -23,7 +23,7 @@ export default function AppliancePowerDashboard() {
 
   const fetchData = async () => {
     try {
-      const res = await api.getDevicePowerHistory({ per_page: 500 });
+      const res = await api.getDevicePowerHistory({ per_page: 500 }) as any;
       
       // We need to pivot the data manually for Recharts, similar to how the backend does it for CSV
       // Recharts wants an array of objects where each object is a timestamp with keys for each device
@@ -147,7 +147,7 @@ export default function AppliancePowerDashboard() {
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
                   itemStyle={{ fontSize: '13px', paddingTop: '4px' }}
                   labelStyle={{ color: '#94a3b8', marginBottom: '8px', fontWeight: 'bold' }}
-                  formatter={(value: number, name: string) => [`${(value || 0).toFixed(3)} kW`, name]}
+                  formatter={(value: any, name: any) => [`${(Number(value) || 0).toFixed(3)} kW`, String(name)]}
                 />
                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
                 
