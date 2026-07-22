@@ -19,7 +19,8 @@ function CanvasCleanup() {
   useEffect(() => {
     return () => {
       gl.dispose();
-      const ext = gl.getExtension('WEBGL_lose_context');
+      const context = gl.getContext();
+      const ext = context.getExtension('WEBGL_lose_context');
       if (ext) ext.loseContext();
     };
   }, [gl]);
