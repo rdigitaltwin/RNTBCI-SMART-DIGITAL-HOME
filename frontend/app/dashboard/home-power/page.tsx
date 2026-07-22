@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, Activity, Zap, Clock } from 'lucide-react';
+import { Download, Activity, Zap, Clock, FileDown } from 'lucide-react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import api from '@/services/api';
+import { StatCard, LiveIndicator } from '@/components/ui/DashboardCards';
 
 export default function HomePowerDashboard() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState('24h');
   
   // Calculate stats from data
   const latestKw = data.length > 0 ? data[data.length - 1].total_home_power_consumption_kw : 0;
@@ -22,12 +24,19 @@ export default function HomePowerDashboard() {
     // Poll every 15 seconds
     const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [timeRange]);
 
   const fetchData = async () => {
     try {
-      // Get last 24 hours of data roughly
-      const res = await api.getHomePowerHistory({ per_page: 100 }) as any;
+      // Determine per_page based on time range (rough estimate since 1 record = 15s)
+      const ranges: Record<string, number> = {
+        '15m': 60,
+        '1h': 240,
+        '6h': 1440,
+        '24h': 5760,
+      };
+      
+      const res = await api.getHomePowerHistory({ per_page: ranges[timeRange] || 100 }) as any;
       // Sort ascending for charts
       const sortedData = res.records.sort((a: any, b: any) => 
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
@@ -61,136 +70,160 @@ export default function HomePowerDashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="fade-in" style={{ maxWidth: '1600px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* Header & Controls Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Home Power Analytics</h1>
-          <p className="text-gray-400 mt-1">Total electricity consumption time-series</p>
+          <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Home Power History</h1>
+          <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Total electricity consumption time-series</p>
         </div>
         
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {/* Time Range Selector */}
+          <div style={{ 
+            display: 'flex', background: 'rgba(11, 17, 32, 0.5)', 
+            borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+            {['15m', '1h', '6h', '24h'].map(range => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                style={{
+                  padding: '6px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+                  background: timeRange === range ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
+                  color: timeRange === range ? '#00E5FF' : '#64748B',
+                  transition: 'all 0.2s', cursor: 'pointer', border: 'none'
+                }}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+
           <button 
             onClick={downloadCsv}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors border border-slate-700"
+            className="hover-brighten"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(11, 17, 32, 0.8)', border: '1px solid rgba(255,255,255,0.1)',
+              color: '#CBD5E1', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+              cursor: 'pointer', transition: 'all 0.2s ease-out'
+            }}
           >
-            <Download size={18} />
-            <span>Export CSV</span>
+            <FileDown size={16} color="#64748B" />
+            CSV
           </button>
           <button 
             onClick={downloadXlsx}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition-colors"
+            className="hover-brighten"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(0, 255, 157, 0.1)', border: '1px solid rgba(0, 255, 157, 0.2)',
+              color: '#00FF9D', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+              cursor: 'pointer', transition: 'all 0.2s ease-out'
+            }}
           >
-            <Download size={18} />
-            <span>Export XLSX</span>
+            <Download size={16} />
+            XLSX
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Activity size={64} />
-          </div>
-          <div className="flex items-center gap-3 text-emerald-400 mb-2">
-            <Activity size={20} />
-            <h3 className="font-medium">Current Draw</h3>
-          </div>
-          <div className="text-4xl font-bold text-white mt-4">
-            {latestKw.toFixed(2)} <span className="text-xl text-gray-500 font-normal">kW</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Zap size={64} />
-          </div>
-          <div className="flex items-center gap-3 text-amber-400 mb-2">
-            <Zap size={20} />
-            <h3 className="font-medium">Peak Demand (24h)</h3>
-          </div>
-          <div className="text-4xl font-bold text-white mt-4">
-            {maxKw.toFixed(2)} <span className="text-xl text-gray-500 font-normal">kW</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Clock size={64} />
-          </div>
-          <div className="flex items-center gap-3 text-blue-400 mb-2">
-            <Clock size={20} />
-            <h3 className="font-medium">Average (24h)</h3>
-          </div>
-          <div className="text-4xl font-bold text-white mt-4">
-            {avgKw.toFixed(2)} <span className="text-xl text-gray-500 font-normal">kW</span>
-          </div>
-        </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '16px',
+      }}>
+        <StatCard label="Current Draw" value={(latestKw).toFixed(2)} unit="kW" icon={Activity} color="#00FF9D" />
+        <StatCard label="Peak Demand" value={(maxKw).toFixed(2)} unit="kW" icon={Zap} color="#FFC857" />
+        <StatCard label="Average" value={(avgKw).toFixed(2)} unit="kW" icon={Clock} color="#6366F1" />
       </div>
 
       {/* Main Chart */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-white">Power Consumption Trend</h2>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-            <span className="text-sm text-gray-400">Live</span>
+      <div className="glass-card" style={{ padding: '32px', minHeight: '500px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#F8FAFC' }}>Power Consumption Trend</h2>
+            <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Historical breakdown</p>
           </div>
+          <LiveIndicator />
         </div>
         
         {loading && data.length === 0 ? (
-          <div className="h-[400px] flex items-center justify-center">
+          <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
           </div>
         ) : error ? (
-          <div className="h-[400px] flex items-center justify-center text-red-400">
+          <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF4D6D' }}>
             {error}
           </div>
         ) : (
-          <div className="h-[400px] w-full">
+          <div style={{ height: '400px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorKw" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <linearGradient id="colorKwPremium" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#00E5FF" stopOpacity={0.4}/>
+                    <stop offset="100%" stopColor="#00E5FF" stopOpacity={0}/>
                   </linearGradient>
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis 
                   dataKey="timeFormatted" 
-                  stroke="#94a3b8" 
+                  stroke="#64748B" 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
+                  dy={10}
                 />
                 <YAxis 
-                  stroke="#94a3b8" 
+                  stroke="#64748B" 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
                   tickFormatter={(value) => `${value} kW`}
+                  dx={-10}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
-                  itemStyle={{ color: '#10b981' }}
-                  labelStyle={{ color: '#94a3b8', marginBottom: '8px' }}
+                  contentStyle={{ 
+                    background: 'rgba(11, 17, 32, 0.95)', border: '1px solid rgba(0, 229, 255, 0.2)', 
+                    borderRadius: '8px', fontSize: '13px', fontFamily: "'JetBrains Mono', monospace", 
+                    color: '#F8FAFC', boxShadow: '0 8px 32px rgba(0, 229, 255, 0.1)'
+                  }}
+                  itemStyle={{ color: '#00E5FF', fontWeight: 600, padding: '4px 0' }}
+                  labelStyle={{ color: '#94A3B8', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}
                   formatter={(value: any) => [`${Number(value).toFixed(3)} kW`, 'Total Power']}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="total_home_power_consumption_kw" 
-                  stroke="#10b981" 
-                  strokeWidth={2}
+                  stroke="#00E5FF" 
+                  strokeWidth={3}
                   fillOpacity={1} 
-                  fill="url(#colorKw)" 
-                  activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+                  fill="url(#colorKwPremium)" 
+                  activeDot={{ r: 6, fill: '#00E5FF', stroke: '#0B1120', strokeWidth: 3 }}
+                  style={{ filter: 'url(#glow)' }}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        .hover-brighten:hover {
+          filter: brightness(1.2);
+          transform: translateY(-1px);
+        }
+      `}</style>
     </div>
   );
 }
