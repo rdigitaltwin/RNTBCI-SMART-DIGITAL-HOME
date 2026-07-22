@@ -691,9 +691,9 @@ class SimulationEngine:
                         "timestamp": now.isoformat(),
                     })
 
-                    # Random events (0.5% chance per tick)
-                    if random.random() < 0.005:
-                        await self._generate_event(db, device, device_type, now)
+                    # Random events (disabled)
+                    # if random.random() < 0.005:
+                    #     await self._generate_event(db, device, device_type, now)
 
                 # Record to HomePowerHistory (every ~15s)
                 if write_history:
