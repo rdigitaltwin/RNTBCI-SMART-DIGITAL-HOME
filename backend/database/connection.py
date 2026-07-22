@@ -44,7 +44,16 @@ async def get_db() -> AsyncSession:
 
 async def init_db() -> None:
     """Create all tables. Used for development bootstrapping."""
+    def check_and_drop_legacy(sync_conn):
+        from sqlalchemy import inspect, text
+        inspector = inspect(sync_conn)
+        if inspector.has_table("home_power_history"):
+            columns = [col['name'] for col in inspector.get_columns("home_power_history")]
+            if "base_load_kw" not in columns:
+                sync_conn.execute(text("DROP TABLE home_power_history CASCADE"))
+                
     async with engine.begin() as conn:
+        await conn.run_sync(check_and_drop_legacy)
         await conn.run_sync(Base.metadata.create_all)
 
 

@@ -160,29 +160,37 @@ export default function HomePowerDashboard() {
           <LiveIndicator />
         </div>
         
-        {loading && data.length === 0 ? (
-          <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-          </div>
-        ) : error ? (
-          <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-            <div style={{ color: '#FF4D6D', fontSize: '16px', fontWeight: 500 }}>{error}</div>
-            <button 
-              onClick={fetchData}
-              style={{
-                padding: '8px 24px', background: 'rgba(255, 77, 109, 0.1)', color: '#FF4D6D',
-                border: '1px solid rgba(255, 77, 109, 0.2)', borderRadius: '8px', cursor: 'pointer',
-                fontWeight: 600, transition: 'all 0.2s'
-              }}
-              onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 77, 109, 0.2)'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 77, 109, 0.1)'}
-            >
-              Retry Connection
-            </button>
-          </div>
-        ) : (
-          <div style={{ height: '400px', width: '100%' }}>
-            <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height="100%">
+        <div style={{ position: 'relative', height: '400px', width: '100%' }}>
+          {/* Overlay loading/error states */}
+          {(loading || error) && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 10,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(5, 8, 22, 0.6)', backdropFilter: 'blur(2px)', borderRadius: '12px', gap: '16px'
+            }}>
+              {loading && data.length === 0 ? (
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+              ) : error ? (
+                <>
+                  <div style={{ color: '#FF4D6D', fontSize: '16px', fontWeight: 500 }}>{error}</div>
+                  <button 
+                    onClick={fetchData}
+                    style={{
+                      padding: '8px 24px', background: 'rgba(255, 77, 109, 0.1)', color: '#FF4D6D',
+                      border: '1px solid rgba(255, 77, 109, 0.2)', borderRadius: '8px', cursor: 'pointer',
+                      fontWeight: 600, transition: 'all 0.2s'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 77, 109, 0.2)'}
+                    onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 77, 109, 0.1)'}
+                  >
+                    Retry Connection
+                  </button>
+                </>
+              ) : null}
+            </div>
+          )}
+          
+          <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorKwPremium" x1="0" y1="0" x2="0" y2="1">
@@ -234,7 +242,6 @@ export default function HomePowerDashboard() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        )}
       </div>
 
       <style jsx global>{`
