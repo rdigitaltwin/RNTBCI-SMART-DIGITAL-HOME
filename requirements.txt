@@ -38,3 +38,6 @@ pytest-asyncio==0.25.3
 
 # Logging
 python-json-logger==3.2.1
+
+# Export (XLSX)
+openpyxl>=3.1.5

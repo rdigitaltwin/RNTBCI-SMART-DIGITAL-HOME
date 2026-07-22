@@ -48,6 +48,7 @@ from backend.schemas import (
 from backend.utils.device_logger import DeviceLogger
 from backend.utils.webhook import dispatch_webhook
 from backend.websockets.manager import ws_manager
+from backend.services.simulation import device_simulator, DEFAULT_ON_MODE, DEVICE_MODE_PROFILES
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -456,7 +457,7 @@ async def toggle_power(
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
-    """Toggle device power state."""
+    """Toggle device power state. Delegates power calculation to the simulation engine."""
     result = await db.execute(
         select(Device)
         .options(selectinload(Device.room))
@@ -470,10 +471,17 @@ async def toggle_power(
     device.power_state = PowerState(data.power_state)
     device.last_updated = datetime.now(timezone.utc)
 
-    # Update energy usage based on power state
-    if data.power_state == "off":
+    # Delegate power management to simulation engine state machine
+    device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+    tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+    if data.power_state == "on":
+        tracker.set_power_on()  # Enters STARTING phase (30s warm-up, then RUNNING)
+        # Power stays 0 until simulation engine transitions to RUNNING after ~30s
+    elif data.power_state == "off":
+        tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         device.energy_usage_kw = 0.0
     elif data.power_state == "standby":
+        tracker.set_power_off()
         device.energy_usage_kw = max(device.energy_usage_kw * 0.05, 0.001)
 
     # Log event
@@ -527,7 +535,7 @@ async def toggle_state(
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
-    """Toggle device state (ON/OFF)."""
+    """Toggle device state (ON/OFF). Delegates power to simulation engine state machine."""
     result = await db.execute(
         select(Device)
         .options(selectinload(Device.room))
@@ -542,24 +550,15 @@ async def toggle_state(
     device.power_state = PowerState(power_state_str)
     device.last_updated = datetime.now(timezone.utc)
 
-    # Typical power load estimations based on device type
-    typical_loads = {
-        DeviceType.HVAC: 2100.0,
-        DeviceType.WATER_HEATER: 1500.0,
-        DeviceType.SMART_TV: 120.0,
-        DeviceType.ROUTER: 12.0,
-        DeviceType.SMART_LIGHT: 15.0,
-        DeviceType.WASHING_MACHINE: 500.0,
-        DeviceType.REFRIGERATOR: 150.0,
-    }
-    
-    # Update energy usage based on power state
-    if power_state_str == "off":
-        device.energy_usage_kw = 0.0
+    # Delegate power management to simulation engine state machine
+    device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+    tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+    if power_state_str == "on":
+        tracker.set_power_on()  # Enters STARTING phase (30s warm-up)
+        # Power will remain 0 for ~30s, then simulation engine will calculate real values
     else:
-        # If no specific load, we just leave it or set a generic fallback
-        default_load = typical_loads.get(device.type, 50.0) / 1000.0
-        device.energy_usage_kw = default_load
+        tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
+        device.energy_usage_kw = 0.0
 
     # Log event
     event = DeviceEvent(
@@ -584,12 +583,13 @@ async def toggle_state(
         "device": device_resp.model_dump(mode="json"),
     })
     
+    phase = tracker.power_phase
     await redis_client.publish_event({
         "device_id": str(device.id),
         "device_name": device.name,
         "event_type": "power_toggle",
         "severity": "info",
-        "message": f"{device.name} turned {data.status}. Power usage dropped by {int(device.energy_usage_kw * 1000)}W" if data.status == "OFF" else f"{device.name} turned {data.status}. Power usage increased by {int(device.energy_usage_kw * 1000)}W",
+        "message": f"{device.name} turned {data.status}. Phase: {phase}. Power will update after warm-up." if data.status == "ON" else f"{device.name} turned {data.status}. Power shutting down.",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
     
@@ -601,6 +601,69 @@ async def toggle_state(
             "state": device_resp.model_dump(mode="json")
         }
         background_tasks.add_task(dispatch_webhook, webhook_url, payload)
+
+    return device_resp
+
+
+@router.patch("/{device_id}/mode", response_model=DeviceResponse)
+@limiter.limit("60/minute")
+async def change_device_mode(
+    request: Request,
+    device_id: uuid.UUID,
+    data: dict,
+    current_user: User = Depends(require_user_or_admin),
+    db: AsyncSession = Depends(get_db),
+) -> DeviceResponse:
+    """Change the operating mode of a device (e.g., Light: dim/normal/bright, HVAC: fan/eco/cool/heat/boost)."""
+    result = await db.execute(
+        select(Device)
+        .options(selectinload(Device.room))
+        .where(Device.id == device_id)
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+
+    mode = data.get("mode")
+    if not mode:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="'mode' field is required")
+
+    device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+    profiles = DEVICE_MODE_PROFILES.get(device_type_str, {})
+    if mode not in profiles:
+        available = [m for m in profiles.keys() if m != "off"]
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid mode '{mode}' for {device_type_str}. Available: {available}",
+        )
+
+    # Update simulation tracker
+    tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+    old_mode = tracker.operating_mode
+    tracker.set_mode(mode)
+
+    # Update device metadata
+    metadata = dict(device.extra_data or {})
+    metadata["operating_mode"] = mode
+    device.extra_data = metadata
+    device.last_updated = datetime.now(timezone.utc)
+
+    # Log event
+    event = DeviceEvent(
+        device_id=device.id,
+        event_type="mode_change",
+        severity=EventSeverity.INFO,
+        message=f"{device.name}: mode changed from {old_mode} to {mode} by {current_user.username}",
+        extra_data={"old_mode": old_mode, "new_mode": mode, "user": current_user.username},
+    )
+    db.add(event)
+    await db.commit()
+
+    device_resp = _device_to_response(device)
+    await redis_client.publish_device_update(str(device.id), {
+        "action": "mode_changed",
+        "device": device_resp.model_dump(mode="json"),
+    })
 
     return device_resp
 
@@ -771,12 +834,13 @@ async def public_toggle_light_state(
     device.power_state = PowerState(power_state_str)
     device.last_updated = datetime.now(timezone.utc)
 
-    default_load = 15.0 / 1000.0
-    
-    if power_state_str == "off":
-        device.energy_usage_kw = 0.0
+    # Delegate to simulation engine state machine
+    tracker = device_simulator.ensure_tracker(str(device.id), "smart_light")
+    if power_state_str == "on":
+        tracker.set_power_on()  # STARTING phase, power = 0 for 30s
     else:
-        device.energy_usage_kw = default_load
+        tracker.set_power_off()  # STOPPING phase
+        device.energy_usage_kw = 0.0
 
     event = DeviceEvent(
         device_id=device.id,
@@ -1155,23 +1219,14 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
                 device.power_state = PowerState(power_state_str)
                 device.last_updated = datetime.now(timezone.utc)
                 
-                # Simple energy logic
-                if power_state_str == "off":
-                    device.energy_usage_kw = 0.0
+                # Delegate to simulation engine state machine
+                device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+                matter_tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+                if power_state_str == "on":
+                    matter_tracker.set_power_on()  # STARTING → RUNNING after 30s
                 else:
-                    device.energy_usage_kw = 0.05
-                    
-                # Log to EnergyHistory for dashboard graphs
-                from backend.models import EnergyHistory
-                energy_record = EnergyHistory(
-                    device_id=device.id,
-                    power_kw=device.energy_usage_kw,
-                    voltage=230.0,
-                    current_amps=(device.energy_usage_kw * 1000) / 230.0 if device.energy_usage_kw else 0.0,
-                    cost_usd=device.energy_usage_kw * 0.12,
-                    timestamp=datetime.now(timezone.utc)
-                )
-                db.add(energy_record)
+                    matter_tracker.set_power_off()  # STOPPING → OFF
+                    device.energy_usage_kw = 0.0
                 
                 await db.commit()
                 

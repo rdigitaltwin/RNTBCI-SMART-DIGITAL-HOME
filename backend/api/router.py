@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from backend.api.v1.auth import router as auth_router
 from backend.api.v1.dashboard import dashboard_router, energy_router
+from backend.api.v1.device_power import device_power_router
 from backend.api.v1.devices import router as devices_router
 from backend.api.v1.enterprise import (
     hems_router,
@@ -15,6 +16,7 @@ from backend.api.v1.enterprise import (
     timetravel_router,
 )
 from backend.api.v1.events import alerts_router, events_router
+from backend.api.v1.home_power import home_power_router
 from backend.api.v1.system import router as system_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
@@ -28,6 +30,10 @@ api_v1_router.include_router(events_router)
 api_v1_router.include_router(alerts_router)
 api_v1_router.include_router(system_router)
 
+# Power history routes
+api_v1_router.include_router(home_power_router)
+api_v1_router.include_router(device_power_router)
+
 # Enterprise modules
 api_v1_router.include_router(simulation_router)
 api_v1_router.include_router(scenario_router)
@@ -36,3 +42,4 @@ api_v1_router.include_router(hub_router)
 api_v1_router.include_router(location_router)
 api_v1_router.include_router(pipeline_router)
 api_v1_router.include_router(timetravel_router)
+

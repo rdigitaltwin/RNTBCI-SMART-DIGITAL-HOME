@@ -29,6 +29,8 @@ const NAV_ITEMS = [
   { id: 'devices', label: 'Devices', icon: Cpu, href: '/dashboard/devices' },
   { id: 'digital-twin', label: '3D Digital Twin', icon: Home, href: '/dashboard/twin' },
   { id: 'energy', label: 'Energy Analytics', icon: Zap, href: '/dashboard/energy' },
+  { id: 'home-power', label: 'Home Power History', icon: Activity, href: '/dashboard/home-power' },
+  { id: 'appliance-power', label: 'Appliance Power', icon: Activity, href: '/dashboard/appliance-power' },
   { id: 'events', label: 'Event Stream', icon: Activity, href: '/dashboard/events' },
   { id: 'scenarios', label: 'Scenarios', icon: Film, href: '/dashboard/scenarios' },
   { id: 'timetravel', label: 'Time Travel', icon: Clock, href: '/dashboard/timetravel' },

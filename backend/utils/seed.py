@@ -27,11 +27,13 @@ from backend.models import (
     ConnectivityStatus,
     Device,
     DeviceEvent,
+    DevicePowerHistory,
     DeviceState,
     DeviceStatus,
     DeviceType,
     EnergyHistory,
     EventSeverity,
+    HomePowerHistory,
     Notification,
     Permission,
     PowerState,
@@ -80,15 +82,22 @@ async def seed_database() -> None:
         await _seed_energy_history(db, devices)
         logger.info("Seeded energy history (30 days)")
 
-        # 7. Events
+        # 7. Power history tables (new)
+        await _seed_home_power_history(db, devices)
+        logger.info("Seeded home power history (30 days)")
+
+        await _seed_device_power_history(db, devices)
+        logger.info("Seeded device power history (30 days)")
+
+        # 8. Events
         await _seed_events(db, devices)
         logger.info("Seeded events")
 
-        # 8. Alerts
+        # 9. Alerts
         await _seed_alerts(db, devices)
         logger.info("Seeded alerts")
 
-        # 9. Notifications
+        # 10. Notifications
         await _seed_notifications(db, users)
         logger.info("Seeded notifications")
 
@@ -258,6 +267,14 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"upload_speed": 45, "download_speed": 95, "internet_status": "connected", "connected_clients": 8}, 3.5, 2.0, 2.5),
         ("Front Door Lock", DeviceType.DOOR_LOCK, "hallway", PowerState.OFF, 0.003,
          {"lock_state": "locked", "auto_lock": True, "auto_lock_delay": 60}, 3.0, 1.0, 0.0),
+
+        # Kitchen — Cooking appliance
+        ("Induction Cooktop", DeviceType.COOKING, "kitchen", PowerState.OFF, 0.0,
+         {"mode": "off", "burner": 1}, 8.0, 1.0, 1.0),
+
+        # Virtual base load (always ON — standby, WiFi, lights etc.)
+        ("Base Load", DeviceType.BASE_LOAD, "hallway", PowerState.ON, 0.20,
+         {"description": "Ambient standby power consumption"}, 0.0, 0.0, 0.0),
     ]
 
     for name, dtype, room_key, pstate, energy, meta, px, py, pz in device_configs:
@@ -348,6 +365,186 @@ async def _seed_energy_history(db: AsyncSession, devices: list[Device]) -> None:
             db.add_all(records)
             await db.flush()
             records = []
+
+    if records:
+        db.add_all(records)
+        await db.flush()
+
+
+async def _seed_home_power_history(db: AsyncSession, devices: list[Device]) -> None:
+    """Generate 30 days of total home power consumption history."""
+    from backend.services.simulation import DEVICE_MODE_PROFILES, DEFAULT_ON_MODE
+
+    now = datetime.now(timezone.utc)
+    records = []
+
+    for day_offset in range(30, 0, -1):
+        for hour in range(0, 24):
+            for minute in [0, 15, 30, 45]:
+                timestamp = now - timedelta(days=day_offset, hours=24 - hour, minutes=60 - minute)
+
+                total_kw = 0.0
+
+                for device in devices:
+                    dtype = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
+                    dtype_str = dtype.value
+
+                    # Base load always contributes
+                    if dtype == DeviceType.BASE_LOAD:
+                        profile = DEVICE_MODE_PROFILES.get("base_load", {}).get("active", {})
+                        total_kw += profile.get("kw", 0.20) + random.gauss(0, 0.01)
+                        continue
+
+                    # Simulate usage patterns based on time-of-day
+                    is_active = False
+                    mode = DEFAULT_ON_MODE.get(dtype_str, "on")
+
+                    if dtype == DeviceType.REFRIGERATOR:
+                        is_active = True  # Always on
+                        cycle = math.sin(hour * math.pi / 3)
+                        mode = "compressor" if cycle > 0.5 else ("cooling" if cycle > -0.3 else "idle")
+                    elif dtype == DeviceType.HVAC:
+                        # Active during hot hours
+                        is_active = 10 <= hour <= 22 and random.random() < 0.6
+                        mode = "cool" if 12 <= hour <= 18 else "eco"
+                    elif dtype == DeviceType.SMART_LIGHT:
+                        is_active = hour >= 18 or hour < 6
+                        mode = "normal" if is_active else "off"
+                    elif dtype == DeviceType.SMART_TV:
+                        is_active = 18 <= hour <= 23 and random.random() < 0.7
+                    elif dtype == DeviceType.WASHING_MACHINE:
+                        is_active = hour in (9, 10, 11) and random.random() < 0.3
+                        mode = random.choice(["wash", "rinse", "spin"])
+                    elif dtype == DeviceType.DISHWASHER:
+                        is_active = hour in (20, 21) and random.random() < 0.4
+                        mode = random.choice(["wash", "dry"])
+                    elif dtype == DeviceType.COOKING:
+                        is_active = hour in (7, 8, 12, 13, 18, 19) and random.random() < 0.5
+                        mode = random.choice(["low", "medium", "high"])
+                    elif dtype == DeviceType.WATER_HEATER:
+                        is_active = hour in (6, 7, 18, 19) and random.random() < 0.3
+                        mode = "heating"
+                    elif dtype == DeviceType.ROUTER:
+                        is_active = True  # Always on
+                        mode = "active"
+                    elif dtype == DeviceType.CAMERA:
+                        is_active = True  # Always on
+                        mode = "recording"
+                    else:
+                        is_active = random.random() < 0.2  # Low activity for other devices
+
+                    if is_active:
+                        profiles = DEVICE_MODE_PROFILES.get(dtype_str, {})
+                        profile = profiles.get(mode, profiles.get("on", {}))
+                        kw = profile.get("kw", 0.01)
+                        kw += random.gauss(0, kw * 0.08)  # 8% noise
+                        total_kw += max(0, kw)
+
+                total_kw = max(0, total_kw)
+                records.append(HomePowerHistory(
+                    timestamp=timestamp,
+                    total_home_power_consumption_kw=round(total_kw, 4),
+                ))
+
+                if len(records) >= 5000:
+                    db.add_all(records)
+                    await db.flush()
+                    records = []
+
+    if records:
+        db.add_all(records)
+        await db.flush()
+
+
+async def _seed_device_power_history(db: AsyncSession, devices: list[Device]) -> None:
+    """Generate 30 days of per-device power consumption history."""
+    from backend.services.simulation import DEVICE_MODE_PROFILES, DEFAULT_ON_MODE
+
+    now = datetime.now(timezone.utc)
+    records = []
+
+    for day_offset in range(30, 0, -1):
+        for hour in range(0, 24):
+            for minute in [0, 15, 30, 45]:
+                timestamp = now - timedelta(days=day_offset, hours=24 - hour, minutes=60 - minute)
+
+                for device in devices:
+                    dtype = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
+                    dtype_str = dtype.value
+
+                    # Determine activity and mode
+                    is_active = False
+                    mode = "off"
+
+                    if dtype == DeviceType.BASE_LOAD:
+                        is_active = True
+                        mode = "active"
+                    elif dtype == DeviceType.REFRIGERATOR:
+                        is_active = True
+                        cycle = math.sin(hour * math.pi / 3)
+                        mode = "compressor" if cycle > 0.5 else ("cooling" if cycle > -0.3 else "idle")
+                    elif dtype == DeviceType.HVAC:
+                        is_active = 10 <= hour <= 22 and random.random() < 0.6
+                        mode = "cool" if 12 <= hour <= 18 else "eco"
+                    elif dtype == DeviceType.SMART_LIGHT:
+                        is_active = hour >= 18 or hour < 6
+                        mode = "normal" if is_active else "off"
+                    elif dtype == DeviceType.SMART_TV:
+                        is_active = 18 <= hour <= 23 and random.random() < 0.7
+                        mode = "on" if is_active else "off"
+                    elif dtype == DeviceType.WASHING_MACHINE:
+                        is_active = hour in (9, 10, 11) and random.random() < 0.3
+                        mode = random.choice(["wash", "rinse", "spin"]) if is_active else "idle"
+                    elif dtype == DeviceType.DISHWASHER:
+                        is_active = hour in (20, 21) and random.random() < 0.4
+                        mode = random.choice(["wash", "dry"]) if is_active else "idle"
+                    elif dtype == DeviceType.COOKING:
+                        is_active = hour in (7, 8, 12, 13, 18, 19) and random.random() < 0.5
+                        mode = random.choice(["low", "medium", "high"]) if is_active else "idle"
+                    elif dtype == DeviceType.WATER_HEATER:
+                        is_active = hour in (6, 7, 18, 19) and random.random() < 0.3
+                        mode = "heating" if is_active else "off"
+                    elif dtype == DeviceType.ROUTER:
+                        is_active = True
+                        mode = "active"
+                    elif dtype == DeviceType.CAMERA:
+                        is_active = True
+                        mode = "recording"
+                    else:
+                        is_active = random.random() < 0.15
+                        mode = DEFAULT_ON_MODE.get(dtype_str, "on") if is_active else "off"
+
+                    # Get power profile
+                    profiles = DEVICE_MODE_PROFILES.get(dtype_str, {})
+                    profile = profiles.get(mode, {"kw": 0.0, "kvar": 0.0, "pf": 1.0})
+                    kw = profile.get("kw", 0.0)
+                    kvar = profile.get("kvar", 0.0)
+                    pf = profile.get("pf", 1.0)
+
+                    if kw > 0:
+                        kw += random.gauss(0, kw * 0.08)
+                        kvar += random.gauss(0, max(kvar * 0.08, 0.001))
+                        kw = max(0, kw)
+                        kvar = max(0, kvar)
+
+                    interval_hrs = 0.25  # 15 minutes
+                    energy_kwh = kw * interval_hrs
+
+                    records.append(DevicePowerHistory(
+                        timestamp=timestamp,
+                        device_id=device.id,
+                        device_name=device.name,
+                        mode=mode,
+                        kw=round(kw, 6),
+                        kvar=round(kvar, 6),
+                        power_factor=round(pf, 3),
+                        energy_kwh=round(energy_kwh, 6),
+                    ))
+
+                    if len(records) >= 5000:
+                        db.add_all(records)
+                        await db.flush()
+                        records = []
 
     if records:
         db.add_all(records)

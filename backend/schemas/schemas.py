@@ -330,6 +330,63 @@ class DashboardRealtimeResponse(BaseModel):
 
 
 # =============================================================================
+# POWER HISTORY SCHEMAS
+# =============================================================================
+
+
+class HomePowerHistoryResponse(BaseModel):
+    """Single home power history record."""
+
+    id: uuid.UUID
+    timestamp: datetime
+    total_home_power_consumption_kw: float
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class HomePowerHistoryListResponse(BaseModel):
+    """Paginated home power history."""
+
+    records: list[HomePowerHistoryResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+class DevicePowerHistoryResponse(BaseModel):
+    """Single device power history record."""
+
+    id: uuid.UUID
+    timestamp: datetime
+    device_id: uuid.UUID
+    device_name: str
+    mode: str
+    kw: float
+    kvar: float
+    power_factor: float
+    energy_kwh: float
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DevicePowerHistoryListResponse(BaseModel):
+    """Paginated device power history."""
+
+    records: list[DevicePowerHistoryResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+class DeviceModeRequest(BaseModel):
+    """Device mode change request."""
+
+    mode: str = Field(..., min_length=1, max_length=50)
+
+
+# =============================================================================
 # WEBSOCKET SCHEMAS
 # =============================================================================
 
@@ -341,3 +398,4 @@ class WSMessage(BaseModel):
     payload: dict
     timestamp: datetime | None = None
     event_id: str | None = None
+

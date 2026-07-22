@@ -3,6 +3,13 @@
 Enterprise-grade device simulation with realistic load profiles,
 state machines, scenario management, and historical replay.
 Runs at 1-second intervals with physically accurate power curves.
+
+Key features:
+- Device power phase state machine: OFF → STARTING (30s) → RUNNING → STOPPING → OFF
+- Per-device operating modes with mode-specific kW and kVAR values
+- Reactive power (kVAR) based on realistic power factors
+- Continuous recording to home_power_history and device_power_history
+- Noise injection for realistic fluctuations
 """
 
 import asyncio
@@ -25,11 +32,14 @@ from backend.models import (
     ConnectivityStatus,
     Device,
     DeviceEvent,
+    DevicePowerHistory,
+    DevicePowerPhase,
     DeviceState,
     DeviceStatus,
     DeviceType,
     EnergyHistory,
     EventSeverity,
+    HomePowerHistory,
     PowerState,
 )
 from backend.redis.client import redis_client
@@ -39,252 +49,312 @@ settings = get_settings()
 
 
 # =============================================================================
-# DEVICE STATE MACHINES
+# DEVICE MODE DEFINITIONS WITH kW AND kVAR
 # =============================================================================
 
+# Each mode: {"kw": float, "kvar": float, "pf": float, "noise_pct": float}
+# noise_pct = percentage of kw used as std deviation for Gaussian noise
 
-class RefrigeratorState(str, Enum):
-    IDLE = "idle"
-    COMPRESSOR_ON = "compressor_on"
-    COOLING = "cooling"
-    COMPRESSOR_OFF = "compressor_off"
-
-
-class WashingMachineState(str, Enum):
-    IDLE = "idle"
-    PRE_WASH = "pre_wash"
-    WASH = "wash"
-    SPIN = "spin"
-    DRAIN = "drain"
-    COMPLETE = "complete"
-
-
-class DishwasherState(str, Enum):
-    IDLE = "idle"
-    PREWASH = "prewash"
-    WASH = "wash"
-    DRY = "dry"
-    COMPLETE = "complete"
-
-
-class HVACState(str, Enum):
-    IDLE = "idle"
-    COOLING = "cooling"
-    HEATING = "heating"
-    FAN_ONLY = "fan_only"
-    DEFROST = "defrost"
-
-
-# =============================================================================
-# LOAD PROFILE DEFINITIONS (Watts)
-# =============================================================================
-
-
-LOAD_PROFILES = {
-    DeviceType.REFRIGERATOR: {
-        RefrigeratorState.IDLE: {"power_w": 40, "duration_s": (300, 600), "noise": 5},
-        RefrigeratorState.COMPRESSOR_ON: {"power_w": 180, "duration_s": (30, 60), "noise": 15},
-        RefrigeratorState.COOLING: {"power_w": 80, "duration_s": (120, 300), "noise": 10},
-        RefrigeratorState.COMPRESSOR_OFF: {"power_w": 40, "duration_s": (60, 120), "noise": 5},
-        "cycle": [RefrigeratorState.IDLE, RefrigeratorState.COMPRESSOR_ON,
-                  RefrigeratorState.COOLING, RefrigeratorState.COMPRESSOR_OFF],
+DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
+    "base_load": {
+        "active": {"kw": 0.20, "kvar": 0.066, "pf": 0.95, "noise_pct": 0.05},
     },
-    DeviceType.WASHING_MACHINE: {
-        WashingMachineState.IDLE: {"power_w": 5, "duration_s": (0, 0), "noise": 1},
-        WashingMachineState.PRE_WASH: {"power_w": 200, "duration_s": (120, 180), "noise": 20},
-        WashingMachineState.WASH: {"power_w": 500, "duration_s": (600, 1200), "noise": 50},
-        WashingMachineState.SPIN: {"power_w": 800, "duration_s": (300, 600), "noise": 80},
-        WashingMachineState.DRAIN: {"power_w": 150, "duration_s": (120, 180), "noise": 15},
-        WashingMachineState.COMPLETE: {"power_w": 2, "duration_s": (0, 0), "noise": 0},
-        "cycle": [WashingMachineState.PRE_WASH, WashingMachineState.WASH,
-                  WashingMachineState.SPIN, WashingMachineState.DRAIN, WashingMachineState.COMPLETE],
+    "smart_light": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "dim": {"kw": 0.005, "kvar": 0.002, "pf": 0.92, "noise_pct": 0.10},
+        "normal": {"kw": 0.012, "kvar": 0.004, "pf": 0.95, "noise_pct": 0.08},
+        "bright": {"kw": 0.020, "kvar": 0.007, "pf": 0.94, "noise_pct": 0.08},
     },
-    DeviceType.DISHWASHER: {
-        DishwasherState.IDLE: {"power_w": 3, "duration_s": (0, 0), "noise": 1},
-        DishwasherState.PREWASH: {"power_w": 100, "duration_s": (180, 300), "noise": 10},
-        DishwasherState.WASH: {"power_w": 1800, "duration_s": (1200, 1800), "noise": 100},
-        DishwasherState.DRY: {"power_w": 600, "duration_s": (600, 900), "noise": 50},
-        DishwasherState.COMPLETE: {"power_w": 2, "duration_s": (0, 0), "noise": 0},
-        "cycle": [DishwasherState.PREWASH, DishwasherState.WASH,
-                  DishwasherState.DRY, DishwasherState.COMPLETE],
+    "refrigerator": {
+        "idle": {"kw": 0.05, "kvar": 0.037, "pf": 0.80, "noise_pct": 0.10},
+        "cooling": {"kw": 0.15, "kvar": 0.112, "pf": 0.80, "noise_pct": 0.08},
+        "compressor": {"kw": 0.30, "kvar": 0.225, "pf": 0.80, "noise_pct": 0.06},
+        "defrost": {"kw": 0.25, "kvar": 0.188, "pf": 0.80, "noise_pct": 0.08},
     },
-    DeviceType.HVAC: {
-        HVACState.IDLE: {"power_w": 50, "duration_s": (120, 300), "noise": 5},
-        HVACState.COOLING: {"power_w": 2500, "duration_s": (300, 900), "noise": 200},
-        HVACState.HEATING: {"power_w": 3000, "duration_s": (300, 900), "noise": 250},
-        HVACState.FAN_ONLY: {"power_w": 150, "duration_s": (180, 600), "noise": 15},
-        HVACState.DEFROST: {"power_w": 1800, "duration_s": (120, 300), "noise": 100},
+    "hvac": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "fan": {"kw": 0.15, "kvar": 0.075, "pf": 0.89, "noise_pct": 0.10},
+        "eco": {"kw": 1.00, "kvar": 0.484, "pf": 0.90, "noise_pct": 0.08},
+        "cool": {"kw": 2.50, "kvar": 1.210, "pf": 0.90, "noise_pct": 0.06},
+        "heat": {"kw": 3.00, "kvar": 1.452, "pf": 0.90, "noise_pct": 0.06},
+        "boost": {"kw": 4.00, "kvar": 1.936, "pf": 0.90, "noise_pct": 0.05},
     },
-    DeviceType.SMART_LIGHT: {
-        "on": {"power_w": 12, "noise": 1},
-        "dim": {"power_w": 5, "noise": 0.5},
-        "medium": {"power_w": 10, "noise": 0.8},
-        "high_intensity": {"power_w": 15, "noise": 1.5},
-        "blinking": {"power_w": 8, "noise": 4},
-        "off": {"power_w": 0.5, "noise": 0.1},
+    "washing_machine": {
+        "idle": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "wash": {"kw": 0.50, "kvar": 0.265, "pf": 0.88, "noise_pct": 0.08},
+        "rinse": {"kw": 0.20, "kvar": 0.106, "pf": 0.88, "noise_pct": 0.10},
+        "spin": {"kw": 0.80, "kvar": 0.424, "pf": 0.88, "noise_pct": 0.06},
     },
-    DeviceType.SMART_SWITCH: {
-        "on": {"power_w": 1.5, "noise": 0.1},
-        "off": {"power_w": 0.5, "noise": 0.05},
+    "dishwasher": {
+        "idle": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "wash": {"kw": 0.80, "kvar": 0.387, "pf": 0.90, "noise_pct": 0.06},
+        "dry": {"kw": 1.20, "kvar": 0.581, "pf": 0.90, "noise_pct": 0.06},
     },
-    DeviceType.SMART_PLUG: {
-        "on": {"power_w": 800, "noise": 80},  # depends on connected device
-        "off": {"power_w": 0.5, "noise": 0.1},
+    "cooking": {
+        "idle": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "low": {"kw": 0.50, "kvar": 0.164, "pf": 0.95, "noise_pct": 0.08},
+        "medium": {"kw": 1.50, "kvar": 0.493, "pf": 0.95, "noise_pct": 0.06},
+        "high": {"kw": 3.00, "kvar": 0.986, "pf": 0.95, "noise_pct": 0.05},
     },
-    DeviceType.DOOR_LOCK: {
-        "locked": {"power_w": 2, "noise": 0.2},
-        "unlocking": {"power_w": 8, "noise": 1},
-        "unlocked": {"power_w": 3, "noise": 0.3},
+    # Generic profiles for other devices (single-mode when ON)
+    "smart_switch": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "on": {"kw": 0.0015, "kvar": 0.0005, "pf": 0.95, "noise_pct": 0.10},
     },
-    DeviceType.GARAGE_DOOR: {
-        "closed": {"power_w": 3, "noise": 0.3},
-        "opening": {"power_w": 450, "noise": 30},
-        "open": {"power_w": 5, "noise": 0.5},
-        "closing": {"power_w": 450, "noise": 30},
+    "smart_plug": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "on": {"kw": 0.80, "kvar": 0.30, "pf": 0.94, "noise_pct": 0.10},
     },
-    DeviceType.WATER_HEATER: {
-        "idle": {"power_w": 30, "noise": 3},
-        "heating": {"power_w": 4500, "noise": 200},
-        "maintaining": {"power_w": 800, "noise": 80},
+    "door_lock": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "locked": {"kw": 0.002, "kvar": 0.0005, "pf": 0.97, "noise_pct": 0.15},
     },
-    DeviceType.NEBULIZER: {
-        "off": {"power_w": 0.5, "noise": 0.05},
-        "low": {"power_w": 25, "noise": 2},
-        "medium": {"power_w": 40, "noise": 4},
-        "high": {"power_w": 55, "noise": 5},
+    "garage_door": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "standby": {"kw": 0.003, "kvar": 0.001, "pf": 0.95, "noise_pct": 0.10},
     },
-    DeviceType.ROUTER: {
-        "active": {"power_w": 12, "noise": 1.5},
-        "idle": {"power_w": 8, "noise": 0.8},
+    "water_heater": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "heating": {"kw": 4.50, "kvar": 0.50, "pf": 0.99, "noise_pct": 0.04},
+        "maintaining": {"kw": 0.80, "kvar": 0.10, "pf": 0.99, "noise_pct": 0.08},
     },
-    DeviceType.CAMERA: {
-        "recording": {"power_w": 15, "noise": 1.5},
-        "standby": {"power_w": 5, "noise": 0.5},
-        "night_vision": {"power_w": 18, "noise": 2},
+    "nebulizer": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "low": {"kw": 0.025, "kvar": 0.008, "pf": 0.95, "noise_pct": 0.10},
+        "medium": {"kw": 0.040, "kvar": 0.013, "pf": 0.95, "noise_pct": 0.10},
+        "high": {"kw": 0.055, "kvar": 0.018, "pf": 0.95, "noise_pct": 0.10},
     },
-    DeviceType.SMART_TV: {
-        "on": {"power_w": 120, "noise": 10},
-        "standby": {"power_w": 1, "noise": 0.1},
-        "off": {"power_w": 0.3, "noise": 0.02},
+    "router": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "active": {"kw": 0.012, "kvar": 0.004, "pf": 0.95, "noise_pct": 0.12},
+    },
+    "camera": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "recording": {"kw": 0.015, "kvar": 0.005, "pf": 0.95, "noise_pct": 0.10},
+        "night_vision": {"kw": 0.018, "kvar": 0.006, "pf": 0.95, "noise_pct": 0.10},
+    },
+    "smart_tv": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "on": {"kw": 0.120, "kvar": 0.040, "pf": 0.95, "noise_pct": 0.08},
+        "standby": {"kw": 0.001, "kvar": 0.0003, "pf": 0.95, "noise_pct": 0.15},
     },
 }
 
+# Default mode when device is first turned ON
+DEFAULT_ON_MODE: dict[str, str] = {
+    "base_load": "active",
+    "smart_light": "normal",
+    "refrigerator": "idle",
+    "hvac": "cool",
+    "washing_machine": "wash",
+    "dishwasher": "wash",
+    "cooking": "medium",
+    "smart_switch": "on",
+    "smart_plug": "on",
+    "door_lock": "locked",
+    "garage_door": "standby",
+    "water_heater": "heating",
+    "nebulizer": "medium",
+    "router": "active",
+    "camera": "recording",
+    "smart_tv": "on",
+}
+
+# Auto-cycling devices: mode sequence and duration ranges (seconds)
+DEVICE_CYCLES: dict[str, list[tuple[str, tuple[int, int]]]] = {
+    "refrigerator": [
+        ("idle", (300, 600)),
+        ("cooling", (120, 300)),
+        ("compressor", (30, 60)),
+        ("cooling", (120, 240)),
+        ("defrost", (60, 120)),
+    ],
+    "washing_machine": [
+        ("wash", (600, 1200)),
+        ("rinse", (300, 600)),
+        ("spin", (300, 600)),
+    ],
+    "dishwasher": [
+        ("wash", (1200, 1800)),
+        ("dry", (600, 900)),
+    ],
+}
+
+# HVAC warm-up power multiplier curve (seconds → multiplier)
+STARTING_DURATION_S = 30
+STOPPING_DURATION_S = 10
+HISTORY_RECORD_INTERVAL_S = 15  # Record to history tables every 15 seconds
+
 
 # =============================================================================
-# DEVICE STATE TRACKER
+# DEVICE STATE TRACKER (per device)
 # =============================================================================
 
 
 class DeviceStateTracker:
-    """Tracks the internal state machine for a single device."""
+    """Tracks power phase, operating mode, and cycle state for a single device."""
 
-    def __init__(self, device_id: str, device_type: DeviceType) -> None:
+    def __init__(self, device_id: str, device_type_str: str) -> None:
         self.device_id = device_id
-        self.device_type = device_type
-        self.current_state: str = "idle"
-        self.state_timer: float = 0
-        self.state_duration: float = 0
+        self.device_type_str = device_type_str
+
+        # Power phase state machine
+        self.power_phase: str = DevicePowerPhase.OFF.value
+        self.phase_timer: float = 0.0  # seconds spent in current phase
+
+        # Operating mode
+        self.operating_mode: str = "off"
+
+        # Cycle state (for auto-cycling devices like fridge)
         self.cycle_index: int = 0
+        self.cycle_timer: float = 0.0
+        self.cycle_duration: float = 0.0
         self.running_cycle: bool = False
+
+        # Metadata
         self.metadata: dict[str, Any] = {}
 
-    def get_power_watts(self) -> float:
-        """Calculate current power consumption in watts with realistic noise."""
-        profile = LOAD_PROFILES.get(self.device_type, {})
-        state_profile = profile.get(self.current_state, {})
+    def get_mode_profile(self) -> dict[str, float]:
+        """Get the kW/kVAR profile for current operating mode."""
+        profiles = DEVICE_MODE_PROFILES.get(self.device_type_str, {})
+        return profiles.get(self.operating_mode, {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0})
 
-        if not state_profile or isinstance(state_profile, list):
-            return 0.0
+    def get_power_kw_kvar(self) -> tuple[float, float, float]:
+        """Calculate current kW, kVAR, and power factor with noise.
 
-        base_power = state_profile.get("power_w", 0)
-        noise = state_profile.get("noise", 0)
+        During STARTING phase: returns 0 kW/kVAR (warm-up period)
+        During RUNNING phase: returns mode-specific values with noise
+        During STOPPING phase: returns decaying values
+        """
+        if self.power_phase == DevicePowerPhase.OFF.value:
+            return 0.0, 0.0, 1.0
 
-        power = base_power + random.gauss(0, noise)
-        return max(0, power)
+        if self.power_phase == DevicePowerPhase.STARTING.value:
+            # 30-second warm-up: device is ON but not yet consuming power
+            return 0.0, 0.0, 1.0
+
+        profile = self.get_mode_profile()
+        base_kw = profile.get("kw", 0.0)
+        base_kvar = profile.get("kvar", 0.0)
+        pf = profile.get("pf", 1.0)
+        noise_pct = profile.get("noise_pct", 0.05)
+
+        if self.power_phase == DevicePowerPhase.STOPPING.value:
+            # Decay: power reduces linearly over STOPPING_DURATION_S
+            decay = max(0.0, 1.0 - (self.phase_timer / STOPPING_DURATION_S))
+            base_kw *= decay
+            base_kvar *= decay
+
+        # Apply Gaussian noise
+        if base_kw > 0:
+            noise = random.gauss(0, base_kw * noise_pct)
+            base_kw = max(0.0, base_kw + noise)
+            base_kvar = max(0.0, base_kvar + noise * (base_kvar / max(base_kw, 0.001)))
+
+        return round(base_kw, 6), round(base_kvar, 6), pf
+
+    def set_power_on(self, mode: str | None = None) -> None:
+        """Transition to STARTING phase (30s warm-up, then RUNNING)."""
+        if self.power_phase in (DevicePowerPhase.RUNNING.value, DevicePowerPhase.STARTING.value):
+            return  # Already on
+        self.power_phase = DevicePowerPhase.STARTING.value
+        self.phase_timer = 0.0
+        self.operating_mode = mode or DEFAULT_ON_MODE.get(self.device_type_str, "on")
+        # Start auto-cycle if applicable
+        if self.device_type_str in DEVICE_CYCLES:
+            self._start_cycle()
+
+    def set_power_off(self) -> None:
+        """Transition to STOPPING phase (gradual shutdown)."""
+        if self.power_phase == DevicePowerPhase.OFF.value:
+            return  # Already off
+        self.power_phase = DevicePowerPhase.STOPPING.value
+        self.phase_timer = 0.0
+        self.running_cycle = False
+
+    def set_mode(self, mode: str) -> None:
+        """Change operating mode while device is running."""
+        profiles = DEVICE_MODE_PROFILES.get(self.device_type_str, {})
+        if mode in profiles:
+            self.operating_mode = mode
+            # Reset cycle if device has auto-cycling
+            if self.device_type_str in DEVICE_CYCLES:
+                self.running_cycle = False
 
     def tick(self, elapsed_s: float = 1.0) -> dict[str, Any]:
         """Advance the state machine by elapsed_s seconds.
 
-        Returns dict with state change info if state changed.
+        Returns dict with state change info.
         """
-        result = {"changed": False}
+        result: dict[str, Any] = {"changed": False, "phase_changed": False}
 
-        if not self.running_cycle:
-            return result
+        self.phase_timer += elapsed_s
 
-        self.state_timer += elapsed_s
+        # Handle phase transitions
+        if self.power_phase == DevicePowerPhase.STARTING.value:
+            if self.phase_timer >= STARTING_DURATION_S:
+                old_phase = self.power_phase
+                self.power_phase = DevicePowerPhase.RUNNING.value
+                self.phase_timer = 0.0
+                result["phase_changed"] = True
+                result["old_phase"] = old_phase
+                result["new_phase"] = self.power_phase
+                result["changed"] = True
 
-        if self.state_timer >= self.state_duration:
-            result = self._advance_state()
+        elif self.power_phase == DevicePowerPhase.STOPPING.value:
+            if self.phase_timer >= STOPPING_DURATION_S:
+                old_phase = self.power_phase
+                self.power_phase = DevicePowerPhase.OFF.value
+                self.phase_timer = 0.0
+                self.operating_mode = "off"
+                self.running_cycle = False
+                result["phase_changed"] = True
+                result["old_phase"] = old_phase
+                result["new_phase"] = self.power_phase
+                result["changed"] = True
+
+        elif self.power_phase == DevicePowerPhase.RUNNING.value:
+            # Handle auto-cycling (e.g., fridge)
+            if self.running_cycle:
+                cycle_result = self._tick_cycle(elapsed_s)
+                if cycle_result.get("changed"):
+                    result.update(cycle_result)
 
         return result
 
-    def start_cycle(self) -> None:
-        """Start a device operation cycle."""
-        profile = LOAD_PROFILES.get(self.device_type, {})
-        cycle = profile.get("cycle")
+    def _start_cycle(self) -> None:
+        """Start auto-cycling for devices that cycle through modes."""
+        cycle = DEVICE_CYCLES.get(self.device_type_str)
+        if not cycle:
+            return
+        self.running_cycle = True
+        self.cycle_index = 0
+        mode, duration_range = cycle[0]
+        self.operating_mode = mode
+        self.cycle_timer = 0.0
+        self.cycle_duration = random.uniform(duration_range[0], duration_range[1])
 
-        if cycle:
-            self.running_cycle = True
-            self.cycle_index = 0
-            self._enter_state(cycle[0])
-        else:
-            self.running_cycle = True
-
-    def stop_cycle(self) -> None:
-        """Stop the current cycle."""
-        self.running_cycle = False
-        self.current_state = "idle"
-        self.state_timer = 0
-        self.state_duration = 0
-
-    def _advance_state(self) -> dict[str, Any]:
-        """Move to the next state in the cycle."""
-        profile = LOAD_PROFILES.get(self.device_type, {})
-        cycle = profile.get("cycle")
-
+    def _tick_cycle(self, elapsed_s: float) -> dict[str, Any]:
+        """Advance auto-cycle timer."""
+        cycle = DEVICE_CYCLES.get(self.device_type_str)
         if not cycle:
             return {"changed": False}
 
-        old_state = self.current_state
-        self.cycle_index += 1
-
-        if self.cycle_index >= len(cycle):
-            self.running_cycle = False
-            self.current_state = "idle"
-            self.state_timer = 0
+        self.cycle_timer += elapsed_s
+        if self.cycle_timer >= self.cycle_duration:
+            old_mode = self.operating_mode
+            self.cycle_index = (self.cycle_index + 1) % len(cycle)
+            mode, duration_range = cycle[self.cycle_index]
+            self.operating_mode = mode
+            self.cycle_timer = 0.0
+            self.cycle_duration = random.uniform(duration_range[0], duration_range[1])
             return {
                 "changed": True,
-                "old_state": old_state,
-                "new_state": "idle",
-                "cycle_complete": True,
+                "old_mode": old_mode,
+                "new_mode": mode,
+                "cycle_wrap": self.cycle_index == 0,
             }
-
-        new_state = cycle[self.cycle_index]
-        self._enter_state(new_state)
-
-        return {
-            "changed": True,
-            "old_state": old_state,
-            "new_state": self.current_state,
-            "cycle_complete": False,
-        }
-
-    def _enter_state(self, state) -> None:
-        """Enter a new state with randomized duration."""
-        self.current_state = state.value if hasattr(state, "value") else state
-        self.state_timer = 0
-
-        profile = LOAD_PROFILES.get(self.device_type, {})
-        state_profile = profile.get(state, {})
-        if isinstance(state_profile, dict):
-            duration_range = state_profile.get("duration_s", (60, 120))
-            if isinstance(duration_range, tuple) and len(duration_range) == 2:
-                self.state_duration = random.uniform(duration_range[0], duration_range[1])
-            else:
-                self.state_duration = 60
-        else:
-            self.state_duration = 60
+        return {"changed": False}
 
 
 # =============================================================================
@@ -306,6 +376,7 @@ class SimulationEngine:
         self._total_events: int = 0
         self._simulation_fps: float = 0
         self._last_tick_time: float = 0
+        self._history_accumulator: float = 0.0  # seconds since last history write
 
         # Historical playback
         self._playback_mode = False
@@ -343,6 +414,16 @@ class SimulationEngine:
     def metrics(self) -> dict[str, float]:
         return dict(self._metrics)
 
+    def get_tracker(self, device_id: str) -> DeviceStateTracker | None:
+        """Get the state tracker for a device (used by API endpoints)."""
+        return self._trackers.get(device_id)
+
+    def ensure_tracker(self, device_id: str, device_type_str: str) -> DeviceStateTracker:
+        """Get or create a tracker for a device."""
+        if device_id not in self._trackers:
+            self._trackers[device_id] = DeviceStateTracker(device_id, device_type_str)
+        return self._trackers[device_id]
+
     async def start(self) -> None:
         """Start the simulation engine."""
         self._running = True
@@ -374,7 +455,8 @@ class SimulationEngine:
     def reset(self) -> None:
         """Reset all device states."""
         for tracker in self._trackers.values():
-            tracker.stop_cycle()
+            tracker.set_power_off()
+            tracker.power_phase = DevicePowerPhase.OFF.value
         self._tick_count = 0
         self._total_events = 0
         logger.info("Simulation reset")
@@ -447,85 +529,132 @@ class SimulationEngine:
 
                 now = datetime.now(timezone.utc)
                 hour = now.hour
-                total_power_w = 0.0
+                total_power_kw = 0.0
+                total_power_kvar = 0.0
+                self._history_accumulator += self._speed
+
+                # Should we write to history tables this tick?
+                write_history = self._history_accumulator >= HISTORY_RECORD_INTERVAL_S
+
+                device_power_records: list[DevicePowerHistory] = []
 
                 for device in devices:
                     device_type = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
                     power_state = device.power_state if isinstance(device.power_state, PowerState) else PowerState(device.power_state)
                     device_id = str(device.id)
+                    device_type_str = device_type.value
 
                     # Initialize tracker if needed
                     if device_id not in self._trackers:
-                        tracker = DeviceStateTracker(device_id, device_type)
+                        tracker = DeviceStateTracker(device_id, device_type_str)
                         self._trackers[device_id] = tracker
+                        # If device is already ON in DB, sync tracker
                         if power_state == PowerState.ON:
-                            tracker.start_cycle()
+                            tracker.power_phase = DevicePowerPhase.RUNNING.value
+                            tracker.operating_mode = DEFAULT_ON_MODE.get(device_type_str, "on")
+                            if device_type_str in DEVICE_CYCLES:
+                                tracker._start_cycle()
+                        # Base load is always running
+                        if device_type == DeviceType.BASE_LOAD:
+                            tracker.power_phase = DevicePowerPhase.RUNNING.value
+                            tracker.operating_mode = "active"
 
                     tracker = self._trackers[device_id]
 
-                    # Skip powered-off devices
-                    if power_state == PowerState.OFF:
-                        device.energy_usage_kw = 0.0
-                        device.turned_on_at = None
-                        continue
-                    else:
-                        if device.turned_on_at is None:
-                            device.turned_on_at = now
+                    # Sync power state from DB → tracker if out of sync
+                    if power_state == PowerState.OFF and tracker.power_phase not in (
+                        DevicePowerPhase.OFF.value, DevicePowerPhase.STOPPING.value
+                    ):
+                        tracker.set_power_off()
+                    elif power_state == PowerState.ON and tracker.power_phase == DevicePowerPhase.OFF.value:
+                        tracker.set_power_on()
+
+                    # Base load always stays running
+                    if device_type == DeviceType.BASE_LOAD:
+                        tracker.power_phase = DevicePowerPhase.RUNNING.value
+                        tracker.operating_mode = "active"
 
                     # Advance state machine
                     state_change = tracker.tick(self._speed)
 
                     # Calculate power
-                    power_w = tracker.get_power_watts()
+                    kw, kvar, pf = tracker.get_power_kw_kvar()
+                    total_power_kw += kw
+                    total_power_kvar += kvar
 
-                    # Apply time-of-day modulation for non-cyclic devices
-                    if not tracker.running_cycle:
-                        time_factor = 0.6 + 0.4 * math.sin((hour - 6) * math.pi / 12)
-                        power_w *= time_factor
-
-                    power_kw = power_w / 1000.0
-                    total_power_w += power_w
-
-                    # Update device
-                    device.energy_usage_kw = round(power_kw, 4)
+                    # Update device DB record
+                    device.energy_usage_kw = round(kw, 4)
                     device.last_updated = now
+
+                    if power_state == PowerState.ON and device.turned_on_at is None:
+                        device.turned_on_at = now
+                    elif power_state == PowerState.OFF:
+                        device.turned_on_at = None
 
                     # Update metadata with state info
                     metadata = dict(device.extra_data or {})
-                    metadata["sim_state"] = tracker.current_state
-                    metadata["sim_power_w"] = round(power_w, 1)
+                    metadata["sim_state"] = tracker.operating_mode
+                    metadata["sim_phase"] = tracker.power_phase
+                    metadata["sim_power_kw"] = round(kw, 4)
+                    metadata["sim_power_kvar"] = round(kvar, 4)
+                    metadata["sim_power_factor"] = round(pf, 3)
                     metadata = self._update_device_telemetry(device_type, metadata, hour, power_state)
                     device.extra_data = metadata
 
-                    # Record energy
-                    voltage = 230.0 + random.gauss(0, 2)
-                    current_a = power_w / voltage if voltage > 0 else 0
-                    cost_per_kwh = 0.12
-                    interval_hours = (1.0 * self._speed) / 3600.0
-                    cost = power_kw * interval_hours * cost_per_kwh
-                    
-                    device.total_energy_kwh = (device.total_energy_kwh or 0.0) + (power_kw * interval_hours)
+                    # Record to EnergyHistory (existing table, every tick)
+                    if kw > 0:
+                        voltage = 230.0 + random.gauss(0, 2)
+                        current_a = (kw * 1000) / voltage if voltage > 0 else 0
+                        cost_per_kwh = 0.12
+                        interval_hours = (1.0 * self._speed) / 3600.0
+                        cost = kw * interval_hours * cost_per_kwh
 
-                    energy_record = EnergyHistory(
-                        device_id=device.id,
-                        power_kw=round(power_kw, 4),
-                        voltage=round(voltage, 1),
-                        current_amps=round(current_a, 3),
-                        cost_usd=round(cost, 6),
-                    )
-                    db.add(energy_record)
+                        device.total_energy_kwh = (device.total_energy_kwh or 0.0) + (kw * interval_hours)
+
+                        energy_record = EnergyHistory(
+                            device_id=device.id,
+                            power_kw=round(kw, 4),
+                            voltage=round(voltage, 1),
+                            current_amps=round(current_a, 3),
+                            cost_usd=round(cost, 6),
+                        )
+                        db.add(energy_record)
+
+                    # Record to DevicePowerHistory (new table, every ~15s)
+                    if write_history:
+                        interval_hrs = HISTORY_RECORD_INTERVAL_S / 3600.0
+                        device_power_records.append(DevicePowerHistory(
+                            timestamp=now,
+                            device_id=device.id,
+                            device_name=device.name,
+                            mode=tracker.operating_mode,
+                            kw=round(kw, 6),
+                            kvar=round(kvar, 6),
+                            power_factor=round(pf, 3),
+                            energy_kwh=round(kw * interval_hrs, 6),
+                        ))
 
                     # Handle state changes
                     if state_change.get("changed"):
+                        msg_parts = []
+                        if state_change.get("phase_changed"):
+                            msg_parts.append(
+                                f"phase: {state_change.get('old_phase')} → {state_change.get('new_phase')}"
+                            )
+                        if state_change.get("old_mode"):
+                            msg_parts.append(
+                                f"mode: {state_change.get('old_mode')} → {state_change.get('new_mode')}"
+                            )
+
                         event = DeviceEvent(
                             device_id=device.id,
                             event_type="state_change",
                             severity=EventSeverity.INFO,
-                            message=f"{device.name}: {state_change['old_state']} → {state_change['new_state']}",
+                            message=f"{device.name}: {', '.join(msg_parts) if msg_parts else 'state updated'}",
                             metadata={
-                                "old_state": state_change["old_state"],
-                                "new_state": state_change["new_state"],
-                                "power_w": round(power_w, 1),
+                                "phase": tracker.power_phase,
+                                "mode": tracker.operating_mode,
+                                "power_kw": round(kw, 4),
                             },
                         )
                         db.add(event)
@@ -536,7 +665,7 @@ class SimulationEngine:
                             "device_name": device.name,
                             "event_type": "state_change",
                             "severity": "info",
-                            "message": f"{device.name}: {state_change['old_state']} → {state_change['new_state']}",
+                            "message": event.message,
                             "timestamp": now.isoformat(),
                         })
 
@@ -544,26 +673,39 @@ class SimulationEngine:
                     await redis_client.publish_device_update(device_id, {
                         "action": "telemetry",
                         "device_id": device_id,
-                        "power_w": round(power_w, 1),
-                        "power_kw": round(power_kw, 4),
+                        "power_kw": round(kw, 4),
+                        "power_kvar": round(kvar, 4),
+                        "power_factor": round(pf, 3),
                         "power_state": power_state.value,
-                        "sim_state": tracker.current_state,
+                        "sim_phase": tracker.power_phase,
+                        "sim_mode": tracker.operating_mode,
                         "metadata": metadata,
                         "timestamp": now.isoformat(),
                     })
 
-                    # Random events (1% chance per tick)
-                    if random.random() < 0.01:
+                    # Random events (0.5% chance per tick)
+                    if random.random() < 0.005:
                         await self._generate_event(db, device, device_type, now)
 
+                # Record to HomePowerHistory (every ~15s)
+                if write_history:
+                    home_record = HomePowerHistory(
+                        timestamp=now,
+                        total_home_power_consumption_kw=round(total_power_kw, 4),
+                    )
+                    db.add(home_record)
+                    db.add_all(device_power_records)
+                    self._history_accumulator = 0.0
+
                 # Update metrics
+                total_power_w = total_power_kw * 1000
                 self._metrics["total_power_w"] = round(total_power_w, 1)
                 self._metrics["peak_power_w"] = max(
                     self._metrics["peak_power_w"], total_power_w
                 )
                 self._metrics["connected_devices"] = len(devices)
                 self._metrics["total_energy_kwh"] = round(
-                    self._metrics.get("total_energy_kwh", 0) + (total_power_w / 1000.0) * (self._speed / 3600.0), 4
+                    self._metrics.get("total_energy_kwh", 0) + (total_power_kw) * (self._speed / 3600.0), 4
                 )
                 self._metrics["electricity_cost_usd"] = round(
                     self._metrics["total_energy_kwh"] * 0.12, 4
@@ -686,7 +828,6 @@ class SimulationEngine:
             metadata["temperature"] = round(max(16, min(35, current)), 1)
             metadata["outdoor_temperature"] = round(outdoor_temp, 1)
 
-            fan_speeds = ["low", "medium", "high", "auto"]
             if abs(current - target) > 3:
                 metadata["fan_speed"] = "high"
             elif abs(current - target) > 1:
@@ -697,16 +838,15 @@ class SimulationEngine:
         elif device_type == DeviceType.REFRIGERATOR:
             temp = metadata.get("temperature", 4.0)
             sim_state = metadata.get("sim_state", "idle")
-            if sim_state in ("compressor_on", "cooling"):
+            if sim_state in ("compressor", "cooling"):
                 temp -= 0.1 + random.gauss(0, 0.02)
             else:
                 temp += 0.03 + random.gauss(0, 0.01)
             metadata["temperature"] = round(max(0.5, min(10, temp)), 1)
             metadata["door_state"] = "closed"
-            metadata["cooling_status"] = "active" if sim_state in ("compressor_on", "cooling") else "standby"
+            metadata["cooling_status"] = "active" if sim_state in ("compressor", "cooling") else "standby"
 
         elif device_type == DeviceType.ROUTER:
-            # Simulate realistic network traffic
             base_down = 80 + 20 * math.sin(hour * math.pi / 12)
             metadata["download_speed"] = round(base_down + random.gauss(0, 10), 1)
             metadata["upload_speed"] = round(base_down * 0.4 + random.gauss(0, 5), 1)
@@ -743,7 +883,7 @@ class SimulationEngine:
 
         elif device_type == DeviceType.WASHING_MACHINE:
             sim_state = metadata.get("sim_state", "idle")
-            if sim_state not in ("idle", "complete"):
+            if sim_state not in ("idle", "off"):
                 remaining = metadata.get("remaining_time", 0)
                 metadata["remaining_time"] = max(0, remaining - 1)
                 metadata["spin_speed"] = 1200 if sim_state == "spin" else 0

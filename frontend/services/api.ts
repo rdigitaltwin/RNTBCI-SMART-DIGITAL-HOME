@@ -246,6 +246,22 @@ class APIClient {
   async healthCheck() {
     return this.request('/health');
   }
+  // Power History
+  async getHomePowerHistory(params?: { start_date?: string; end_date?: string; page?: number; per_page?: number }) {
+    const query = new URLSearchParams();
+    if (params) Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, String(v)); });
+    return this.request(`/api/v1/home-power/history?${query}`);
+  }
+
+  async getDevicePowerHistory(params?: { device_id?: string; device_name?: string; start_date?: string; end_date?: string; page?: number; per_page?: number }) {
+    const query = new URLSearchParams();
+    if (params) Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, String(v)); });
+    return this.request(`/api/v1/device-power/history?${query}`);
+  }
+  
+  async changeDeviceMode(id: string, mode: string) {
+    return this.request(`/api/v1/devices/${id}/mode`, { method: 'PATCH', body: { mode } });
+  }
 }
 
 export const api = new APIClient(API_BASE);

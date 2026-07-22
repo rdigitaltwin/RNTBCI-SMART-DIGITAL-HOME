@@ -69,6 +69,8 @@ class DeviceType(str, enum.Enum):
     ROUTER = "router"
     CAMERA = "camera"
     SMART_TV = "smart_tv"
+    COOKING = "cooking"
+    BASE_LOAD = "base_load"
 
 
 class DeviceStatus(str, enum.Enum):
@@ -86,6 +88,15 @@ class PowerState(str, enum.Enum):
     ON = "on"
     OFF = "off"
     STANDBY = "standby"
+
+
+class DevicePowerPhase(str, enum.Enum):
+    """Device power lifecycle phase for state machine."""
+
+    OFF = "off"
+    STARTING = "starting"
+    RUNNING = "running"
+    STOPPING = "stopping"
 
 
 class ConnectivityStatus(str, enum.Enum):
@@ -498,3 +509,64 @@ class WebSocketSession(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="websocket_sessions")
+
+
+# =============================================================================
+# POWER HISTORY MODELS
+# =============================================================================
+
+
+class HomePowerHistory(Base):
+    """Total home power consumption time-series record."""
+
+    __tablename__ = "home_power_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    total_home_power_consumption_kw: Mapped[float] = mapped_column(
+        Float, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    __table_args__ = (
+        Index("ix_home_power_timestamp", "timestamp"),
+    )
+
+
+class DevicePowerHistory(Base):
+    """Per-device power consumption time-series record with mode and reactive power."""
+
+    __tablename__ = "device_power_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
+    )
+    device_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    mode: Mapped[str] = mapped_column(String(50), nullable=False, default="off")
+    kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    power_factor: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    energy_kwh: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    # Relationships
+    device: Mapped["Device"] = relationship("Device")
+
+    __table_args__ = (
+        Index("ix_device_power_device_time", "device_id", "timestamp"),
+        Index("ix_device_power_timestamp", "timestamp"),
+    )
