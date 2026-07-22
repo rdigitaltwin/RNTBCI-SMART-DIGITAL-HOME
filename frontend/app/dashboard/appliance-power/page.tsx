@@ -38,18 +38,23 @@ export default function AppliancePowerDashboard() {
       const foundDevices = new Set<string>();
 
       res.records.forEach((r: any) => {
-        const ts = r.timestamp;
+        const date = new Date(r.timestamp);
+        // Truncate to nearest 10 seconds to group records properly
+        date.setMilliseconds(0);
+        const secs = date.getSeconds();
+        date.setSeconds(secs - (secs % 10));
+        const ts = date.toISOString();
+        
         const deviceName = r.device_name;
         foundDevices.add(deviceName);
         
         if (!timeBuckets[ts]) {
-          const date = new Date(ts);
           timeBuckets[ts] = {
             timestamp: ts,
             timeFormatted: `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
           };
         }
-        timeBuckets[ts][deviceName] = r.kw;
+        timeBuckets[ts][deviceName] = Number(r.kw) || 0;
       });
 
       const sortedData = Object.values(timeBuckets).sort((a: any, b: any) => 
@@ -268,6 +273,7 @@ export default function AppliancePowerDashboard() {
                       strokeWidth={isHovered ? 4 : 2}
                       strokeOpacity={isFaded ? 0.15 : 1}
                       dot={false}
+                      connectNulls={true}
                       activeDot={{ r: 6, fill: color, stroke: '#0B1120', strokeWidth: 2 }}
                       style={{ transition: 'all 0.3s ease-out' }}
                       onMouseEnter={() => setHoveredDevice(device)}
