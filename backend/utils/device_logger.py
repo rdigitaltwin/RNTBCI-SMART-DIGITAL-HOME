@@ -9,7 +9,7 @@ from typing import Any
 class DeviceLogger:
     """Manages separate JSON log files for individual devices using Matter-compliant schemas."""
     
-    _log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+    _log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
     # ── Device-type to schema mapping ────────────────────────────────────
     # Maps recognisable substrings in a device name to the correct schema

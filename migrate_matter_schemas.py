@@ -10,7 +10,7 @@ Usage:  python3.13 migrate_matter_schemas.py
 import json
 import os
 
-LOGS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend", "logs")
+LOGS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend", "data")
 
 # ── Device-type keyword mapping ──────────────────────────────────────────
 DEVICE_TYPE_KEYWORDS = {
