@@ -527,8 +527,7 @@ class HomePowerHistory(Base):
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
-    total_home_power_consumption_kw: Mapped[float] = mapped_column(
---- models.py ---
+    total_home_power_consumption_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_main_light_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_main_light_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_ac_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
