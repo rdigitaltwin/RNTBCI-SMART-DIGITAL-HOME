@@ -17,7 +17,7 @@ import os
 from pythonjsonlogger import jsonlogger
 
 # Set up JSON logging to file
-log_dir = os.path.join(os.path.dirname(__file__), "logs")
+log_dir = os.path.join(os.path.dirname(__file__), "data")
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, "system.log")
 

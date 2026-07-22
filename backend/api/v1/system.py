@@ -11,7 +11,7 @@ async def download_system_logs():
     """Download the JSON-formatted system log file."""
     log_file_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-        "logs", 
+        "data", 
         "system.log"
     )
     
@@ -30,7 +30,7 @@ async def download_device_logs(device_name: str):
     safe_name = device_name.replace(" ", "_")
     log_file_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-        "logs", 
+        "data", 
         f"device_{safe_name}.json"
     )
     

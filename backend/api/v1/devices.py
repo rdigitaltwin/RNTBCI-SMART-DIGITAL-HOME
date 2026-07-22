@@ -700,7 +700,7 @@ async def public_export_devices_csv(
     device_type_filter: str = Query(None, alias="type", description="Filter by device type name (e.g., 'light')")
 ) -> Response:
     """Export all device JSON files into a generic Excel CSV sheet, optionally filtered by type."""
-    logs_dir = os.path.join(os.path.dirname(__file__), "../../logs")
+    logs_dir = os.path.join(os.path.dirname(__file__), "../../data")
     
     csv_data = []
     
@@ -979,7 +979,7 @@ async def public_list_device_data(
     Returns a list of device names that can be queried via
     GET /api/v1/devices/public/device-data/{device_name}
     """
-    logs_dir = os.path.join(os.path.dirname(__file__), "../../logs")
+    logs_dir = os.path.join(os.path.dirname(__file__), "../../data")
     logs_dir = os.path.normpath(logs_dir)
 
     devices = []
@@ -1024,7 +1024,7 @@ async def public_get_device_data(
             detail="Invalid device name. Use names like 'Bathroom_Light' or 'Kitchen_Light'.",
         )
 
-    logs_dir = os.path.join(os.path.dirname(__file__), "../../logs")
+    logs_dir = os.path.join(os.path.dirname(__file__), "../../data")
     logs_dir = os.path.normpath(logs_dir)
     file_path = os.path.join(logs_dir, f"device_{safe_name}.json")
 
@@ -1061,7 +1061,7 @@ async def public_get_device_data(
 
 def _find_device_file(identifier: str) -> str | None:
     """Find a device JSON file by its device_id or device_name (e.g. Bathroom_Light)."""
-    logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../logs"))
+    logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../data"))
     if not os.path.isdir(logs_dir):
         return None
         
@@ -1452,7 +1452,7 @@ def _get_default_state(device_type: DeviceType) -> dict:
 @limiter.limit("5/minute")
 async def migrate_all_schemas(request: Request) -> dict:
     """Force migrate all JSON schemas in the logs directory to the new Matter format."""
-    logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../logs"))
+    logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../data"))
     if not os.path.isdir(logs_dir):
         return {"status": "error", "message": "Logs directory not found"}
         
