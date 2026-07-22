@@ -18,6 +18,18 @@ import * as THREE from 'three';
 import api from '@/services/api';
 import { useDeviceStore, type Device, type Room } from '@/store';
 
+export function CanvasCleanup() {
+  const { gl } = useThree();
+  useEffect(() => {
+    return () => {
+      gl.dispose();
+      const ext = gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+    };
+  }, [gl]);
+  return null;
+}
+
 // =============================================================================
 // HOUSE SHELL COMPONENT — Roof, Foundation, and Structural Elements
 // =============================================================================
@@ -217,13 +229,15 @@ function DeviceModel({ device, isSelected, onClick }: {
   }, [device.type]);
 
   // Animate glow
-  useFrame((state) => {
+  const timeRef = useRef(0);
+  useFrame((state, delta) => {
+    timeRef.current += delta;
     if (glowRef.current && isOn) {
-      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.15 + 0.85;
+      const pulse = Math.sin(timeRef.current * 2) * 0.15 + 0.85;
       glowRef.current.scale.setScalar(pulse);
     }
     if (groupRef.current && isSelected) {
-      groupRef.current.position.y = pos[1] + Math.sin(state.clock.elapsedTime * 3) * 0.03;
+      groupRef.current.position.y = pos[1] + Math.sin(timeRef.current * 3) * 0.03;
     }
   });
 
@@ -680,9 +694,11 @@ export default function DigitalTwinPage() {
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: [8, 6, 8], fov: 45 }}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        gl={{ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false }}
+        dpr={[1, 2]}
         style={{ background: '#050816' }}
       >
+        <CanvasCleanup />
         <Suspense fallback={null}>
           <DigitalTwinScene />
         </Suspense>

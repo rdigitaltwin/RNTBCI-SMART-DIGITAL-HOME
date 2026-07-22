@@ -7,12 +7,24 @@
  * and synchronized dashboard/3D twin updates.
  */
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense, useEffect } from 'react';
 import {
   Clock, Play, Pause, SkipBack, SkipForward, RotateCcw,
   Calendar, Rewind, FastForward, History,
 } from 'lucide-react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
+
+function CanvasCleanup() {
+  const { gl } = useThree();
+  useEffect(() => {
+    return () => {
+      gl.dispose();
+      const ext = gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+    };
+  }, [gl]);
+  return null;
+}
 import api from '@/services/api';
 import { useSimulationStore } from '@/store';
 import { DigitalTwinScene } from '../twin/page';
@@ -287,9 +299,11 @@ export default function TimeTravelPage() {
         
         <Canvas
           camera={{ position: [8, 6, 8], fov: 45 }}
-          gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+          gl={{ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false }}
+          dpr={[1, 2]}
           style={{ background: '#050816', borderRadius: '14px' }}
         >
+          <CanvasCleanup />
           <Suspense fallback={null}>
             <DigitalTwinScene />
           </Suspense>

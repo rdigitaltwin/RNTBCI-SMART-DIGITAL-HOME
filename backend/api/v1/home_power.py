@@ -33,7 +33,7 @@ async def get_home_power_history(
     start_date: datetime | None = Query(None, description="Start date (ISO 8601)"),
     end_date: datetime | None = Query(None, description="End date (ISO 8601)"),
     page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=10000),
+    per_page: int = Query(50, ge=1, le=1000),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -53,8 +53,11 @@ async def get_home_power_history(
     if filters:
         query = query.where(and_(*filters))
 
-    # Count total
-    count_query = select(func.count()).select_from(query.subquery())
+    # Count total (Optimized)
+    count_query = select(func.count(HomePowerHistory.id))
+    if filters:
+        count_query = count_query.where(and_(*filters))
+        
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
 
@@ -71,12 +74,7 @@ async def get_home_power_history(
 
     return HomePowerHistoryListResponse(
         records=[
-            HomePowerHistoryResponse(
-                id=r.id,
-                timestamp=r.timestamp,
-                total_home_power_consumption_kw=r.total_home_power_consumption_kw,
-                created_at=r.created_at,
-            )
+            HomePowerHistoryResponse.model_validate(r)
             for r in records
         ],
         total=total,
@@ -107,7 +105,7 @@ async def download_home_power_csv(
     if filters:
         query = query.where(and_(*filters))
 
-    query = query.order_by(HomePowerHistory.timestamp.asc())
+    query = query.order_by(HomePowerHistory.timestamp.asc()).limit(50000)
     result = await db.execute(query)
     records = result.scalars().all()
 
@@ -160,7 +158,7 @@ async def download_home_power_xlsx(
     if filters:
         query = query.where(and_(*filters))
 
-    query = query.order_by(HomePowerHistory.timestamp.asc())
+    query = query.order_by(HomePowerHistory.timestamp.asc()).limit(50000)
     result = await db.execute(query)
     records = result.scalars().all()
 

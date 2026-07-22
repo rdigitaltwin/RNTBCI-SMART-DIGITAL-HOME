@@ -230,7 +230,7 @@ class DeviceStateTracker:
             return 0.0, 0.0, 1.0
 
         if self.power_phase == DevicePowerPhase.STARTING.value:
-            pass
+            return 0.0, 0.0, 1.0
 
         profile = self.get_mode_profile()
         base_kw = profile.get("kw", 0.0)
@@ -253,10 +253,10 @@ class DeviceStateTracker:
         return round(base_kw, 6), round(base_kvar, 6), pf
 
     def set_power_on(self, mode: str | None = None) -> None:
-        """Transition instantly to RUNNING phase."""
-        if self.power_phase == DevicePowerPhase.RUNNING.value:
-            return  # Already on
-        self.power_phase = DevicePowerPhase.RUNNING.value
+        """Transition instantly to STARTING phase."""
+        if self.power_phase in (DevicePowerPhase.RUNNING.value, DevicePowerPhase.STARTING.value):
+            return  # Already on or starting
+        self.power_phase = DevicePowerPhase.STARTING.value
         self.phase_timer = 0.0
         self.operating_mode = mode or DEFAULT_ON_MODE.get(self.device_type_str, "on")
         # Start auto-cycle if applicable

@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     mqtt_broker_port: int = 1883
 
     # CORS
-    allowed_origins: str = "http://localhost:3000"
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://rntbci-project.vercel.app"
 
     # Rate Limiting
     rate_limit_per_minute: int = 100

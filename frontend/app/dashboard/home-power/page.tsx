@@ -28,17 +28,24 @@ export default function HomePowerDashboard() {
 
   const fetchData = async () => {
     try {
-      // Determine per_page based on time range (rough estimate since 1 record = 15s)
-      const ranges: Record<string, number> = {
-        '15m': 60,
-        '1h': 240,
-        '6h': 1440,
-        '24h': 5760,
-      };
+      const targetCount = { '15m': 60, '1h': 240, '6h': 1440, '24h': 5760 }[timeRange] || 60;
+      let allRecords: any[] = [];
+      const CHUNK_SIZE = 1000;
+      const numChunks = Math.ceil(targetCount / CHUNK_SIZE);
       
-      const res = await api.getHomePowerHistory({ per_page: ranges[timeRange] || 100 }) as any;
+      const promises = [];
+      for (let i = 0; i < numChunks; i++) {
+        const fetchSize = (i === numChunks - 1 && targetCount % CHUNK_SIZE !== 0) ? targetCount % CHUNK_SIZE : CHUNK_SIZE;
+        promises.push(api.getHomePowerHistory({ page: i + 1, per_page: fetchSize }));
+      }
+      
+      const results = await Promise.all(promises);
+      results.forEach((res: any) => {
+        allRecords = allRecords.concat(res.records || []);
+      });
+
       // Sort ascending for charts
-      const sortedData = res.records.sort((a: any, b: any) => 
+      const sortedData = allRecords.sort((a: any, b: any) => 
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
       
@@ -158,12 +165,24 @@ export default function HomePowerDashboard() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
           </div>
         ) : error ? (
-          <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF4D6D' }}>
-            {error}
+          <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+            <div style={{ color: '#FF4D6D', fontSize: '16px', fontWeight: 500 }}>{error}</div>
+            <button 
+              onClick={fetchData}
+              style={{
+                padding: '8px 24px', background: 'rgba(255, 77, 109, 0.1)', color: '#FF4D6D',
+                border: '1px solid rgba(255, 77, 109, 0.2)', borderRadius: '8px', cursor: 'pointer',
+                fontWeight: 600, transition: 'all 0.2s'
+              }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 77, 109, 0.2)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 77, 109, 0.1)'}
+            >
+              Retry Connection
+            </button>
           </div>
         ) : (
           <div style={{ height: '400px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorKwPremium" x1="0" y1="0" x2="0" y2="1">

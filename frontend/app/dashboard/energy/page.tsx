@@ -233,7 +233,7 @@ export default function EnergyPage() {
         {/* Power consumption over time */}
         <div className="glass-card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>Power Consumption (24h)</h3>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height={250}>
             <ComposedChart data={hourlyData}>
               <defs>
                 <linearGradient id="powerAreaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -253,7 +253,7 @@ export default function EnergyPage() {
         {/* Weekly comparison */}
         <div className="glass-card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>Weekly Comparison</h3>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height={250}>
             <BarChart data={weeklyData}>
               <defs>
                 <linearGradient id="weeklyGrad" x1="0" y1="0" x2="0" y2="1">
@@ -274,7 +274,7 @@ export default function EnergyPage() {
       {/* Cost breakdown */}
       <div className="glass-card" style={{ padding: '20px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>Cost Trend (24h)</h3>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height={200}>
           <AreaChart data={hourlyData}>
             <defs>
               <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">

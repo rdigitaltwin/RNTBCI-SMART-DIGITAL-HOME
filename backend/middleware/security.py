@@ -40,8 +40,16 @@ def setup_middleware(app: FastAPI) -> None:
 
     # Security headers middleware
     @app.middleware("http")
-    async def security_headers(request: Request, call_next) -> Response:
-        response = await call_next(request)
+    async def request_logging_and_headers(request: Request, call_next) -> Response:
+        start_time = time.time()
+        try:
+            response = await call_next(request)
+            process_time = time.time() - start_time
+            logger.info(f"{request.method} {request.url.path} - Status: {response.status_code} - {process_time:.4f}s")
+        except Exception as e:
+            process_time = time.time() - start_time
+            logger.error(f"{request.method} {request.url.path} - 500 - {process_time:.4f}s - Error: {e}")
+            raise
 
         # Content Security Policy
         response.headers["Content-Security-Policy"] = (

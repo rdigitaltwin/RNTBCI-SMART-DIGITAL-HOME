@@ -14,6 +14,18 @@ import { OrbitControls, Stars, Float, Text3D, Center } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
+function CanvasCleanup() {
+  const { gl } = useThree();
+  useEffect(() => {
+    return () => {
+      gl.dispose();
+      const ext = gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+    };
+  }, [gl]);
+  return null;
+}
+
 // =============================================================================
 // PARTICLE FIELD
 // =============================================================================
@@ -68,10 +80,12 @@ function ParticleField({ count = 2000 }: { count?: number }) {
 
 function HolographicHouse({ progress }: { progress: number }) {
   const groupRef = useRef<THREE.Group>(null);
+  const timeRef = useRef(0);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+      timeRef.current += delta;
+      groupRef.current.rotation.y = timeRef.current * 0.1;
     }
   });
 
@@ -170,9 +184,11 @@ function HolographicHouse({ progress }: { progress: number }) {
 
 function CameraAnimator({ progress }: { progress: number }) {
   const { camera } = useThree();
+  const timeRef = useRef(0);
 
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
+  useFrame((state, delta) => {
+    timeRef.current += delta;
+    const t = timeRef.current;
     const radius = 8 - progress * 2;
     const height = 4 + Math.sin(t * 0.3) * 0.5;
 
@@ -250,9 +266,11 @@ export default function LandingPage() {
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: [8, 4, 8], fov: 50 }}
-        gl={{ antialias: true, alpha: false }}
+        gl={{ antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: false }}
+        dpr={[1, 2]}
         style={{ position: 'absolute', inset: 0 }}
       >
+        <CanvasCleanup />
         <Suspense fallback={null}>
           <LandingScene progress={progress} />
         </Suspense>

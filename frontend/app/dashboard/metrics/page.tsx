@@ -170,7 +170,7 @@ export default function MetricsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div className="glass-card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>Simulation FPS (60s)</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height={200}>
             <LineChart data={fpsHistory}>
               <XAxis dataKey="time" tick={{ fontSize: 8, fill: '#64748B' }} axisLine={false} tickLine={false} interval={9} />
               <YAxis tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} domain={[0, 120]} />
@@ -182,7 +182,7 @@ export default function MetricsPage() {
 
         <div className="glass-card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>Total Power (60s)</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height={200}>
             <AreaChart data={fpsHistory}>
               <defs>
                 <linearGradient id="powerLiveGrad" x1="0" y1="0" x2="0" y2="1">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ProductionLogStripper } from "./LogStripper";
 
 export const metadata: Metadata = {
   title: "RNTBCI Smart Home Digital Twin",
@@ -18,6 +19,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="antialiased">
+        <ProductionLogStripper />
         {children}
       </body>
     </html>
