@@ -113,13 +113,18 @@ async def download_home_power_csv(
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["timestamp", "total_home_power_consumption_kw"])
+    
+    # Dynamically get all float columns (excluding id and timestamp)
+    val_cols = [c.key for c in HomePowerHistory.__table__.columns if c.key not in ("id", "timestamp")]
+    
+    writer.writerow(["timestamp"] + val_cols)
 
     for r in records:
-        writer.writerow([
-            r.timestamp.isoformat(),
-            round(r.total_home_power_consumption_kw, 4),
-        ])
+        row = [r.timestamp.isoformat()]
+        for col in val_cols:
+            val = getattr(r, col, 0.0)
+            row.append(round(val, 4) if isinstance(val, (float, int)) else val)
+        writer.writerow(row)
 
     output.seek(0)
     filename = f"home_power_history_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
@@ -162,13 +167,22 @@ async def download_home_power_xlsx(
     wb = Workbook()
     ws = wb.active
     ws.title = "Home Power History"
-    ws.append(["Timestamp", "Total Home Power (kW)"])
+    
+    # Dynamically get all float columns (excluding id and timestamp)
+    val_cols = [c.key for c in HomePowerHistory.__table__.columns if c.key not in ("id", "timestamp")]
+    
+    headers = ["Timestamp"] + [c.replace("_", " ").title() for c in val_cols]
+    ws.append(headers)
 
     for r in records:
-        ws.append([
-            r.timestamp.isoformat(),
-            round(r.total_home_power_consumption_kw, 4),
-        ])
+        # Convert timezone-aware datetime to naive for Excel compatibility
+        ts_naive = r.timestamp.astimezone(timezone.utc).replace(tzinfo=None)
+        
+        row = [ts_naive]
+        for col in val_cols:
+            val = getattr(r, col, 0.0)
+            row.append(round(val, 4) if isinstance(val, (float, int)) else val)
+        ws.append(row)
 
     # Auto-width columns
     for col in ws.columns:

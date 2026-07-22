@@ -537,6 +537,7 @@ class SimulationEngine:
                 write_history = self._history_accumulator >= HISTORY_RECORD_INTERVAL_S
 
                 device_power_records: list[DevicePowerHistory] = []
+                wide_kwargs: dict[str, float] = {}
 
                 for device in devices:
                     device_type = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
@@ -633,6 +634,13 @@ class SimulationEngine:
                             power_factor=round(pf, 3),
                             energy_kwh=round(kw * interval_hrs, 6),
                         ))
+                        
+                        import re
+                        normalized_name = device.name.lower().replace('"', '').replace('-', '')
+                        normalized_name = re.sub(r'\s+', '_', normalized_name.strip())
+                        normalized_name = re.sub(r'_+', '_', normalized_name)
+                        wide_kwargs[f"{normalized_name}_kw"] = round(kw, 6)
+                        wide_kwargs[f"{normalized_name}_kvar"] = round(kvar, 6)
 
                     # Handle state changes
                     if state_change.get("changed"):
@@ -689,9 +697,14 @@ class SimulationEngine:
 
                 # Record to HomePowerHistory (every ~15s)
                 if write_history:
+                    # Create dict with only columns that actually exist on the model
+                    valid_columns = [c.key for c in HomePowerHistory.__table__.columns]
+                    filtered_kwargs = {k: v for k, v in wide_kwargs.items() if k in valid_columns}
+                    
                     home_record = HomePowerHistory(
                         timestamp=now,
                         total_home_power_consumption_kw=round(total_power_kw, 4),
+                        **filtered_kwargs
                     )
                     db.add(home_record)
                     db.add_all(device_power_records)
