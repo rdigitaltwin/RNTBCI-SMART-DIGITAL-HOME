@@ -577,8 +577,7 @@ class HomePowerHistory(Base):
     base_load_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     base_load_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
-        Float, nullable=False
-    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
     )
