@@ -32,7 +32,7 @@ export default function AppliancePowerDashboard() {
 
   const fetchData = async () => {
     try {
-      const res = await api.getDevicePowerHistory({ per_page: 500 }) as any;
+      const res = await api.getDevicePowerHistory({ per_page: 2000 }) as any;
       
       const timeBuckets: Record<string, any> = {};
       const foundDevices = new Set<string>();
@@ -227,8 +227,9 @@ export default function AppliancePowerDashboard() {
             {error}
           </div>
         ) : (
-          <div style={{ flex: 1, height: '400px', width: '100%' }}>
-            <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height="100%">
+          <div style={{ position: 'relative', height: '400px', width: '100%' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+              <ResponsiveContainer width="99%" height="100%">
               <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis 
@@ -244,7 +245,8 @@ export default function AppliancePowerDashboard() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
-                  tickFormatter={(value) => `${value} kW`}
+                  domain={[0, (dataMax: number) => Math.max(dataMax * 1.1, 0.1)]}
+                  tickFormatter={(value) => `${Number(value).toFixed(2)} kW`}
                   dx={-10}
                 />
                 <Tooltip 
@@ -283,6 +285,7 @@ export default function AppliancePowerDashboard() {
                 })}
               </LineChart>
             </ResponsiveContainer>
+            </div>
           </div>
         )}
       </div>
