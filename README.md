@@ -307,7 +307,7 @@ Channels:
 git clone https://github.com/your-org/RNTBCI_FINAL.git
 cd RNTBCI_FINAL
 cp .env.example .env
-# Edit .env with your database credentials and JWT secret
+# Edit .env with your database credentials and JWT secret and manupulations
 ```
 
 ### 2. Backend Setup
