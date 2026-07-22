@@ -11,7 +11,6 @@ from backend.database import close_db, init_db
 from backend.middleware.security import setup_middleware
 from backend.redis.client import redis_client
 from backend.services.simulation import device_simulator
-from backend.utils.seed import seed_database
 from backend.websockets.manager import ws_manager
 
 import os
@@ -49,8 +48,8 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
-    # Seed database with initial data
-    await seed_database()
+    # Database initialized, skipping sample data seeding
+    # await seed_database()
 
     # Connect Redis
     await redis_client.connect()
