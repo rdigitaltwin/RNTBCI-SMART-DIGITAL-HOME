@@ -227,11 +227,12 @@ class DeviceStateTracker:
         During STOPPING phase: returns decaying values
         """
         if self.power_phase == DevicePowerPhase.OFF.value:
-            return 0.0, 0.0, 1.0
+            # Smart devices always draw a tiny standby power (e.g. WiFi chip) - 2 Watts
+            return 0.002, 0.001, 0.95
 
         if self.power_phase == DevicePowerPhase.STARTING.value:
-            # 30-second warm-up: device is ON but not yet consuming power
-            return 0.0, 0.0, 1.0
+            # 30-second warm-up: device is ON but only drawing standby/startup power - 5 Watts
+            return 0.005, 0.002, 0.95
 
         profile = self.get_mode_profile()
         base_kw = profile.get("kw", 0.0)
