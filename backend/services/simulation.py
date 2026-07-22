@@ -227,12 +227,10 @@ class DeviceStateTracker:
         During STOPPING phase: returns decaying values
         """
         if self.power_phase == DevicePowerPhase.OFF.value:
-            # Smart devices always draw a tiny standby power (e.g. WiFi chip) - 2 Watts
-            return 0.002, 0.001, 0.95
+            return 0.0, 0.0, 1.0
 
         if self.power_phase == DevicePowerPhase.STARTING.value:
-            # 30-second warm-up: device is ON but only drawing standby/startup power - 5 Watts
-            return 0.005, 0.002, 0.95
+            pass
 
         profile = self.get_mode_profile()
         base_kw = profile.get("kw", 0.0)
@@ -255,10 +253,10 @@ class DeviceStateTracker:
         return round(base_kw, 6), round(base_kvar, 6), pf
 
     def set_power_on(self, mode: str | None = None) -> None:
-        """Transition to STARTING phase (30s warm-up, then RUNNING)."""
-        if self.power_phase in (DevicePowerPhase.RUNNING.value, DevicePowerPhase.STARTING.value):
+        """Transition instantly to RUNNING phase."""
+        if self.power_phase == DevicePowerPhase.RUNNING.value:
             return  # Already on
-        self.power_phase = DevicePowerPhase.STARTING.value
+        self.power_phase = DevicePowerPhase.RUNNING.value
         self.phase_timer = 0.0
         self.operating_mode = mode or DEFAULT_ON_MODE.get(self.device_type_str, "on")
         # Start auto-cycle if applicable
@@ -266,11 +264,12 @@ class DeviceStateTracker:
             self._start_cycle()
 
     def set_power_off(self) -> None:
-        """Transition to STOPPING phase (gradual shutdown)."""
+        """Transition instantly to OFF phase."""
         if self.power_phase == DevicePowerPhase.OFF.value:
             return  # Already off
-        self.power_phase = DevicePowerPhase.STOPPING.value
+        self.power_phase = DevicePowerPhase.OFF.value
         self.phase_timer = 0.0
+        self.operating_mode = "off"
         self.running_cycle = False
 
     def set_mode(self, mode: str) -> None:
