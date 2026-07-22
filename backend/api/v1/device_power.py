@@ -7,6 +7,7 @@ Exports support wide-format pivoting (each device becomes its own kW/kVAR column
 import csv
 import io
 import logging
+import zoneinfo
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
@@ -119,7 +120,8 @@ def _pivot_records(records: list) -> tuple[list[str], list[dict]]:
     device_names: set[str] = set()
 
     for r in records:
-        ts = r.timestamp.isoformat()
+        ist_time = r.timestamp.astimezone(zoneinfo.ZoneInfo("Asia/Kolkata")) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+        ts = ist_time.strftime("%Y-%m-%d %H:%M:%S IST")
         # Normalize name for column: "Living Room AC" → "living_room_ac"
         col_name = r.device_name.lower().replace(" ", "_")
         device_names.add(col_name)
@@ -192,7 +194,8 @@ async def download_device_power_csv(
     writer.writerows(rows)
 
     output.seek(0)
-    filename = f"device_power_history_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+    ist_now = datetime.now(timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+    filename = f"device_power_history_{ist_now.strftime('%Y%m%d_%H%M%S')}.csv"
 
     return StreamingResponse(
         output,
@@ -256,7 +259,8 @@ async def download_device_power_xlsx(
     wb.save(output)
     output.seek(0)
 
-    filename = f"device_power_history_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx"
+    ist_now = datetime.now(timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+    filename = f"device_power_history_{ist_now.strftime('%Y%m%d_%H%M%S')}.xlsx"
 
     return StreamingResponse(
         output,

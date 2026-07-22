@@ -6,6 +6,7 @@ Endpoints for querying and exporting total home power consumption time-series.
 import csv
 import io
 import logging
+import zoneinfo
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -118,14 +119,16 @@ async def download_home_power_csv(
     writer.writerow(["timestamp"] + val_cols)
 
     for r in records:
-        row = [r.timestamp.isoformat()]
+        ist_time = r.timestamp.astimezone(zoneinfo.ZoneInfo("Asia/Kolkata")) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+        row = [ist_time.strftime("%Y-%m-%d %H:%M:%S IST")]
         for col in val_cols:
             val = getattr(r, col, 0.0)
             row.append(round(val, 4) if isinstance(val, (float, int)) else val)
         writer.writerow(row)
 
     output.seek(0)
-    filename = f"home_power_history_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+    ist_now = datetime.now(timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+    filename = f"home_power_history_{ist_now.strftime('%Y%m%d_%H%M%S')}.csv"
 
     return StreamingResponse(
         output,
@@ -173,10 +176,8 @@ async def download_home_power_xlsx(
     ws.append(headers)
 
     for r in records:
-        # Convert timezone-aware datetime to naive for Excel compatibility
-        ts_naive = r.timestamp.astimezone(timezone.utc).replace(tzinfo=None)
-        
-        row = [ts_naive]
+        ist_time = r.timestamp.astimezone(zoneinfo.ZoneInfo("Asia/Kolkata")) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+        row = [ist_time.strftime("%Y-%m-%d %H:%M:%S IST")]
         for col in val_cols:
             val = getattr(r, col, 0.0)
             row.append(round(val, 4) if isinstance(val, (float, int)) else val)
@@ -191,7 +192,8 @@ async def download_home_power_xlsx(
     wb.save(output)
     output.seek(0)
 
-    filename = f"home_power_history_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx"
+    ist_now = datetime.now(timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+    filename = f"home_power_history_{ist_now.strftime('%Y%m%d_%H%M%S')}.xlsx"
 
     return StreamingResponse(
         output,
