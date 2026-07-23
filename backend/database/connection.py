@@ -51,6 +51,13 @@ async def init_db() -> None:
             columns = [col['name'] for col in inspector.get_columns("home_power_history")]
             if "base_load_kw" not in columns:
                 sync_conn.execute(text("DROP TABLE home_power_history CASCADE"))
+
+        # Migrate device_power_history: old schema had device_name, mode, kw, kvar, etc.
+        # New schema only has: device_id, timestamp, total_power_consumption_kw
+        if inspector.has_table("device_power_history"):
+            columns = [col['name'] for col in inspector.get_columns("device_power_history")]
+            if "total_power_consumption_kw" not in columns:
+                sync_conn.execute(text("DROP TABLE device_power_history CASCADE"))
                 
     async with engine.begin() as conn:
         await conn.run_sync(check_and_drop_legacy)

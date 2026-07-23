@@ -621,20 +621,15 @@ class SimulationEngine:
                         )
                         db.add(energy_record)
 
-                    # Record to DevicePowerHistory (new table, every ~15s)
+                    # Record to DevicePowerHistory (simplified table, every ~15s)
                     if write_history:
-                        interval_hrs = HISTORY_RECORD_INTERVAL_S / 3600.0
                         device_power_records.append(DevicePowerHistory(
-                            timestamp=now,
                             device_id=device.id,
-                            device_name=device.name,
-                            mode=tracker.operating_mode,
-                            kw=round(kw, 6),
-                            kvar=round(kvar, 6),
-                            power_factor=round(pf, 3),
-                            energy_kwh=round(kw * interval_hrs, 6),
+                            timestamp=now,
+                            total_power_consumption_kw=round(kw, 6),
                         ))
-                        
+
+                        # Populate wide_kwargs for HomePowerHistory
                         import re
                         normalized_name = device.name.lower().replace('"', '').replace('-', '')
                         normalized_name = re.sub(r'\s+', '_', normalized_name.strip())

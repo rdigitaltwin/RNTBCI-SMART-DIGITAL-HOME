@@ -518,27 +518,15 @@ async def _seed_device_power_history(db: AsyncSession, devices: list[Device]) ->
                     profiles = DEVICE_MODE_PROFILES.get(dtype_str, {})
                     profile = profiles.get(mode, {"kw": 0.0, "kvar": 0.0, "pf": 1.0})
                     kw = profile.get("kw", 0.0)
-                    kvar = profile.get("kvar", 0.0)
-                    pf = profile.get("pf", 1.0)
 
                     if kw > 0:
                         kw += random.gauss(0, kw * 0.08)
-                        kvar += random.gauss(0, max(kvar * 0.08, 0.001))
                         kw = max(0, kw)
-                        kvar = max(0, kvar)
-
-                    interval_hrs = 0.25  # 15 minutes
-                    energy_kwh = kw * interval_hrs
 
                     records.append(DevicePowerHistory(
-                        timestamp=timestamp,
                         device_id=device.id,
-                        device_name=device.name,
-                        mode=mode,
-                        kw=round(kw, 6),
-                        kvar=round(kvar, 6),
-                        power_factor=round(pf, 3),
-                        energy_kwh=round(energy_kwh, 6),
+                        timestamp=timestamp,
+                        total_power_consumption_kw=round(kw, 6),
                     ))
 
                     if len(records) >= 5000:

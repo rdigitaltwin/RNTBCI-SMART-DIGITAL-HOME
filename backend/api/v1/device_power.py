@@ -1,14 +1,13 @@
 """RNTBCI Smart Home Digital Twin - Device Power History API.
 
 Endpoints for querying and exporting per-device power consumption time-series.
-Exports support wide-format pivoting (each device becomes its own kW/kVAR column pair).
+Table schema: device_id | timestamp (IST) | total_power_consumption_kw
 """
 
 import csv
 import io
 import logging
 import zoneinfo
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -17,10 +16,11 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.auth.dependencies import get_current_user
 from backend.database import get_db
-from backend.models import DevicePowerHistory, User
+from backend.models import Device, DevicePowerHistory, User
 from backend.schemas import DevicePowerHistoryListResponse, DevicePowerHistoryResponse
 
 logger = logging.getLogger(__name__)
@@ -28,13 +28,14 @@ limiter = Limiter(key_func=get_remote_address)
 
 device_power_router = APIRouter(prefix="/device-power", tags=["Device Power"])
 
+IST = zoneinfo.ZoneInfo("Asia/Kolkata")
+
 
 @device_power_router.get("/history", response_model=DevicePowerHistoryListResponse)
 @limiter.limit("60/minute")
 async def get_device_power_history(
     request: Request,
     device_id: str | None = Query(None, description="Filter by device UUID"),
-    device_name: str | None = Query(None, description="Filter by device name (partial match)"),
     start_date: datetime | None = Query(None, description="Start date (ISO 8601)"),
     end_date: datetime | None = Query(None, description="End date (ISO 8601)"),
     page: int = Query(1, ge=1),
@@ -45,7 +46,7 @@ async def get_device_power_history(
 ) -> DevicePowerHistoryListResponse:
     """Get paginated per-device power consumption history.
 
-    Supports filtering by device ID, device name, date range, pagination, and sort.
+    Returns: device_id, timestamp (IST), total_power_consumption_kw
     """
     query = select(DevicePowerHistory)
     filters = []
@@ -58,8 +59,6 @@ async def get_device_power_history(
         except ValueError:
             pass
 
-    if device_name:
-        filters.append(DevicePowerHistory.device_name.ilike(f"%{device_name}%"))
     if start_date:
         filters.append(DevicePowerHistory.timestamp >= start_date)
     if end_date:
@@ -87,16 +86,9 @@ async def get_device_power_history(
     return DevicePowerHistoryListResponse(
         records=[
             DevicePowerHistoryResponse(
-                id=r.id,
-                timestamp=r.timestamp,
                 device_id=r.device_id,
-                device_name=r.device_name,
-                mode=r.mode,
-                kw=r.kw,
-                kvar=r.kvar,
-                power_factor=r.power_factor,
-                energy_kwh=r.energy_kwh,
-                created_at=r.created_at,
+                timestamp=r.timestamp,
+                total_power_consumption_kw=r.total_power_consumption_kw,
             )
             for r in records
         ],
@@ -104,52 +96,6 @@ async def get_device_power_history(
         page=page,
         per_page=per_page,
     )
-
-
-def _pivot_records(records: list) -> tuple[list[str], list[dict]]:
-    """Pivot normalized device power records into wide format.
-
-    Returns:
-        Tuple of (header list, list of row dicts).
-
-    Output format:
-        timestamp | base_kW | base_kVAR | fridge_kW | fridge_kVAR | hvac_kW | ...
-    """
-    # Group by timestamp
-    time_buckets: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
-    device_names: set[str] = set()
-
-    for r in records:
-        ist_time = r.timestamp.astimezone(zoneinfo.ZoneInfo("Asia/Kolkata")) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
-        ts = ist_time.strftime("%Y-%m-%d %H:%M:%S IST")
-        # Normalize name for column: "Living Room AC" → "living_room_ac"
-        col_name = r.device_name.lower().replace(" ", "_")
-        device_names.add(col_name)
-        time_buckets[ts][col_name] = {
-            "kw": round(r.kw, 4),
-            "kvar": round(r.kvar, 4),
-        }
-
-    # Sort devices alphabetically for consistent column order
-    sorted_devices = sorted(device_names)
-
-    # Build headers
-    headers = ["timestamp"]
-    for name in sorted_devices:
-        headers.append(f"{name}_kW")
-        headers.append(f"{name}_kVAR")
-
-    # Build rows
-    rows = []
-    for ts in sorted(time_buckets.keys()):
-        row = {"timestamp": ts}
-        for name in sorted_devices:
-            data = time_buckets[ts].get(name, {"kw": 0.0, "kvar": 0.0})
-            row[f"{name}_kW"] = data["kw"]
-            row[f"{name}_kVAR"] = data["kvar"]
-        rows.append(row)
-
-    return headers, rows
 
 
 @device_power_router.get("/download/csv")
@@ -162,9 +108,9 @@ async def download_device_power_csv(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
-    """Download device power history as wide-format CSV.
+    """Download device power history as CSV.
 
-    Columns: timestamp, device1_kW, device1_kVAR, device2_kW, device2_kVAR, ...
+    Columns: device_id, timestamp, total_power_consumption_kw
     """
     query = select(DevicePowerHistory)
     filters = []
@@ -186,15 +132,22 @@ async def download_device_power_csv(
     result = await db.execute(query)
     records = result.scalars().all()
 
-    headers, rows = _pivot_records(records)
+    headers = ["device_id", "timestamp", "total_power_consumption_kw"]
 
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=headers)
-    writer.writeheader()
-    writer.writerows(rows)
+    writer = csv.writer(output)
+    writer.writerow(headers)
+
+    for r in records:
+        ist_time = r.timestamp.astimezone(IST) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(IST)
+        writer.writerow([
+            str(r.device_id),
+            ist_time.strftime("%Y-%m-%d %H:%M:%S"),
+            round(r.total_power_consumption_kw, 4),
+        ])
 
     output.seek(0)
-    ist_now = datetime.now(timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+    ist_now = datetime.now(timezone.utc).astimezone(IST)
     filename = f"device_power_history_{ist_now.strftime('%Y%m%d_%H%M%S')}.csv"
 
     return StreamingResponse(
@@ -214,9 +167,9 @@ async def download_device_power_xlsx(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
-    """Download device power history as wide-format XLSX.
+    """Download device power history as XLSX.
 
-    Columns: timestamp, device1_kW, device1_kVAR, device2_kW, device2_kVAR, ...
+    Columns: device_id, timestamp, total_power_consumption_kw
     """
     from openpyxl import Workbook
 
@@ -240,15 +193,20 @@ async def download_device_power_xlsx(
     result = await db.execute(query)
     records = result.scalars().all()
 
-    headers, rows = _pivot_records(records)
+    headers = ["device_id", "timestamp", "total_power_consumption_kw"]
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Device Power History"
     ws.append(headers)
 
-    for row in rows:
-        ws.append([row.get(h, 0) for h in headers])
+    for r in records:
+        ist_time = r.timestamp.astimezone(IST) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(IST)
+        ws.append([
+            str(r.device_id),
+            ist_time.strftime("%Y-%m-%d %H:%M:%S"),
+            round(r.total_power_consumption_kw, 4),
+        ])
 
     # Auto-width columns
     for col in ws.columns:
@@ -259,7 +217,7 @@ async def download_device_power_xlsx(
     wb.save(output)
     output.seek(0)
 
-    ist_now = datetime.now(timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
+    ist_now = datetime.now(timezone.utc).astimezone(IST)
     filename = f"device_power_history_{ist_now.strftime('%Y%m%d_%H%M%S')}.xlsx"
 
     return StreamingResponse(

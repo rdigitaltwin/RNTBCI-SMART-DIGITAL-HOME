@@ -253,7 +253,7 @@ class APIClient {
     return this.request(`/api/v1/home-power/history?${query}`);
   }
 
-  async getDevicePowerHistory(params?: { device_id?: string; device_name?: string; start_date?: string; end_date?: string; page?: number; per_page?: number }) {
+  async getDevicePowerHistory(params?: { device_id?: string; start_date?: string; end_date?: string; page?: number; per_page?: number }) {
     const query = new URLSearchParams();
     if (params) Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, String(v)); });
     return this.request(`/api/v1/device-power/history?${query}`);

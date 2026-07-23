@@ -32,6 +32,13 @@ export default function AppliancePowerDashboard() {
 
   const fetchData = async () => {
     try {
+      // Fetch devices list for id→name mapping
+      const devicesRes = await api.getDevices() as any;
+      const deviceMap: Record<string, string> = {};
+      (devicesRes.devices || devicesRes).forEach((d: any) => {
+        deviceMap[d.id] = d.name;
+      });
+
       const res = await api.getDevicePowerHistory({ per_page: 2000 }) as any;
       
       const timeBuckets: Record<string, any> = {};
@@ -45,7 +52,7 @@ export default function AppliancePowerDashboard() {
         date.setSeconds(secs - (secs % 10));
         const ts = date.toISOString();
         
-        const deviceName = r.device_name;
+        const deviceName = deviceMap[r.device_id] || r.device_id;
         foundDevices.add(deviceName);
         
         if (!timeBuckets[ts]) {
@@ -54,7 +61,7 @@ export default function AppliancePowerDashboard() {
             timeFormatted: `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
           };
         }
-        timeBuckets[ts][deviceName] = Number(r.kw) || 0;
+        timeBuckets[ts][deviceName] = Number(r.total_power_consumption_kw) || 0;
       });
 
       const sortedData = Object.values(timeBuckets).sort((a: any, b: any) => 

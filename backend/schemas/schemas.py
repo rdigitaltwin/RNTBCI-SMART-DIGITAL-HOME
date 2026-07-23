@@ -406,16 +406,9 @@ class HomePowerHistoryListResponse(BaseModel):
 class DevicePowerHistoryResponse(BaseModel):
     """Single device power history record."""
 
-    id: uuid.UUID
-    timestamp: datetime
     device_id: uuid.UUID
-    device_name: str
-    mode: str
-    kw: float
-    kvar: float
-    power_factor: float
-    energy_kwh: float
-    created_at: datetime
+    timestamp: datetime
+    total_power_consumption_kw: float
 
     model_config = {"from_attributes": True}
 

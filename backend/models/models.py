@@ -588,27 +588,23 @@ class HomePowerHistory(Base):
 
 
 class DevicePowerHistory(Base):
-    """Per-device power consumption time-series record with mode and reactive power."""
+    """Per-device power consumption time-series record.
+
+    Simplified to three columns matching the project dataset schema:
+    device_id | timestamp (IST) | total_power_consumption_kw
+    """
 
     __tablename__ = "device_power_history"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"),
+        primary_key=True, nullable=False
     )
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+        DateTime(timezone=True), primary_key=True, nullable=False
     )
-    device_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
-    )
-    device_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    mode: Mapped[str] = mapped_column(String(50), nullable=False, default="off")
-    kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    power_factor: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    energy_kwh: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow
+    total_power_consumption_kw: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
     )
 
     # Relationships
@@ -618,3 +614,4 @@ class DevicePowerHistory(Base):
         Index("ix_device_power_device_time", "device_id", "timestamp"),
         Index("ix_device_power_timestamp", "timestamp"),
     )
+
