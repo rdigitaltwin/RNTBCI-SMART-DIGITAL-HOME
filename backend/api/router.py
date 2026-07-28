@@ -18,6 +18,7 @@ from backend.api.v1.enterprise import (
 from backend.api.v1.events import alerts_router, events_router
 from backend.api.v1.home_power import home_power_router
 from backend.api.v1.system import router as system_router
+from backend.api.v1.ml import router as ml_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -42,4 +43,5 @@ api_v1_router.include_router(hub_router)
 api_v1_router.include_router(location_router)
 api_v1_router.include_router(pipeline_router)
 api_v1_router.include_router(timetravel_router)
+api_v1_router.include_router(ml_router)
 

@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database import async_session_factory
 from backend.models import Device, DeviceEvent, DeviceType, EnergyHistory, PowerState
 from backend.redis.client import redis_client
+from backend.services.ml_inference import detect_anomaly
 
 logger = logging.getLogger(__name__)
 
@@ -84,18 +85,19 @@ class AnalyticsEngine:
             result["trend"] = "increasing" if statistics.mean(recent) > statistics.mean(older) * 1.05 else \
                              "decreasing" if statistics.mean(recent) < statistics.mean(older) * 0.95 else "stable"
 
-            # Anomaly detection
-            if len(self._history) >= 60:
-                all_powers = [h["total_power_w"] for h in self._history[-60:]]
-                mean_p = statistics.mean(all_powers)
-                std_p = statistics.stdev(all_powers) if len(all_powers) > 1 else 0
-                current = processed["total_power_w"]
-
-                if std_p > 0 and abs(current - mean_p) > self._anomaly_threshold * std_p:
-                    result["anomaly"] = True
-                    result["anomaly_score"] = round(abs(current - mean_p) / std_p, 2)
-                else:
-                    result["anomaly"] = False
+            # Anomaly detection via ML Model (Isolation Forest)
+            current = processed["total_power_w"]
+            hour = datetime.now(timezone.utc).hour
+            # Simple temp mock for anomaly context, ideally pulled from environment
+            outdoor_temp = 25 + 10 * math.sin((hour - 14) * math.pi / 12)
+            
+            # Predict
+            # We convert W to kWh for the model's scale: current / 1000
+            is_anomaly = detect_anomaly(current / 1000.0, hour, outdoor_temp)
+            
+            result["anomaly"] = bool(is_anomaly)
+            result["anomaly_score"] = 0.99 if is_anomaly else 0.0
+            
         else:
             result["trend"] = "insufficient_data"
             result["anomaly"] = False

@@ -43,6 +43,7 @@ from backend.models import (
     PowerState,
 )
 from backend.redis.client import redis_client
+from backend.services.ml_inference import predict_power_consumption
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -220,23 +221,39 @@ class DeviceStateTracker:
         return profiles.get(self.operating_mode, {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0})
 
     def get_power_kw_kvar(self) -> tuple[float, float, float]:
-        """Calculate current kW, kVAR, and power factor with noise.
-
-        During STARTING phase: returns 0 kW/kVAR (warm-up period)
-        During RUNNING phase: returns mode-specific values with noise
-        During STOPPING phase: returns decaying values
+        """Calculate current kW, kVAR, and power factor using ML Model predictions.
+        
+        Replaced legacy Gaussian noise and hardcoded profiles with AI-driven inference.
         """
         if self.power_phase == DevicePowerPhase.OFF.value:
             return 0.0, 0.0, 1.0
 
         if self.power_phase == DevicePowerPhase.STARTING.value:
             return 0.0, 0.0, 1.0
-
-        profile = self.get_mode_profile()
-        base_kw = profile.get("kw", 0.0)
-        base_kvar = profile.get("kvar", 0.0)
-        pf = profile.get("pf", 1.0)
-        noise_pct = profile.get("noise_pct", 0.05)
+            
+        now = datetime.now(timezone.utc)
+        hour = now.hour
+        season_encoded = 1 # Example: Summer
+        is_weekend = 1 if now.weekday() >= 5 else 0
+        
+        # Simple simulated outdoor temp based on hour (can be pulled from a weather API)
+        outdoor_temp = 25 + 10 * math.sin((hour - 14) * math.pi / 12)
+        
+        # Get AI predicted power consumption for this appliance
+        base_kw = predict_power_consumption(
+            outdoor_temp=outdoor_temp,
+            season_encoded=season_encoded,
+            hour=hour,
+            is_weekend=is_weekend,
+            prev_energy=0.0, # Could be fetched from self.metadata
+            appliance_type=self.device_type_str,
+            household_size=3
+        )
+        
+        # Determine reactive power (kVAR) using a static PF estimation for the appliance
+        # Since our dataset mainly has kWh, we will assign an average pf
+        pf = 0.90
+        base_kvar = base_kw * math.tan(math.acos(pf)) if base_kw > 0 else 0.0
 
         if self.power_phase == DevicePowerPhase.STOPPING.value:
             # Decay: power reduces linearly over STOPPING_DURATION_S
@@ -244,13 +261,7 @@ class DeviceStateTracker:
             base_kw *= decay
             base_kvar *= decay
 
-        # Apply Gaussian noise
-        if base_kw > 0:
-            noise = random.gauss(0, base_kw * noise_pct)
-            base_kw = max(0.0, base_kw + noise)
-            base_kvar = max(0.0, base_kvar + noise * (base_kvar / max(base_kw, 0.001)))
-
-        return round(base_kw, 6), round(base_kvar, 6), pf
+        return round(base_kw, 3), round(base_kvar, 3), pf
 
     def set_power_on(self, mode: str | None = None) -> None:
         """Transition instantly to STARTING phase."""

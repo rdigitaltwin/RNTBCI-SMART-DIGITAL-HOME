@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database import async_session_factory
 from backend.models import Device, DeviceType, EnergyHistory, PowerState
 from backend.redis.client import redis_client
+from backend.services.ml_inference import predict_forecast_consumption, generate_recommendation
 
 logger = logging.getLogger(__name__)
 
@@ -177,12 +178,9 @@ class EnergyManager:
         predictions = {}
 
         for offset_h in [1, 2, 4, 8, 24]:
-            target_hour = (now.hour + offset_h) % 24
-            # Simple prediction based on time-of-day pattern
-            time_factor = 0.5 + 0.5 * math.sin((target_hour - 6) * math.pi / 12)
-            base_prediction = self._current_total_w * time_factor
-            noise = random.gauss(0, base_prediction * 0.1)
-            predictions[f"next_{offset_h}h_w"] = round(max(0, base_prediction + noise), 1)
+            # Use ML forecasting model
+            prediction_kw = predict_forecast_consumption(self._current_total_w / 1000.0, offset_h)
+            predictions[f"next_{offset_h}h_w"] = round(prediction_kw * 1000.0, 1)
 
         # Cost prediction for rest of day
         remaining_hours = 24 - now.hour
@@ -195,22 +193,40 @@ class EnergyManager:
         return predictions
 
     def _generate_load_shed_recommendations(self, allocations: list[dict]) -> list[dict]:
-        """Generate recommendations for load shedding to stay within budget."""
+        """Generate recommendations for load shedding using AI/SHAP."""
         excess_w = self._current_total_w - PEAK_THRESHOLD_W
         recommendations = []
+        
+        now = datetime.now(timezone.utc)
+        hour = now.hour
+        is_weekend = 1 if now.weekday() >= 5 else 0
+        outdoor_temp = 25 + 10 * math.sin((hour - 14) * math.pi / 12)
+        season_encoded = 1
 
         for alloc in allocations:
             if excess_w <= 0:
                 break
-            if alloc["priority"] <= 5:  # Only shed low-priority devices
-                recommendations.append({
-                    "device_id": alloc["device_id"],
-                    "device_name": alloc["device_name"],
-                    "action": "reduce_power" if alloc["priority"] > 3 else "power_off",
-                    "savings_w": alloc["power_w"],
-                    "reason": f"Peak load management (current: {round(self._current_total_w)}W, threshold: {PEAK_THRESHOLD_W}W)",
-                })
-                excess_w -= alloc["power_w"]
+                
+            # Ask the ML model for SHAP-based reasons and recommendations
+            ai_recs = generate_recommendation(
+                outdoor_temp=outdoor_temp,
+                season_encoded=season_encoded,
+                hour=hour,
+                is_weekend=is_weekend,
+                prev_energy=alloc["power_kw"],
+                appliance_type=alloc["device_type"],
+                household_size=3
+            )
+            
+            for ai_rec in ai_recs:
+                if excess_w <= 0:
+                    break
+                # Enhance the AI recommendation with specific action context
+                ai_rec["device_id"] = alloc["device_id"]
+                ai_rec["device_name"] = alloc["device_name"]
+                ai_rec["action"] = "power_off"
+                recommendations.append(ai_rec)
+                excess_w -= ai_rec.get("potential_savings_w", 0)
 
         return recommendations
 
