@@ -98,6 +98,45 @@ async def get_device_power_history(
     )
 
 
+@device_power_router.get("/calculate")
+@limiter.limit("60/minute")
+async def calculate_device_power(
+    request: Request,
+    device_id: str = Query(..., description="Device UUID"),
+    start_date: datetime = Query(..., description="Start date (ISO 8601)"),
+    end_date: datetime = Query(..., description="End date (ISO 8601)"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Calculate the total accumulated power consumption for a specific device between two times.
+    
+    This performs a database-level sum over the historical time-series data.
+    """
+    import uuid as uuid_mod
+    try:
+        parsed_id = uuid_mod.UUID(device_id)
+    except ValueError:
+        return {"error": "Invalid device UUID format."}
+        
+    query = select(func.sum(DevicePowerHistory.total_power_consumption_kw)).where(
+        and_(
+            DevicePowerHistory.device_id == parsed_id,
+            DevicePowerHistory.timestamp >= start_date,
+            DevicePowerHistory.timestamp <= end_date
+        )
+    )
+    
+    result = await db.execute(query)
+    total_power = result.scalar() or 0.0
+    
+    return {
+        "device_id": str(parsed_id),
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "total_consumed_kw": round(total_power, 4)
+    }
+
+
 @device_power_router.get("/download/csv")
 @limiter.limit("10/minute")
 async def download_device_power_csv(
