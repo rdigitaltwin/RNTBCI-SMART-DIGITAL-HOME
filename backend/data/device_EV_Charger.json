@@ -173,6 +173,30 @@
                 "power_state": "on"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T13:02:39.182384+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T13:02:40.208232+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T13:02:44.058518+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
         }
     ]
 }

@@ -773,6 +773,22 @@
                 "power_state": "on"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T13:02:29.094803+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T13:02:32.190958+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
         }
     ]
 }

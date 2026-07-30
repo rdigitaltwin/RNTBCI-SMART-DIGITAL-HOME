@@ -598,6 +598,9 @@ class SimulationEngine:
                     if kw > 0:
                         tracker.accumulated_kwh += (kw * interval_hours)
                         
+
+                    metadata = dict(device.extra_data or {})
+                        
                     if write_history or state_change.get("changed"):
                         # Update device DB record
                         device.energy_usage_kw = round(kw, 4)
@@ -609,7 +612,6 @@ class SimulationEngine:
                             device.turned_on_at = None
     
                         # Update metadata with state info
-                        metadata = dict(device.extra_data or {})
                         metadata["sim_state"] = tracker.operating_mode
                         metadata["sim_phase"] = tracker.power_phase
                         metadata["sim_power_kw"] = round(kw, 4)
