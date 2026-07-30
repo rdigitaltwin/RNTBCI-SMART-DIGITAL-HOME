@@ -5,6 +5,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Suppress verbose SQLAlchemy engine logs in production
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+
 if __name__ == "__main__":
     # Get PORT from environment, default to 8000
     try:

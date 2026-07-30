@@ -1,4 +1,4 @@
-FROM python:3.11-slim as requirements-stage
+FROM python:3.11-slim AS requirements-stage
 
 WORKDIR /tmp
 
