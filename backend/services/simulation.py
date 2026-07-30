@@ -139,6 +139,11 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
         "on": {"kw": 0.120, "kvar": 0.040, "pf": 0.95, "noise_pct": 0.08},
         "standby": {"kw": 0.001, "kvar": 0.0003, "pf": 0.95, "noise_pct": 0.15},
     },
+    "energy_evse": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "charging": {"kw": 7.2, "kvar": 0.72, "pf": 0.99, "noise_pct": 0.02},
+        "standby": {"kw": 0.005, "kvar": 0.002, "pf": 0.90, "noise_pct": 0.10},
+    },
 }
 
 # Default mode when device is first turned ON
@@ -159,6 +164,7 @@ DEFAULT_ON_MODE: dict[str, str] = {
     "router": "active",
     "camera": "recording",
     "smart_tv": "on",
+    "energy_evse": "charging",
 }
 
 # Auto-cycling devices: mode sequence and duration ranges (seconds)

@@ -577,6 +577,8 @@ class HomePowerHistory(Base):
     induction_cooktop_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     base_load_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     base_load_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    ev_charger_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    ev_charger_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
 
     created_at: Mapped[datetime] = mapped_column(
