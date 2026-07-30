@@ -42,8 +42,13 @@ async def get_db() -> AsyncSession:
             await session.close()
 
 
-async def init_db() -> None:
-    """Create all tables. Used for development bootstrapping."""
+async def init_db() -> bool:
+    """Create all tables with robust retries. Used for development bootstrapping."""
+    import asyncio
+    import logging
+    
+    logger = logging.getLogger(__name__)
+
     def check_and_drop_legacy(sync_conn):
         from sqlalchemy import inspect, text
         inspector = inspect(sync_conn)
@@ -58,10 +63,29 @@ async def init_db() -> None:
             columns = [col['name'] for col in inspector.get_columns("device_power_history")]
             if "total_power_consumption_kw" not in columns:
                 sync_conn.execute(text("DROP TABLE device_power_history CASCADE"))
-                
-    async with engine.begin() as conn:
-        await conn.run_sync(check_and_drop_legacy)
-        await conn.run_sync(Base.metadata.create_all)
+
+    max_retries = 5
+    base_delay = 2
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(check_and_drop_legacy)
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("Database initialized successfully.")
+            return True
+        except ConnectionRefusedError as e:
+            logger.error(f"Database connection refused (Attempt {attempt}/{max_retries}). Is PostgreSQL running on the specified host/port?")
+        except Exception as e:
+            logger.error(f"Database initialization failed (Attempt {attempt}/{max_retries}): {e}")
+            
+        if attempt < max_retries:
+            delay = base_delay ** attempt
+            logger.info(f"Retrying database connection in {delay} seconds...")
+            await asyncio.sleep(delay)
+            
+    logger.critical("Max database connection retries reached. The application will start, but database-dependent features will fail.")
+    return False
 
 
 async def close_db() -> None:

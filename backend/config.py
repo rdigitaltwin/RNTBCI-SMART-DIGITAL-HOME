@@ -74,9 +74,32 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.allowed_origins.split(",")]
 
     def model_post_init(self, __context: object) -> None:
-        """Resolve JWT secret after initialization."""
+        """Resolve JWT secret and validate Database URL after initialization."""
         if not self.jwt_secret_key:
             self.jwt_secret_key = _resolve_jwt_secret()
+
+        # Parse and sanitize database URL for asyncpg (Standardize PaaS URLs)
+        url = self.database_url
+        if url.startswith("postgres://"):
+            self.database_url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://"):
+            self.database_url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        # Log environment securely (without passwords)
+        env_type = "Local" if "localhost" in self.database_url or "127.0.0.1" in self.database_url else "Remote/PaaS"
+        
+        try:
+            # Safely extract host details for logging
+            safe_url = self.database_url.split("@")[-1] if "@" in self.database_url else self.database_url.split("//")[-1]
+            safe_host = safe_url.split("/")[0]
+            safe_db = safe_url.split("/")[-1].split("?")[0] if "/" in safe_url else "unknown"
+            
+            logging.info(f"Environment: {env_type}")
+            logging.info(f"Database Host: {safe_host}")
+            logging.info(f"Database Name: {safe_db}")
+            logging.info(f"SSL Enabled: {'sslmode=' in self.database_url.lower()}")
+        except Exception:
+            logging.warning("Could not safely parse DATABASE_URL for logging.")
 
 
 @lru_cache()

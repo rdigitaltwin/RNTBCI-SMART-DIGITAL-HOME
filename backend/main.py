@@ -95,15 +95,29 @@ async def lifespan(app: FastAPI):
     """Application lifecycle manager."""
     logger.info("Starting RNTBCI Smart Home Digital Twin v%s", settings.app_version)
 
-    # Initialize database tables
-    await init_db()
-    logger.info("Database initialized")
+    import asyncio
 
-    # Database initialized, skipping sample data seeding
-    # await seed_database()
+    # Start database initialization and seeding in the background 
+    # so the application can start even if the database is temporarily offline
+    async def startup_db_tasks():
+        db_ready = await init_db()
+        if db_ready:
+            # Auto-seed EV Charger device if it doesn't exist
+            try:
+                await _ensure_ev_charger_exists()
+                logger.info("EV Charger device check complete")
+            except Exception as e:
+                logger.error(f"Failed to auto-seed EV charger: {e}")
+        else:
+            logger.warning("Database unavailable. Skipping auto-seeding.")
 
-    # Connect Redis
-    await redis_client.connect()
+    asyncio.create_task(startup_db_tasks())
+
+    # Connect Redis (Redis client handles its own offline states usually)
+    try:
+        await redis_client.connect()
+    except Exception as e:
+        logger.error(f"Redis connection failed during startup: {e}")
 
     # Start WebSocket manager
     await ws_manager.start()
@@ -111,10 +125,6 @@ async def lifespan(app: FastAPI):
     # Start simulation engine
     await device_simulator.start()
     logger.info("Simulation engine started")
-
-    # Auto-seed EV Charger device if it doesn't exist
-    await _ensure_ev_charger_exists()
-    logger.info("EV Charger device check complete")
 
     yield
 

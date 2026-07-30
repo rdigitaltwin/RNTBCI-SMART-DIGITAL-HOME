@@ -222606,3 +222606,16 @@
 {"asctime": "2026-07-08 18:29:19,796", "levelname": "INFO", "name": "backend.websockets.manager", "message": "WebSocket manager stopped"}
 {"asctime": "2026-07-30 09:56:09,105", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
 {"asctime": "2026-07-30 10:07:44,779", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
+{"asctime": "2026-07-30 10:43:06,713", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
+{"asctime": "2026-07-30 10:53:08,331", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
+{"asctime": "2026-07-30 10:57:19,133", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
+{"asctime": "2026-07-30 11:00:53,277", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
+{"asctime": "2026-07-30 11:00:53,287", "levelname": "ERROR", "name": "backend.database.connection", "message": "Database connection refused (Attempt 1/5). Is PostgreSQL running on the specified host/port?"}
+{"asctime": "2026-07-30 11:00:53,287", "levelname": "INFO", "name": "backend.database.connection", "message": "Retrying database connection in 2 seconds..."}
+{"asctime": "2026-07-30 11:00:53,288", "levelname": "WARNING", "name": "backend.redis.client", "message": "Redis connection failed: Authentication required.. Operating without Redis."}
+{"asctime": "2026-07-30 11:00:53,288", "levelname": "INFO", "name": "backend.websockets.manager", "message": "WebSocket manager started"}
+{"asctime": "2026-07-30 11:00:53,288", "levelname": "INFO", "name": "backend.services.simulation", "message": "Simulation engine started (speed: 1.0x)"}
+{"asctime": "2026-07-30 11:00:53,288", "levelname": "INFO", "name": "backend.main", "message": "Simulation engine started"}
+{"asctime": "2026-07-30 11:00:53,290", "levelname": "INFO", "name": "backend.main", "message": "Shutting down RNTBCI Smart Home Digital Twin"}
+{"asctime": "2026-07-30 11:00:53,290", "levelname": "INFO", "name": "backend.services.simulation", "message": "Simulation engine stopped"}
+{"asctime": "2026-07-30 11:00:53,290", "levelname": "INFO", "name": "backend.websockets.manager", "message": "WebSocket manager stopped"}
