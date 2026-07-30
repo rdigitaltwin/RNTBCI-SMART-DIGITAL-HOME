@@ -1,6 +1,7 @@
 import os
 import joblib
 import numpy as np
+import pandas as pd
 import logging
 import shap
 import math
@@ -49,7 +50,10 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
             sequence_buffer[appliance_type] = []
             
         appliance_encoded = appliance_encoder.transform([appliance_type])[0] if appliance_type in appliance_encoder.classes_ else 0
-        features = np.array([[outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_encoded, household_size]])
+        features = pd.DataFrame(
+            [[outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_encoded, household_size]],
+            columns=['outdoor_temp', 'season_encoded', 'hour', 'is_weekend', 'prev_energy', 'appliance_encoded', 'household_size']
+        )
         features_scaled = energy_scaler.transform(features)[0] # Shape (7,)
         
         # Append to buffer
@@ -79,7 +83,10 @@ def detect_anomaly(energy_consumption, hour, outdoor_temp):
         return False
     
     try:
-        features = np.array([[energy_consumption, hour, outdoor_temp]])
+        features = pd.DataFrame(
+            [[energy_consumption, hour, outdoor_temp]],
+            columns=['energy_consumption', 'hour', 'outdoor_temp']
+        )
         pred = anomaly_model.predict(features)[0]
         return pred == -1  # Isolation forest returns -1 for anomalies
     except Exception as e:

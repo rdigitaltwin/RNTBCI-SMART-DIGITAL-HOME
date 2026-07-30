@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: rntbci-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rntbci-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: rntbci-redis
+          property: connectionString
+
+  - type: redis
+    name: rntbci-redis
+    ipAllowList: []
+
+databases:
+  - name: rntbci-db
+    engine: postgres
+    version: 15
+    plan: free

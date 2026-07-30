@@ -38,3 +38,14 @@ pytest-asyncio==0.25.3
 
 # Logging
 python-json-logger==3.2.1
+
+# Machine Learning
+joblib
+pandas
+scikit-learn
+shap
+torch
+xgboost
+lightgbm
+catboost
+numpy

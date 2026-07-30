@@ -214,6 +214,7 @@ class DeviceStateTracker:
 
         # Metadata
         self.metadata: dict[str, Any] = {}
+        self.accumulated_kwh: float = 0.0
 
     def get_mode_profile(self) -> dict[str, float]:
         """Get the kW/kVAR profile for current operating mode."""
@@ -594,43 +595,48 @@ class SimulationEngine:
                     total_power_kw += kw
                     total_power_kvar += kvar
 
-                    # Update device DB record
-                    device.energy_usage_kw = round(kw, 4)
-                    device.last_updated = now
-
-                    if power_state == PowerState.ON and device.turned_on_at is None:
-                        device.turned_on_at = now
-                    elif power_state == PowerState.OFF:
-                        device.turned_on_at = None
-
-                    # Update metadata with state info
-                    metadata = dict(device.extra_data or {})
-                    metadata["sim_state"] = tracker.operating_mode
-                    metadata["sim_phase"] = tracker.power_phase
-                    metadata["sim_power_kw"] = round(kw, 4)
-                    metadata["sim_power_kvar"] = round(kvar, 4)
-                    metadata["sim_power_factor"] = round(pf, 3)
-                    metadata = self._update_device_telemetry(device_type, metadata, hour, power_state)
-                    device.extra_data = metadata
-
-                    # Record to EnergyHistory (existing table, every tick)
+                    interval_hours = (1.0 * self._speed) / 3600.0
                     if kw > 0:
-                        voltage = 230.0 + random.gauss(0, 2)
-                        current_a = (kw * 1000) / voltage if voltage > 0 else 0
-                        cost_per_kwh = 0.12
-                        interval_hours = (1.0 * self._speed) / 3600.0
-                        cost = kw * interval_hours * cost_per_kwh
-
-                        device.total_energy_kwh = (device.total_energy_kwh or 0.0) + (kw * interval_hours)
-
-                        energy_record = EnergyHistory(
-                            device_id=device.id,
-                            power_kw=round(kw, 4),
-                            voltage=round(voltage, 1),
-                            current_amps=round(current_a, 3),
-                            cost_usd=round(cost, 6),
-                        )
-                        db.add(energy_record)
+                        tracker.accumulated_kwh += (kw * interval_hours)
+                        
+                    if write_history or state_change.get("changed"):
+                        # Update device DB record
+                        device.energy_usage_kw = round(kw, 4)
+                        device.last_updated = now
+    
+                        if power_state == PowerState.ON and device.turned_on_at is None:
+                            device.turned_on_at = now
+                        elif power_state == PowerState.OFF:
+                            device.turned_on_at = None
+    
+                        # Update metadata with state info
+                        metadata = dict(device.extra_data or {})
+                        metadata["sim_state"] = tracker.operating_mode
+                        metadata["sim_phase"] = tracker.power_phase
+                        metadata["sim_power_kw"] = round(kw, 4)
+                        metadata["sim_power_kvar"] = round(kvar, 4)
+                        metadata["sim_power_factor"] = round(pf, 3)
+                        metadata = self._update_device_telemetry(device_type, metadata, hour, power_state)
+                        device.extra_data = metadata
+    
+                        # Record to EnergyHistory
+                        if tracker.accumulated_kwh > 0:
+                            device.total_energy_kwh = (device.total_energy_kwh or 0.0) + tracker.accumulated_kwh
+                            
+                            voltage = 230.0 + random.gauss(0, 2)
+                            current_a = (kw * 1000) / voltage if voltage > 0 else 0
+                            cost_per_kwh = 0.12
+                            cost = tracker.accumulated_kwh * cost_per_kwh
+    
+                            energy_record = EnergyHistory(
+                                device_id=device.id,
+                                power_kw=round(kw, 4),
+                                voltage=round(voltage, 1),
+                                current_amps=round(current_a, 3),
+                                cost_usd=round(cost, 6),
+                            )
+                            db.add(energy_record)
+                            tracker.accumulated_kwh = 0.0
 
                     # Record to DevicePowerHistory (simplified table, every ~15s)
                     if write_history:
