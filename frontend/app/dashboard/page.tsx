@@ -281,9 +281,9 @@ function QuickDeviceList() {
             </div>
             <span style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-              color: device.power_state === 'on' ? '#00E5FF' : '#64748B',
+              color: device.power_state === 'on' ? '#00E5FF' : '#64748B'
             }}>
-              {device.power_state === 'on' ? `${(device.energy_usage_kw * 1000).toFixed(0)}W` : '0W'}
+              {device.power_state === 'on' ? (device.type === 'smart_light' ? `${device.energy_usage_kw.toFixed(1)}W` : `${(device.energy_usage_kw * 1000).toFixed(0)}W`) : '0W'}
             </span>
             <button
               onClick={() => handleToggle(device)}

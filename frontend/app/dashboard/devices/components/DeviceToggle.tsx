@@ -42,7 +42,7 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
         fontFamily: "'Orbitron', monospace", fontSize: '16px', fontWeight: 700,
         color: isOn ? '#F8FAFC' : '#64748B',
       }}>
-        {((device.energy_usage_kw || 0) * 1000).toFixed(0)}<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>W</span>
+        {device.type === 'smart_light' ? ((device.energy_usage_kw || 0)).toFixed(1) : ((device.energy_usage_kw || 0) * 1000).toFixed(0)}<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>W</span>
       </span>
       <button 
         onClick={handlePowerToggle}
