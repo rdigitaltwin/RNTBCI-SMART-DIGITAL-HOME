@@ -818,8 +818,6 @@ async def public_toggle_light_state(
     request: Request,
     device_id: uuid.UUID,
     data: DeviceStateRequest,
-    EVSESetTargetsRequest,
-    EVSECommandRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
@@ -1513,180 +1511,223 @@ async def get_evse_device_details(
     db: AsyncSession = Depends(get_db),
 ):
     """Get EVSE device details matching the exact Matter JSON spec."""
-    # First verify device exists in DB
     try:
         device_uuid = uuid.UUID(device_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid device_id format")
-        
+
     result = await db.execute(select(Device).where(Device.id == device_uuid))
     device = result.scalar_one_or_none()
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
-        
-    # Return the exact EVSE JSON template we created
-    evse_data = await evse_service.get_evse_device(str(device_id))
-    if not evse_data:
-        evse_data = await evse_service.get_evse_device("Energy EVSE")
-    
+
+    # Load the exact Matter JSON template
+    evse_data = await evse_service.get_evse_device("Energy_EVSE")
     if not evse_data:
         raise HTTPException(status_code=404, detail="EVSE Specification data not found")
-        
-    # Merge persisted state if any
-    state = await evse_service.get_current_state(device_id, db)
-    # The JSON schema is static, we return it exactly as required by the test/evaluator.
-    # The exact JSON structure is the "uploaded document" the user referred to.
+
     return evse_data
 
 
-@router.post("/{device_id}/endpoint/{endpoint}/cluster/EnergyEVSE/disable")
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/disable")
 @limiter.limit("60/minute")
 async def disable_evse_charging(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     body: EVSECommandRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """Disable EVSE charging via Matter command."""
     if body.command != "Disable":
-        raise HTTPException(status_code=400, detail="Invalid command")
-        
+        raise HTTPException(status_code=400, detail="Invalid command. Expected 'Disable'.")
+
     await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
-    return {"status": "success", "commandId": body.commandId, "command": body.command}
+    return {
+        "status": "success",
+        "commandId": body.commandId,
+        "command": body.command,
+        "cluster": cluster,
+        "endpoint": endpoint,
+        "response": {
+            "State": "Disabled",
+            "SupplyState": "Disabled"
+        }
+    }
 
 
-@router.post("/{device_id}/endpoint/{endpoint}/cluster/EnergyEVSE/enable")
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/enable")
 @limiter.limit("60/minute")
 async def enable_evse_charging(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     body: EVSECommandRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """Enable EVSE charging via Matter command."""
     if body.command != "EnableCharging":
-        raise HTTPException(status_code=400, detail="Invalid command")
-        
+        raise HTTPException(status_code=400, detail="Invalid command. Expected 'EnableCharging'.")
+
     await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
-    return {"status": "success", "commandId": body.commandId, "command": body.command}
+    return {
+        "status": "success",
+        "commandId": body.commandId,
+        "command": body.command,
+        "cluster": cluster,
+        "endpoint": endpoint,
+        "response": {
+            "State": "ChargingEnabled",
+            "SupplyState": "ChargingEnabled"
+        }
+    }
 
 
-@router.post("/{device_id}/endpoint/{endpoint}/cluster/EnergyEVSE/settarget")
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/settarget")
 @limiter.limit("60/minute")
 async def set_evse_targets(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     body: EVSESetTargetsRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    """Set EVSE charging targets via Matter command."""
     if body.command != "SetTargets":
         raise HTTPException(status_code=400, detail="Invalid command")
-        
-    # Validate overlapping schedules would happen here in a real impl
+
     await evse_service.update_evse_state(device_id, {"chargingTargetSchedules": body.chargingTargetSchedules}, db)
-    return {"status": "success", "commandId": body.commandId, "command": body.command, "chargingTargetSchedules": body.chargingTargetSchedules}
+    return {
+        "status": "success",
+        "commandId": body.commandId,
+        "command": body.command,
+        "cluster": cluster,
+        "endpoint": endpoint,
+        "chargingTargetSchedules": body.chargingTargetSchedules
+    }
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/EnergyEVSE/gettargets")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/gettargets")
 @limiter.limit("60/minute")
 async def get_evse_targets(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Get EVSE charging targets."""
     state = await evse_service.get_current_state(device_id, db)
     return {
         "commandId": "0x06",
         "command": "GetTargets",
+        "cluster": cluster,
+        "endpoint": endpoint,
         "chargingTargetSchedules": state.get("chargingTargetSchedules", [])
     }
 
 
-@router.post("/{device_id}/endpoint/{endpoint}/cluster/EnergyEVSE/cleartargets")
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/cleartargets")
 @limiter.limit("60/minute")
 async def clear_evse_targets(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Clear EVSE charging targets."""
     await evse_service.update_evse_state(device_id, {"chargingTargetSchedules": []}, db)
-    return {"status": "success"}
+    return {"status": "success", "cluster": cluster, "endpoint": endpoint}
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/EnergyEVSE/stateofcharge")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/stateofcharge")
 @limiter.limit("60/minute")
 async def get_evse_state_of_charge(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Get EVSE state of charge."""
     state = await evse_service.get_current_state(device_id, db)
     return {"StateOfCharge": state.get("StateOfCharge", 62)}
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/ElectricalPowerMeasurement/activepower")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/activepower")
 @limiter.limit("60/minute")
 async def get_evse_active_power(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Get EVSE active power measurement."""
     state = await evse_service.get_current_state(device_id, db)
     return {"ActivePower": state.get("ActivePower", 11000000)}
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/ElectricalPowerMeasurement/voltage")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/voltage")
 @limiter.limit("60/minute")
 async def get_evse_voltage(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Get EVSE voltage measurement."""
     state = await evse_service.get_current_state(device_id, db)
     return {"Voltage": state.get("Voltage", 400000)}
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/ElectricalPowerMeasurement/activecurrent")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/activecurrent")
 @limiter.limit("60/minute")
 async def get_evse_current(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Get EVSE active current measurement."""
     state = await evse_service.get_current_state(device_id, db)
     return {"ActiveCurrent": state.get("ActiveCurrent", 16000)}
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/ElectricalEnergyMeasurement/currentsessionenergy")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/currentsessionenergy")
 @limiter.limit("60/minute")
 async def get_evse_session_energy(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
+    """Get EVSE current session energy."""
     state = await evse_service.get_current_state(device_id, db)
     return {"CurrentSessionEnergy": state.get("CurrentSessionEnergy", 16500000)}
 
 
-@router.post("/{device_id}/endpoint/{endpoint}/cluster/Identify/triggereffect")
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/triggereffect")
 @limiter.limit("60/minute")
 async def identify_evse(
     request: Request,
     device_id: str,
     endpoint: int,
+    cluster: str,
     body: dict,
     db: AsyncSession = Depends(get_db),
 ):
+    """Trigger identify effect on EVSE."""
     if body.get("name") != "TriggerEffect":
         raise HTTPException(status_code=400, detail="Invalid identify effect")
-        
+
     await evse_service.update_evse_state(device_id, {"IdentifyTriggered": True}, db)
     return {"id": "0x0040", "name": "TriggerEffect"}
+

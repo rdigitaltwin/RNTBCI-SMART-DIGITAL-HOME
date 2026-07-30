@@ -2,26 +2,40 @@
     "deviceType": {
         "id": "0x050C",
         "name": "EnergyEVSE",
-        "device_name": "Energy EVSE",
         "revision": 2,
+
         "classification": {
-            "class": "Simple Device",
-            "scope": "Endpoint"
+            "class": "simple",
+            "scope": "endpoint"
         },
+
         "endpoints": [
             {
                 "endpointId": 1,
                 "deviceType": "EnergyEVSE",
+
                 "clusters": [
                     {
                         "clusterId": "0x0003",
                         "name": "Identify",
                         "side": "server",
-                        "mandatory": true,
-                        "attributes": [],
+                        "mandatory": false,
+
                         "commands": [
                             {
-                                "name": "TriggerEffect"
+                                "commandId": "0x0040",
+                                "name": "TriggerEffect",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "EffectIdentifier",
+                                        "type": "enum8"
+                                    },
+                                    {
+                                        "name": "EffectVariant",
+                                        "type": "enum8"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -30,73 +44,209 @@
                         "name": "EnergyEVSE",
                         "side": "server",
                         "mandatory": true,
+
                         "attributes": [
                             {
-                                "name": "StateOfCharge",
-                                "type": "int",
-                                "unit": "%"
-                            },
-                            {
-                                "name": "SessionDuration",
-                                "type": "int",
-                                "unit": "s"
-                            },
-                            {
-                                "name": "SessionEnergyCharged",
-                                "type": "int",
-                                "unit": "mWh"
-                            },
-                            {
-                                "name": "NextChargeTargetTime",
-                                "type": "int",
-                                "unit": "s"
-                            },
-                            {
-                                "name": "NextChargeStartTime",
-                                "type": "int",
-                                "unit": "s"
-                            },
-                            {
-                                "name": "UserMaximumChargeCurrent",
-                                "type": "int",
-                                "unit": "mA"
+                                "name": "State",
+                                "type": "enum",
+                                "value": "NotPluggedIn"
                             },
                             {
                                 "name": "SupplyState",
-                                "type": "enum"
+                                "type": "enum",
+                                "value": "Disabled"
                             },
                             {
                                 "name": "FaultState",
-                                "type": "enum"
+                                "type": "enum",
+                                "value": "NoError"
                             },
                             {
-                                "name": "State",
-                                "type": "enum"
+                                "name": "ChargingEnabledUntil",
+                                "type": "epoch-s",
+                                "value": null
+                            },
+                            {
+                                "name": "MinimumChargeCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 6000
+                            },
+                            {
+                                "name": "MaximumChargeCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 80000
+                            },
+                            {
+                                "name": "UserMaximumChargeCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 80000
+                            },
+                            {
+                                "name": "SessionDuration",
+                                "type": "elapsed-s",
+                                "unit": "s",
+                                "value": 0
+                            },
+                            {
+                                "name": "SessionEnergyCharged",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "StateOfCharge",
+                                "type": "percent",
+                                "unit": "%",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeStartTime",
+                                "type": "epoch-s",
+                                "unit": "s",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeTargetTime",
+                                "type": "epoch-s",
+                                "unit": "s",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeRequiredEnergy",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeTargetSoC",
+                                "type": "percent",
+                                "unit": "%",
+                                "value": null
                             }
                         ],
+
                         "commands": [
                             {
-                                "name": "Disable"
+                                "commandId": "0x01",
+                                "name": "Disable",
+                                "direction": "invoke",
+                                "fields": []
                             },
                             {
-                                "name": "EnableCharging"
+                                "commandId": "0x02",
+                                "name": "EnableCharging",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "ChargingEnabledUntil",
+                                        "type": "epoch-s"
+                                    },
+                                    {
+                                        "name": "MinimumChargeCurrent",
+                                        "type": "int64"
+                                    },
+                                    {
+                                        "name": "MaximumChargeCurrent",
+                                        "type": "int64"
+                                    }
+                                ]
                             },
                             {
-                                "name": "SetTargets"
+                                "commandId": "0x03",
+                                "name": "EnableDischarging",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "DischargingEnabledUntil",
+                                        "type": "epoch-s"
+                                    },
+                                    {
+                                        "name": "MaximumDischargeCurrent",
+                                        "type": "int64"
+                                    }
+                                ]
                             },
                             {
-                                "name": "GetTargets"
+                                "commandId": "0x04",
+                                "name": "StartDiagnostics",
+                                "direction": "invoke",
+                                "fields": []
                             },
                             {
-                                "name": "ClearTargets"
+                                "commandId": "0x05",
+                                "name": "SetTargets",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "ChargingTargetSchedules",
+                                        "type": "list"
+                                    }
+                                ]
+                            },
+                            {
+                                "commandId": "0x06",
+                                "name": "GetTargets",
+                                "direction": "invoke",
+                                "fields": []
+                            },
+                            {
+                                "commandId": "0x07",
+                                "name": "ClearTargets",
+                                "direction": "invoke",
+                                "fields": []
                             }
                         ],
-                        "features": [
+
+                        "events": [
                             {
-                                "name": "SOC reporting"
+                                "name": "EVConnected",
+                                "priority": "info"
                             },
                             {
-                                "name": "Charging Preferences"
+                                "name": "EVNotDetected",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "EnergyTransferStarted",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "EnergyTransferStopped",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "Fault",
+                                "priority": "critical"
+                            },
+                            {
+                                "name": "RFID",
+                                "priority": "info"
+                            }
+                        ],
+
+                        "features": [
+                            {
+                                "bit": 0,
+                                "name": "ChargingPreferences"
+                            },
+                            {
+                                "bit": 1,
+                                "name": "SoCReporting"
+                            },
+                            {
+                                "bit": 2,
+                                "name": "PlugAndCharge"
+                            },
+                            {
+                                "bit": 3,
+                                "name": "RFID"
+                            },
+                            {
+                                "bit": 4,
+                                "name": "V2X"
                             }
                         ]
                     },
@@ -105,15 +255,34 @@
                         "name": "EnergyEVSEMode",
                         "side": "server",
                         "mandatory": true,
+
                         "attributes": [
                             {
+                                "name": "SupportedModes",
+                                "type": "list",
+                                "value": [
+                                    {"label": "Manual", "mode": 0},
+                                    {"label": "TimeOfUse", "mode": 1},
+                                    {"label": "SolarCharging", "mode": 2}
+                                ]
+                            },
+                            {
                                 "name": "CurrentMode",
-                                "type": "enum",
-                                "enumValues": [
-                                    "Manual",
-                                    "ScheduledCharging",
-                                    "SmartCharging",
-                                    "EcoCharging"
+                                "type": "uint8",
+                                "value": 0
+                            }
+                        ],
+
+                        "commands": [
+                            {
+                                "commandId": "0x00",
+                                "name": "ChangeToMode",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "NewMode",
+                                        "type": "uint8"
+                                    }
                                 ]
                             }
                         ]
@@ -123,34 +292,41 @@
                         "name": "ElectricalPowerMeasurement",
                         "side": "server",
                         "mandatory": true,
+
                         "attributes": [
                             {
+                                "name": "PowerMode",
+                                "type": "enum",
+                                "value": "AC"
+                            },
+                            {
                                 "name": "Voltage",
-                                "type": "int",
-                                "unit": "mV"
+                                "type": "int64",
+                                "unit": "mV",
+                                "value": 230000
                             },
                             {
-                                "name": "Current",
-                                "type": "int",
-                                "unit": "mA"
+                                "name": "ActiveCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 0
                             },
                             {
-                                "name": "Power",
-                                "type": "int",
-                                "unit": "mW"
+                                "name": "ActivePower",
+                                "type": "int64",
+                                "unit": "mW",
+                                "value": 0
                             },
                             {
                                 "name": "Frequency",
-                                "type": "int",
-                                "unit": "mHz"
+                                "type": "int64",
+                                "unit": "mHz",
+                                "value": 50000
                             },
                             {
                                 "name": "PowerFactor",
-                                "type": "int"
-                            },
-                            {
-                                "name": "PowerMode",
-                                "type": "enum"
+                                "type": "int64",
+                                "value": 100
                             }
                         ]
                     },
@@ -159,16 +335,31 @@
                         "name": "ElectricalEnergyMeasurement",
                         "side": "server",
                         "mandatory": true,
+
                         "attributes": [
                             {
-                                "name": "TotalEnergyImported",
-                                "type": "int",
-                                "unit": "mWh"
+                                "name": "CumulativeEnergyImported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
                             },
                             {
-                                "name": "CurrentSessionEnergy",
-                                "type": "int",
-                                "unit": "mWh"
+                                "name": "CumulativeEnergyExported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "PeriodicEnergyImported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "PeriodicEnergyExported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
                             }
                         ]
                     }

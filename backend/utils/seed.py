@@ -251,6 +251,8 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 6000}, -5.5, 2.8, 0.0),
         ("Security Camera", DeviceType.CAMERA, "garage", PowerState.OFF, 0.015,
          {"recording": True, "motion_detection": True, "night_vision": False}, -3.0, 2.5, 0.0),
+        ("EV Charger", DeviceType.ENERGY_EVSE, "garage", PowerState.OFF, 0.0,
+         {"matter_device_type": "0x050C", "state": "NotPluggedIn", "supply_state": "Disabled", "fault_state": "NoError"}, -4.0, 0.5, 2.0),
 
         # Utility Room
         ("Washing Machine", DeviceType.WASHING_MACHINE, "utility_room", PowerState.OFF, 0.0,

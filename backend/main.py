@@ -39,6 +39,57 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+async def _ensure_ev_charger_exists():
+    """Create the EV Charger device in the Garage if it doesn't already exist."""
+    from sqlalchemy import select
+    from backend.database import async_session_factory
+    from backend.models import Device, DeviceType, DeviceStatus, PowerState, ConnectivityStatus, Room
+
+    async with async_session_factory() as db:
+        # Check if an energy_evse device already exists
+        result = await db.execute(
+            select(Device).where(Device.type == DeviceType.ENERGY_EVSE)
+        )
+        existing = result.scalar_one_or_none()
+        if existing:
+            logger.info("EV Charger device already exists: %s", existing.id)
+            return
+
+        # Find the Garage room
+        room_result = await db.execute(select(Room).where(Room.name == "Garage"))
+        garage = room_result.scalar_one_or_none()
+        if not garage:
+            # If no Garage room, use the first available room
+            room_result = await db.execute(select(Room).limit(1))
+            garage = room_result.scalar_one_or_none()
+        if not garage:
+            logger.warning("No rooms found, cannot auto-seed EV Charger")
+            return
+
+        device = Device(
+            name="EV Charger",
+            type=DeviceType.ENERGY_EVSE,
+            room_id=garage.id,
+            status=DeviceStatus.ONLINE,
+            power_state=PowerState.OFF,
+            connectivity=ConnectivityStatus.CONNECTED,
+            energy_usage_kw=0.0,
+            efficiency_percent=95.0,
+            extra_data={
+                "matter_device_type": "0x050C",
+                "state": "NotPluggedIn",
+                "supply_state": "Disabled",
+                "fault_state": "NoError",
+            },
+            position_x=-4.0,
+            position_y=0.5,
+            position_z=2.0,
+        )
+        db.add(device)
+        await db.commit()
+        logger.info("Auto-seeded EV Charger device: %s", device.id)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle manager."""
@@ -60,6 +111,10 @@ async def lifespan(app: FastAPI):
     # Start simulation engine
     await device_simulator.start()
     logger.info("Simulation engine started")
+
+    # Auto-seed EV Charger device if it doesn't exist
+    await _ensure_ev_charger_exists()
+    logger.info("EV Charger device check complete")
 
     yield
 
