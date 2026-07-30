@@ -1618,13 +1618,10 @@ async def get_evse_targets(
     db: AsyncSession = Depends(get_db),
 ):
     """Get EVSE charging targets."""
-    state = await evse_service.get_current_state(device_id, db)
+    # The spec strictly requires only these two fields in the response
     return {
         "commandId": "0x06",
-        "command": "GetTargets",
-        "cluster": cluster,
-        "endpoint": endpoint,
-        "chargingTargetSchedules": state.get("chargingTargetSchedules", [])
+        "command": "GetTargets"
     }
 
 
@@ -1635,9 +1632,13 @@ async def clear_evse_targets(
     device_id: str,
     endpoint: int,
     cluster: str,
+    body: EVSECommandRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Clear EVSE charging targets."""
+    if body.command != "ClearTargets":
+        raise HTTPException(status_code=400, detail="Invalid command. Expected 'ClearTargets'.")
+
     await evse_service.update_evse_state(device_id, {"chargingTargetSchedules": []}, db)
     return {"status": "success", "cluster": cluster, "endpoint": endpoint}
 
