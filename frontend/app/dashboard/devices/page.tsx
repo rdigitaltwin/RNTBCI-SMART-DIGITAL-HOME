@@ -227,6 +227,7 @@ export default function DevicesPage() {
     { id: '00000000-0000-0000-0000-000000000008', name: 'Water Heater', type: 'water_heater', status: 'online', power_state: 'on', energy_usage_kw: 1.2, efficiency_percent: 82, metadata: { temperature: 48, target_temperature: 50 }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
     { id: '00000000-0000-0000-0000-000000000009', name: 'Security Camera', type: 'camera', status: 'online', power_state: 'on', energy_usage_kw: 0.015, efficiency_percent: 96, metadata: { recording: true, night_vision: false, motion_detection: true }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
     { id: '00000000-0000-0000-0000-000000000010', name: 'Garage Door', type: 'garage_door', status: 'online', power_state: 'on', energy_usage_kw: 0.005, efficiency_percent: 90, metadata: { position: 'closed' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
+    { id: '00000000-0000-0000-0000-000000000011', name: 'EV Charger', type: 'energy_evse', status: 'online', power_state: 'on', energy_usage_kw: 7.2, efficiency_percent: 98, metadata: { matter_device_type: '0x050C', state: 'Charging' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
   ] as unknown as Device[];
 
   return (

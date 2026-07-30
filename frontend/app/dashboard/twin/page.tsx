@@ -519,7 +519,12 @@ function DeviceHUD({ device, color }: { device: Device; color: string }) {
         <div>
           <div style={{ color: '#64748B' }}>POWER</div>
           <div style={{ color: '#F8FAFC', fontWeight: 600, fontSize: '14px' }}>
-            {isOn ? (device.type === 'smart_light' ? `${device.energy_usage_kw.toFixed(1)}W` : `${(device.energy_usage_kw * 1000).toFixed(0)}W`) : 'OFF'}
+            {isOn ? (
+              (() => {
+                const pW = (device.energy_usage_kw || 0) * 1000;
+                return pW >= 1000 ? `${(pW / 1000).toFixed(2)} kW` : `${Math.round(pW)} W`;
+              })()
+            ) : 'OFF'}
           </div>
         </div>
         <div>

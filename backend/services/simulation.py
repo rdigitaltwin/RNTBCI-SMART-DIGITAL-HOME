@@ -222,9 +222,10 @@ class DeviceStateTracker:
         return profiles.get(self.operating_mode, {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0})
 
     def get_power_kw_kvar(self) -> tuple[float, float, float]:
-        """Calculate current kW, kVAR, and power factor using ML Model predictions.
+        """Calculate current kW, kVAR, and power factor.
         
-        Replaced legacy Gaussian noise and hardcoded profiles with AI-driven inference.
+        Uses deterministic profiles with Gaussian noise for realistic natural fluctuations.
+        If real Matter telemetry is available, it overrides the simulation.
         """
         if self.power_phase == DevicePowerPhase.OFF.value:
             return 0.0, 0.0, 1.0
@@ -232,29 +233,27 @@ class DeviceStateTracker:
         if self.power_phase == DevicePowerPhase.STARTING.value:
             return 0.0, 0.0, 1.0
             
-        now = datetime.now(timezone.utc)
-        hour = now.hour
-        season_encoded = 1 # Example: Summer
-        is_weekend = 1 if now.weekday() >= 5 else 0
-        
-        # Simple simulated outdoor temp based on hour (can be pulled from a weather API)
-        outdoor_temp = 25 + 10 * math.sin((hour - 14) * math.pi / 12)
-        
-        # Get AI predicted power consumption for this appliance
-        base_kw = predict_power_consumption(
-            outdoor_temp=outdoor_temp,
-            season_encoded=season_encoded,
-            hour=hour,
-            is_weekend=is_weekend,
-            prev_energy=0.0, # Could be fetched from self.metadata
-            appliance_type=self.device_type_str,
-            household_size=3
-        )
-        
-        # Determine reactive power (kVAR) using a static PF estimation for the appliance
-        # Since our dataset mainly has kWh, we will assign an average pf
-        pf = 0.90
-        base_kvar = base_kw * math.tan(math.acos(pf)) if base_kw > 0 else 0.0
+        # If a Matter device reports its own telemetry, use it
+        if "power_w" in self.metadata:
+            base_kw = float(self.metadata["power_w"]) / 1000.0
+            pf = 1.0
+            base_kvar = 0.0
+        elif "sim_power_kw" in self.metadata and self.metadata.get("source") == "matter":
+            base_kw = float(self.metadata["sim_power_kw"])
+            pf = 1.0
+            base_kvar = 0.0
+        else:
+            # Fallback to realistic deterministic profiles
+            profile = self.get_mode_profile()
+            base_kw = profile.get("kw", 0.0)
+            
+            # Add some slight noise to make it look alive and fluctuate naturally
+            noise_pct = profile.get("noise_pct", 0.0)
+            if noise_pct > 0 and base_kw > 0:
+                base_kw += base_kw * random.gauss(0, noise_pct)
+                
+            pf = profile.get("pf", 0.90)
+            base_kvar = profile.get("kvar", base_kw * math.tan(math.acos(pf)) if base_kw > 0 else 0.0)
 
         if self.power_phase == DevicePowerPhase.STOPPING.value:
             # Decay: power reduces linearly over STOPPING_DURATION_S

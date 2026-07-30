@@ -1,0 +1,178 @@
+{
+    "deviceType": {
+        "id": "0x0100",
+        "name": "OnOffLight",
+        "device_name": "EV Charger",
+        "device_id": "849cbe00-8b17-4498-b476-541b3a9b7b1d",
+        "revision": 3,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "OnOffLight",
+                "clusters": [
+                    {
+                        "clusterId": "0x0003",
+                        "name": "Identify",
+                        "side": "server",
+                        "mandatory": true,
+                        "commands": [
+                            {
+                                "commandId": "0x0040",
+                                "name": "TriggerEffect",
+                                "direction": "invoke",
+                                "mandatory": true,
+                                "request": {
+                                    "effectIdentifier": "uint8",
+                                    "effectVariant": "uint8"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0006",
+                        "name": "OnOff",
+                        "side": "server",
+                        "mandatory": true,
+                        "features": [
+                            {
+                                "code": "LT",
+                                "name": "Lighting",
+                                "mandatory": true
+                            }
+                        ],
+                        "attributes": [
+                            {
+                                "attributeId": "0x0000",
+                                "name": "OnOff",
+                                "type": "boolean",
+                                "access": "readWrite",
+                                "default": false
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "commandId": "0x0000",
+                                "name": "Off"
+                            },
+                            {
+                                "commandId": "0x0001",
+                                "name": "On"
+                            },
+                            {
+                                "commandId": "0x0002",
+                                "name": "Toggle"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0008",
+                        "name": "LevelControl",
+                        "side": "server",
+                        "mandatory": false,
+                        "features": [
+                            {
+                                "code": "OO",
+                                "name": "OnOff",
+                                "mandatory": true
+                            },
+                            {
+                                "code": "LT",
+                                "name": "Lighting",
+                                "mandatory": true
+                            }
+                        ],
+                        "attributes": [
+                            {
+                                "attributeId": "0x0000",
+                                "name": "CurrentLevel",
+                                "type": "uint8",
+                                "range": [
+                                    1,
+                                    254
+                                ],
+                                "access": "readWrite"
+                            },
+                            {
+                                "attributeId": "0x0002",
+                                "name": "MinLevel",
+                                "type": "uint8",
+                                "value": 1,
+                                "access": "readOnly"
+                            },
+                            {
+                                "attributeId": "0x0003",
+                                "name": "MaxLevel",
+                                "type": "uint8",
+                                "value": 254,
+                                "access": "readOnly"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "commandId": "0x0000",
+                                "name": "MoveToLevel",
+                                "request": {
+                                    "level": "uint8",
+                                    "transitionTime": "uint16"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0062",
+                        "name": "ScenesManagement",
+                        "side": "server",
+                        "mandatory": true,
+                        "commands": [
+                            {
+                                "commandId": "0x0040",
+                                "name": "CopyScene",
+                                "request": {
+                                    "mode": "uint8",
+                                    "groupId": "uint16",
+                                    "sceneId": "uint8"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0406",
+                        "name": "OccupancySensing",
+                        "side": "client",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "attributeId": "0x0000",
+                                "name": "Occupancy",
+                                "type": "bitmap",
+                                "description": "Indicates occupied/unoccupied state"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-07-30T12:47:26.083947+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T12:47:26.692212+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        }
+    ]
+}
