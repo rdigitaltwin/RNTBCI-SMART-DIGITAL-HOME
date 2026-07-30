@@ -274,10 +274,6 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
         # Kitchen — Cooking appliance
         ("Induction Cooktop", DeviceType.COOKING, "kitchen", PowerState.OFF, 0.0,
          {"mode": "off", "burner": 1}, 8.0, 1.0, 1.0),
-
-        # Virtual base load (always ON — standby, WiFi, lights etc.)
-        ("Base Load", DeviceType.BASE_LOAD, "hallway", PowerState.ON, 0.20,
-         {"description": "Ambient standby power consumption"}, 0.0, 0.0, 0.0),
     ]
 
     for name, dtype, room_key, pstate, energy, meta, px, py, pz in device_configs:
