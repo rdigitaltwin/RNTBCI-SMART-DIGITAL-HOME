@@ -222605,3 +222605,4 @@
 {"asctime": "2026-07-08 18:29:19,795", "levelname": "INFO", "name": "backend.services.simulation", "message": "Simulation engine stopped"}
 {"asctime": "2026-07-08 18:29:19,796", "levelname": "INFO", "name": "backend.websockets.manager", "message": "WebSocket manager stopped"}
 {"asctime": "2026-07-30 09:56:09,105", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
+{"asctime": "2026-07-30 10:07:44,779", "levelname": "INFO", "name": "backend.main", "message": "Starting RNTBCI Smart Home Digital Twin v1.0.0"}
