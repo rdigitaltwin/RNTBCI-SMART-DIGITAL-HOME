@@ -441,3 +441,15 @@ class WSMessage(BaseModel):
     timestamp: datetime | None = None
     event_id: str | None = None
 
+# =============================================================================
+# EVSE SCHEMAS
+# =============================================================================
+
+class EVSESetTargetsRequest(BaseModel):
+    commandId: str = "0x05"
+    command: str = "SetTargets"
+    chargingTargetSchedules: list = Field(default_factory=list)
+
+class EVSECommandRequest(BaseModel):
+    commandId: str
+    command: str

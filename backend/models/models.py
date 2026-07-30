@@ -71,6 +71,7 @@ class DeviceType(str, enum.Enum):
     SMART_TV = "smart_tv"
     COOKING = "cooking"
     BASE_LOAD = "base_load"
+    ENERGY_EVSE = "energy_evse"
 
 
 class DeviceStatus(str, enum.Enum):

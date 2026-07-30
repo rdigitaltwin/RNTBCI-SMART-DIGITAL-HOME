@@ -1,0 +1,180 @@
+{
+    "deviceType": {
+        "id": "0x050C",
+        "name": "EnergyEVSE",
+        "device_name": "Energy EVSE",
+        "revision": 2,
+        "classification": {
+            "class": "Simple Device",
+            "scope": "Endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "EnergyEVSE",
+                "clusters": [
+                    {
+                        "clusterId": "0x0003",
+                        "name": "Identify",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [],
+                        "commands": [
+                            {
+                                "name": "TriggerEffect"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0099",
+                        "name": "EnergyEVSE",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "StateOfCharge",
+                                "type": "int",
+                                "unit": "%"
+                            },
+                            {
+                                "name": "SessionDuration",
+                                "type": "int",
+                                "unit": "s"
+                            },
+                            {
+                                "name": "SessionEnergyCharged",
+                                "type": "int",
+                                "unit": "mWh"
+                            },
+                            {
+                                "name": "NextChargeTargetTime",
+                                "type": "int",
+                                "unit": "s"
+                            },
+                            {
+                                "name": "NextChargeStartTime",
+                                "type": "int",
+                                "unit": "s"
+                            },
+                            {
+                                "name": "UserMaximumChargeCurrent",
+                                "type": "int",
+                                "unit": "mA"
+                            },
+                            {
+                                "name": "SupplyState",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "FaultState",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "State",
+                                "type": "enum"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "Disable"
+                            },
+                            {
+                                "name": "EnableCharging"
+                            },
+                            {
+                                "name": "SetTargets"
+                            },
+                            {
+                                "name": "GetTargets"
+                            },
+                            {
+                                "name": "ClearTargets"
+                            }
+                        ],
+                        "features": [
+                            {
+                                "name": "SOC reporting"
+                            },
+                            {
+                                "name": "Charging Preferences"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x009D",
+                        "name": "EnergyEVSEMode",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentMode",
+                                "type": "enum",
+                                "enumValues": [
+                                    "Manual",
+                                    "ScheduledCharging",
+                                    "SmartCharging",
+                                    "EcoCharging"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0090",
+                        "name": "ElectricalPowerMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Voltage",
+                                "type": "int",
+                                "unit": "mV"
+                            },
+                            {
+                                "name": "Current",
+                                "type": "int",
+                                "unit": "mA"
+                            },
+                            {
+                                "name": "Power",
+                                "type": "int",
+                                "unit": "mW"
+                            },
+                            {
+                                "name": "Frequency",
+                                "type": "int",
+                                "unit": "mHz"
+                            },
+                            {
+                                "name": "PowerFactor",
+                                "type": "int"
+                            },
+                            {
+                                "name": "PowerMode",
+                                "type": "enum"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0091",
+                        "name": "ElectricalEnergyMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "TotalEnergyImported",
+                                "type": "int",
+                                "unit": "mWh"
+                            },
+                            {
+                                "name": "CurrentSessionEnergy",
+                                "type": "int",
+                                "unit": "mWh"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": []
+}
