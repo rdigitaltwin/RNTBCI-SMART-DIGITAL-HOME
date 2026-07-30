@@ -46,6 +46,11 @@ async def _ensure_ev_charger_exists():
     from backend.models import Device, DeviceType, DeviceStatus, PowerState, ConnectivityStatus, Room
 
     async with async_session_factory() as db:
+        # Clean up any generic 'Light' device that shouldn't be there
+        from sqlalchemy import delete
+        await db.execute(delete(Device).where(Device.name == 'Light'))
+        await db.commit()
+        
         # Check if an energy_evse device already exists
         result = await db.execute(
             select(Device).where(Device.type == DeviceType.ENERGY_EVSE)

@@ -534,8 +534,6 @@ async def toggle_state(
     request: Request,
     device_id: uuid.UUID,
     data: DeviceStateRequest,
-    EVSESetTargetsRequest,
-    EVSECommandRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
