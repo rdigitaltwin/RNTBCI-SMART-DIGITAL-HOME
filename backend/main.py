@@ -167,3 +167,24 @@ try:
     app.include_router(debug_router, prefix="/api/v1")
 except Exception as e:
     pass
+
+@app.post("/api/v1/seed")
+async def trigger_seed():
+    """Temporary endpoint to trigger database seed on Railway."""
+    from backend.utils.seed import seed_database
+    from backend.database.connection import engine, Base
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # First drop everything to start fresh
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
+        
+        # Then seed
+        await seed_database(force=True)
+        return {"status": "success", "message": "Database seeded successfully."}
+    except Exception as e:
+        logger.error(f"Seed error: {e}")
+        return {"status": "error", "message": str(e)}

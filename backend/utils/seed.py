@@ -47,14 +47,15 @@ from backend.models import (
 logger = logging.getLogger(__name__)
 
 
-async def seed_database() -> None:
+async def seed_database(force: bool = False) -> None:
     """Execute full database seeding."""
     async with async_session_factory() as db:
         # Check if already seeded
-        existing = await db.execute(select(Role))
-        if existing.scalars().first():
-            logger.info("Database already seeded, skipping")
-            return
+        if not force:
+            existing = await db.execute(select(Role))
+            if existing.scalars().first():
+                logger.info("Database already seeded, skipping")
+                return
 
         logger.info("=== Seeding RNTBCI Database ===")
 
