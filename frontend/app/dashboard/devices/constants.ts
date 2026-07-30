@@ -13,4 +13,5 @@ export const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; 
   router: { emoji: '📡', label: 'Router', color: '#10B981' },
   camera: { emoji: '📷', label: 'Camera', color: '#EF4444' },
   smart_tv: { emoji: '📺', label: 'Smart TV', color: '#EC4899' },
+  energy_evse: { emoji: '🚗⚡', label: 'EV Charger', color: '#10B981' },
 };

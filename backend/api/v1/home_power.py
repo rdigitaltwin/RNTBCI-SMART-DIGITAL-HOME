@@ -120,7 +120,7 @@ async def download_home_power_csv(
 
     for r in records:
         ist_time = r.timestamp.astimezone(zoneinfo.ZoneInfo("Asia/Kolkata")) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(zoneinfo.ZoneInfo("Asia/Kolkata"))
-        row = [ist_time.strftime("%Y-%m-%d %H:%M:%S IST")]
+        row = [ist_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " IST"]
         for col in val_cols:
             val = getattr(r, col, 0.0)
             row.append(round(val, 4) if isinstance(val, (float, int)) else val)

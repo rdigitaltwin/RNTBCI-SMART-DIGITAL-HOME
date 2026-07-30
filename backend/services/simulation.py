@@ -182,8 +182,8 @@ DEVICE_CYCLES: dict[str, list[tuple[str, tuple[int, int]]]] = {
 }
 
 # HVAC warm-up power multiplier curve (seconds → multiplier)
-STARTING_DURATION_S = 30
-STOPPING_DURATION_S = 10
+STARTING_DURATION_S = 0.0
+STOPPING_DURATION_S = 0.0
 HISTORY_RECORD_INTERVAL_S = 15  # Record to history tables every 15 seconds
 
 

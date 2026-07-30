@@ -181,7 +181,7 @@ async def download_device_power_csv(
         ist_time = r.timestamp.astimezone(IST) if r.timestamp.tzinfo else r.timestamp.replace(tzinfo=timezone.utc).astimezone(IST)
         writer.writerow([
             str(r.device_id),
-            ist_time.strftime("%Y-%m-%d %H:%M:%S"),
+            ist_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " IST",
             round(r.total_power_consumption_kw, 4),
         ])
 

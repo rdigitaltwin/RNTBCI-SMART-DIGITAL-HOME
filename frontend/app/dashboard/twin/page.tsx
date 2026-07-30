@@ -224,7 +224,7 @@ function DeviceModel({ device, isSelected, onClick }: {
       smart_light: '#FFC857', door_lock: '#3B82F6', garage_door: '#6366F1',
       washing_machine: '#06B6D4', dishwasher: '#14B8A6', water_heater: '#F97316',
       nebulizer: '#A78BFA', router: '#10B981', camera: '#EF4444',
-      smart_switch: '#94A3B8', smart_plug: '#8B5CF6',
+      smart_switch: '#94A3B8', smart_plug: '#8B5CF6', energy_evse: '#10B981',
     };
     return colors[device.type] || '#00E5FF';
   }, [device.type]);

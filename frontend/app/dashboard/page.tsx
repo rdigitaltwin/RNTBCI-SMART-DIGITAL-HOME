@@ -255,7 +255,7 @@ function QuickDeviceList() {
     hvac: '❄️', refrigerator: '🧊', smart_tv: '📺', router: '📡',
     door_lock: '🔒', washing_machine: '🧺', dishwasher: '🍽️', smart_light: '💡',
     camera: '📷', water_heater: '🔥', nebulizer: '💨', garage_door: '🚗',
-    smart_switch: '🔌', smart_plug: '🔌',
+    smart_switch: '🔌', smart_plug: '🔌', energy_evse: '🚗⚡',
   };
 
   return (
