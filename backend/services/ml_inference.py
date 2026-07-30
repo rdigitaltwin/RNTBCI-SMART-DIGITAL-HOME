@@ -1,9 +1,6 @@
 import os
-import joblib
 import numpy as np
-import pandas as pd
 import logging
-import shap
 import math
 from datetime import datetime
 
@@ -12,16 +9,15 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS_DIR = os.path.join(BASE_DIR, 'ml', 'models')
 
-import torch
-from ml.training.lstm_model import EnergyLSTM
-
-logger = logging.getLogger(__name__)
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS_DIR = os.path.join(BASE_DIR, 'ml', 'models')
 
 # Load models and scalers
 try:
+    import torch
+    import joblib
+    from ml.training.lstm_model import EnergyLSTM
+
     energy_scaler = joblib.load(os.path.join(MODELS_DIR, 'energy_scaler.pkl'))
     appliance_encoder = joblib.load(os.path.join(MODELS_DIR, 'appliance_encoder.pkl'))
     anomaly_model = joblib.load(os.path.join(MODELS_DIR, 'anomaly_model.pkl'))
@@ -32,7 +28,7 @@ try:
     models_loaded = True
     logger.info("ML Models loaded successfully.")
 except Exception as e:
-    logger.warning(f"ML Models failed to load: {e}")
+    logger.warning(f"ML Models failed to load (Optional feature disabled): {e}")
     models_loaded = False
     energy_model, energy_scaler, appliance_encoder, anomaly_model = None, None, None, None
 
@@ -49,6 +45,7 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
         if appliance_type not in sequence_buffer:
             sequence_buffer[appliance_type] = []
             
+        import pandas as pd
         appliance_encoded = appliance_encoder.transform([appliance_type])[0] if appliance_type in appliance_encoder.classes_ else 0
         features = pd.DataFrame(
             [[outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_encoded, household_size]],
@@ -67,6 +64,7 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
             seq.insert(0, features_scaled)
             
         # Convert to tensor: shape (1, seq_len, features)
+        import torch
         x_tensor = torch.tensor(np.array([seq]), dtype=torch.float32)
         
         with torch.no_grad():
