@@ -181,7 +181,7 @@ interface EnergyEngineState {
   initializeDevices: () => void;
 
   // Device control
-  toggleDevice: (deviceId: string) => void;
+  toggleDevice: (deviceId: string, skipBackendSync?: boolean) => void;
   setDevicePower: (deviceId: string, power: number) => void;
   setDeviceStatus: (deviceId: string, status: DeviceStatusType) => void;
 
@@ -305,7 +305,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
   },
 
   // ─── Device Control ────────────────────────────────────────────────
-  toggleDevice: (deviceId: string) => {
+  toggleDevice: (deviceId: string, skipBackendSync: boolean = false) => {
     const state = get();
     const device = state.devices[deviceId];
     if (!device) return;
@@ -354,6 +354,35 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     get()._recalculateMetrics();
     get()._checkMCB();
+
+    // Sync back to backend if needed
+    if (!skipBackendSync) {
+      // Find matching backend device
+      const deviceStore = useDeviceStore.getState();
+      const backendDevice = deviceStore.devices.find(d => {
+        const dName = d.name.toLowerCase();
+        const eName = device.name.toLowerCase();
+        // Exact name match or specific hardcoded mapping
+        if (dName === eName || dName.includes(eName) || eName.includes(dName)) return true;
+        if (deviceId === 'living_light_1' && dName.includes('living room main light')) return true;
+        if (deviceId === 'air_conditioner' && dName.includes('living room ac')) return true;
+        if (deviceId === 'bedroom_light' && dName.includes('master bedroom light')) return true;
+        return false;
+      });
+
+      if (backendDevice) {
+        // Optimistic UI update for backend
+        deviceStore.updateDevice(backendDevice.id, { power_state: newPowerState });
+        // Make API call (ignoring await to not block UI)
+        import('@/services/api').then(({ default: api }) => {
+          api.toggleState(backendDevice.id, newPowerState.toUpperCase()).catch(err => {
+            console.error('Failed to sync device to backend', err);
+            // Revert on error
+            deviceStore.updateDevice(backendDevice.id, { power_state: device.powerState });
+          });
+        });
+      }
+    }
   },
 
   setDevicePower: (deviceId: string, power: number) => {
@@ -907,3 +936,60 @@ export const selectActiveAlerts = (state: EnergyEngineState) =>
 /** Get load color for current state */
 export const selectLoadColor = (state: EnergyEngineState) =>
   LOAD_LEVEL_COLORS[state.metrics.loadLevel];
+
+// =============================================================================
+// BACKEND SYNC (Device Store -> Energy Engine)
+// =============================================================================
+
+import { useDeviceStore } from '@/store';
+
+// Maps backend device names to APPLIANCE_DATABASE ids
+const mapBackendNameToEnergyId = (backendName: string): string | null => {
+  const name = backendName.toLowerCase();
+  if (name.includes('microwave')) return 'microwave';
+  if (name.includes('dishwasher')) return 'dishwasher';
+  if (name.includes('refrigerator')) return 'refrigerator';
+  if (name.includes('kitchen light')) return 'kitchen_light';
+  if (name.includes('cctv') || name.includes('camera')) return 'cctv';
+  if (name.includes('meter')) return 'smart_meter';
+  if (name.includes('living room main light')) return 'living_light_1';
+  if (name.includes('living room ac')) return 'air_conditioner';
+  if (name.includes('master bedroom light')) return 'bedroom_light';
+  if (name.includes('washing machine')) return 'washing_machine';
+  if (name.includes('water heater')) return 'water_heater';
+  if (name.includes('ev charger')) return 'ev_charger';
+  if (name.includes('hvac')) return 'hvac';
+  if (name.includes('heat pump')) return 'heat_pump';
+  return null;
+};
+
+let isSyncing = false;
+
+// Subscribe to backend device store updates (e.g. from websocket or devices page)
+useDeviceStore.subscribe((state, prevState) => {
+  if (isSyncing) return;
+  
+  const energyState = useEnergyStore.getState();
+  if (energyState.deviceOrder.length === 0) return; // not initialized
+  
+  isSyncing = true;
+  
+  state.devices.forEach(device => {
+    const prevDevice = prevState.devices.find(d => d.id === device.id);
+    if (!prevDevice || prevDevice.power_state !== device.power_state) {
+      const energyId = mapBackendNameToEnergyId(device.name);
+      if (energyId) {
+        const energyDevice = energyState.devices[energyId];
+        const targetState = device.power_state === 'on' ? 'on' : 'off';
+        
+        // Only toggle if states don't match (prevents infinite loops)
+        if (energyDevice && energyDevice.powerState !== targetState) {
+          // Toggle it locally without syncing back to the backend
+          energyState.toggleDevice(energyId, true);
+        }
+      }
+    }
+  });
+  
+  isSyncing = false;
+});
