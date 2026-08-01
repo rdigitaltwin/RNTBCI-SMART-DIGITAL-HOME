@@ -497,3 +497,184 @@ h1, h2, h3 {
     --bottombar-height: 120px;
   }
 }
+
+/* ============================================================================
+   ENERGY SYSTEM — Load Zone Colors
+   ============================================================================ */
+
+.load-zone-green { color: #00FF9D; }
+.load-zone-yellow { color: #FFC857; }
+.load-zone-orange { color: #FF8C00; }
+.load-zone-red { color: #FF4D6D; }
+
+.load-bg-green { background: rgba(0, 255, 157, 0.1); border-color: rgba(0, 255, 157, 0.3); }
+.load-bg-yellow { background: rgba(255, 200, 87, 0.1); border-color: rgba(255, 200, 87, 0.3); }
+.load-bg-orange { background: rgba(255, 140, 0, 0.1); border-color: rgba(255, 140, 0, 0.3); }
+.load-bg-red { background: rgba(255, 77, 109, 0.1); border-color: rgba(255, 77, 109, 0.3); }
+
+/* ============================================================================
+   MCB ANIMATIONS
+   ============================================================================ */
+
+@keyframes mcbTrip {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-15deg); }
+  40% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes mcbFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.mcb-tripped {
+  animation: mcbFlash 0.5s ease-in-out infinite;
+}
+
+@keyframes overloadPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 77, 109, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(255, 77, 109, 0.6), 0 0 60px rgba(255, 77, 109, 0.2); }
+}
+
+.overload-glow {
+  animation: overloadPulse 1s ease-in-out infinite;
+}
+
+/* ============================================================================
+   TOAST NOTIFICATIONS
+   ============================================================================ */
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(100px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100px); }
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+.toast-exit {
+  animation: toastSlideOut 0.3s ease-in;
+}
+
+/* ============================================================================
+   GAUGE COMPONENTS
+   ============================================================================ */
+
+.gauge-ring {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 0.5s ease;
+}
+
+.gauge-label {
+  font-family: 'Orbitron', monospace;
+  font-weight: 800;
+  transition: color 0.5s ease;
+}
+
+/* ============================================================================
+   EV CHARGER ANIMATIONS
+   ============================================================================ */
+
+@keyframes chargePulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes chargeFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.ev-charging-indicator {
+  animation: chargePulse 1.5s ease-in-out infinite;
+}
+
+.ev-charge-flow {
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 157, 0.3), transparent);
+  background-size: 200% 100%;
+  animation: chargeFlow 2s linear infinite;
+}
+
+/* ============================================================================
+   RANGE INPUT STYLING (for sliders)
+   ============================================================================ */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+/* ============================================================================
+   ALERT BANNER
+   ============================================================================ */
+
+.alert-banner {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.alert-banner.warning {
+  background: rgba(255, 200, 87, 0.1);
+  border: 1px solid rgba(255, 200, 87, 0.3);
+  color: #FFC857;
+}
+
+.alert-banner.error {
+  background: rgba(255, 77, 109, 0.1);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  color: #FF4D6D;
+}
+
+.alert-banner.critical {
+  background: rgba(255, 0, 64, 0.1);
+  border: 1px solid rgba(255, 0, 64, 0.3);
+  color: #FF0040;
+  animation: overloadPulse 1s ease-in-out infinite;
+}

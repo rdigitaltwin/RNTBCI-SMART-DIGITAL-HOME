@@ -15,6 +15,7 @@ import {
   Clock, Film, Settings, LogOut, Menu, X,
   Home, Wifi, WifiOff, ChevronRight,
   Gauge, Play, Pause, SkipForward,
+  Shield, PlugZap,
 } from 'lucide-react';
 import api from '@/services/api';
 import wsClient from '@/services/websocket';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
   { id: 'devices', label: 'Devices', icon: Cpu, href: '/dashboard/devices' },
   { id: 'digital-twin', label: '3D Digital Twin', icon: Home, href: '/dashboard/twin' },
+  { id: 'energy-command', label: 'Energy Command', icon: Shield, href: '/dashboard/energy-command' },
   { id: 'energy', label: 'Energy Analytics', icon: Zap, href: '/dashboard/energy' },
   { id: 'home-power', label: 'Home Power History', icon: Activity, href: '/dashboard/home-power' },
   { id: 'appliance-power', label: 'Appliance Power', icon: Activity, href: '/dashboard/appliance-power' },

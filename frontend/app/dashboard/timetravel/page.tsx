@@ -28,7 +28,7 @@ function CanvasCleanup() {
 }
 import api from '@/services/api';
 import { useSimulationStore } from '@/store';
-import { DigitalTwinScene } from '../twin/page';
+import { EnergyDigitalTwinScene } from '../twin/page';
 
 const PRESETS = [
   {
@@ -306,7 +306,7 @@ export default function TimeTravelPage() {
         >
           <CanvasCleanup />
           <Suspense fallback={null}>
-            <DigitalTwinScene />
+            <EnergyDigitalTwinScene />
           </Suspense>
         </Canvas>
       </div>
