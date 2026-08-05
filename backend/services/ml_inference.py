@@ -2,6 +2,7 @@ import os
 import numpy as np
 import logging
 import math
+import traceback
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ MODELS_DIR = os.path.join(BASE_DIR, 'ml', 'models')
 try:
     import torch
     import joblib
+    import pandas as pd
     from ml.training.lstm_model import EnergyLSTM
 
     energy_scaler = joblib.load(os.path.join(MODELS_DIR, 'energy_scaler.pkl'))
@@ -45,7 +47,6 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
         if appliance_type not in sequence_buffer:
             sequence_buffer[appliance_type] = []
             
-        import pandas as pd
         appliance_encoded = appliance_encoder.transform([appliance_type])[0] if appliance_type in appliance_encoder.classes_ else 0
         features = pd.DataFrame(
             [[outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_encoded, household_size]],
@@ -64,15 +65,15 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
             seq.insert(0, features_scaled)
             
         # Convert to tensor: shape (1, seq_len, features)
-        import torch
         x_tensor = torch.tensor(np.array([seq]), dtype=torch.float32)
         
         with torch.no_grad():
             pred_kwh = energy_model(x_tensor).item()
         
         return max(0.0, pred_kwh)
-    except Exception as e:
-        logger.error(f"Prediction error: {e}")
+    except Exception:
+        logger.exception("Prediction failed")
+        logger.error(traceback.format_exc())
         return 0.0
 
 def detect_anomaly(energy_consumption, hour, outdoor_temp):
@@ -87,8 +88,9 @@ def detect_anomaly(energy_consumption, hour, outdoor_temp):
         )
         pred = anomaly_model.predict(features)[0]
         return pred == -1  # Isolation forest returns -1 for anomalies
-    except Exception as e:
-        logger.error(f"Anomaly detection error: {e}")
+    except Exception:
+        logger.exception("Anomaly detection failed")
+        logger.error(traceback.format_exc())
         return False
 
 def generate_recommendation(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
@@ -121,8 +123,9 @@ def generate_recommendation(outdoor_temp, season_encoded, hour, is_weekend, prev
             })
             
         return recs
-    except Exception as e:
-        logger.error(f"Recommendation error: {e}")
+    except Exception:
+        logger.exception("Recommendation failed")
+        logger.error(traceback.format_exc())
         return []
 
 def predict_forecast_consumption(current_kw, hour_offset):
