@@ -67,11 +67,16 @@ async def lifespan(app: FastAPI):
     # Start simulation engine
     await device_simulator.start()
     logger.info("Simulation engine started")
+    
+    # Start HEMS Data Pipeline
+    from backend.services.pipeline import data_pipeline
+    await data_pipeline.start()
 
     yield
 
     # Shutdown
     logger.info("Shutting down RNTBCI Smart Home Digital Twin")
+    await data_pipeline.stop()
     await device_simulator.stop()
     await ws_manager.stop()
     await redis_client.disconnect()

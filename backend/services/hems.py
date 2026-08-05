@@ -14,18 +14,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import async_session_factory
-from backend.models import Device, DeviceType, EnergyHistory, PowerState
+from backend.models import Device, DeviceType, EnergyHistory, HouseConfig, PowerState
 from backend.redis.client import redis_client
 from backend.services.ml_inference import predict_forecast_consumption, generate_recommendation
+from backend.services.tariffs import tariff_service
 
 logger = logging.getLogger(__name__)
-
-# Electricity tariff structure (USD per kWh)
-TARIFF = {
-    "off_peak": 0.08,    # 10 PM - 6 AM
-    "mid_peak": 0.12,    # 6 AM - 2 PM, 6 PM - 10 PM
-    "on_peak": 0.18,     # 2 PM - 6 PM
-}
 
 # Device priority for load shedding (lower = shed first)
 DEVICE_PRIORITY = {
@@ -45,55 +39,42 @@ DEVICE_PRIORITY = {
     DeviceType.SMART_SWITCH: 5,
 }
 
-# Maximum recommended power budget (watts)
-MAX_POWER_BUDGET_W = 8000
-PEAK_THRESHOLD_W = 6500
-
-
 class EnergyManager:
     """Central energy management with optimization and prediction."""
 
     def __init__(self) -> None:
-        self._power_budget_w: float = MAX_POWER_BUDGET_W
-        self._current_total_w: float = 0
-        self._peak_today_w: float = 0
-        self._total_cost_today: float = 0
+        self._power_budget_kw: float = 8.0
+        self._peak_threshold_kw: float = 6.5
+        self._current_total_kw: float = 0.0
+        self._peak_today_kw: float = 0.0
+        self._total_cost_today: float = 0.0
         self._optimization_active: bool = False
         self._predictions: dict[str, float] = {}
 
     @property
     def status(self) -> dict[str, Any]:
         return {
-            "power_budget_w": self._power_budget_w,
-            "current_total_w": round(self._current_total_w, 1),
-            "peak_today_w": round(self._peak_today_w, 1),
+            "power_budget_kw": self._power_budget_kw,
+            "current_total_kw": round(self._current_total_kw, 2),
+            "peak_today_kw": round(self._peak_today_kw, 2),
             "total_cost_today_usd": round(self._total_cost_today, 4),
             "optimization_active": self._optimization_active,
-            "current_tariff": self._get_current_tariff(),
-            "tariff_rate_usd": TARIFF[self._get_current_tariff()],
+            "current_tariff": tariff_service.get_current_period(),
+            "tariff_rate_usd": tariff_service.get_current_rate(),
             "budget_utilization_pct": round(
-                (self._current_total_w / self._power_budget_w) * 100, 1
-            ) if self._power_budget_w > 0 else 0,
+                (self._current_total_kw / self._power_budget_kw) * 100, 1
+            ) if self._power_budget_kw > 0 else 0,
             "load_status": self._get_load_status(),
             "predictions": self._predictions,
         }
 
-    def set_power_budget(self, budget_w: float) -> None:
-        """Set the maximum power budget in watts."""
-        self._power_budget_w = max(1000, budget_w)
-
-    def _get_current_tariff(self) -> str:
-        """Determine current electricity tariff period."""
-        hour = datetime.now(timezone.utc).hour
-        if 22 <= hour or hour < 6:
-            return "off_peak"
-        elif 14 <= hour < 18:
-            return "on_peak"
-        return "mid_peak"
+    def set_power_budget(self, budget_kw: float) -> None:
+        """Set the maximum power budget in kW."""
+        self._power_budget_kw = max(1.0, budget_kw)
 
     def _get_load_status(self) -> str:
         """Get current load status."""
-        ratio = self._current_total_w / self._power_budget_w if self._power_budget_w > 0 else 0
+        ratio = self._current_total_kw / self._power_budget_kw if self._power_budget_kw > 0 else 0
         if ratio < 0.6:
             return "normal"
         elif ratio < 0.8:
@@ -106,6 +87,13 @@ class EnergyManager:
         """Run full energy analysis cycle."""
         async with async_session_factory() as db:
             try:
+                # Sync power budget from HouseConfig
+                house_config_result = await db.execute(select(HouseConfig).limit(1))
+                house_config = house_config_result.scalar_one_or_none()
+                if house_config:
+                    self._power_budget_kw = house_config.max_load_kw
+                    self._peak_threshold_kw = self._power_budget_kw * 0.8  # Target 80% as peak threshold
+
                 # Current power draw
                 result = await db.execute(
                     select(
@@ -114,15 +102,14 @@ class EnergyManager:
                     ).where(Device.power_state == PowerState.ON)
                 )
                 row = result.one()
-                total_kw = float(row[0] or 0)
+                total_kw = float(row[0] or 0.0)
                 active_devices = int(row[1] or 0)
 
-                self._current_total_w = total_kw * 1000
-                self._peak_today_w = max(self._peak_today_w, self._current_total_w)
+                self._current_total_kw = total_kw
+                self._peak_today_kw = max(self._peak_today_kw, self._current_total_kw)
 
                 # Calculate cost
-                tariff = self._get_current_tariff()
-                rate = TARIFF[tariff]
+                rate = tariff_service.get_current_rate()
                 interval_hours = 10 / 3600  # 10 second interval
                 self._total_cost_today += total_kw * interval_hours * rate
 
@@ -141,7 +128,6 @@ class EnergyManager:
                         "device_name": d.name,
                         "device_type": dtype.value,
                         "power_kw": d.energy_usage_kw,
-                        "power_w": round(d.energy_usage_kw * 1000, 1),
                         "priority": priority,
                     })
 
@@ -152,7 +138,7 @@ class EnergyManager:
 
                 # Check for peak load management
                 recommendations = []
-                if self._current_total_w > PEAK_THRESHOLD_W:
+                if self._current_total_kw > self._peak_threshold_kw:
                     recommendations = self._generate_load_shed_recommendations(allocations)
 
                 analysis = {
@@ -179,14 +165,14 @@ class EnergyManager:
 
         for offset_h in [1, 2, 4, 8, 24]:
             # Use ML forecasting model
-            prediction_kw = predict_forecast_consumption(self._current_total_w / 1000.0, offset_h)
-            predictions[f"next_{offset_h}h_w"] = round(prediction_kw * 1000.0, 1)
+            prediction_kw = predict_forecast_consumption(self._current_total_kw, offset_h)
+            predictions[f"next_{offset_h}h_kw"] = round(prediction_kw, 2)
 
         # Cost prediction for rest of day
         remaining_hours = 24 - now.hour
-        avg_rate = sum(TARIFF.values()) / len(TARIFF)
+        avg_rate = tariff_service.get_average_rate()
         predicted_daily_cost = self._total_cost_today + (
-            (self._current_total_w / 1000) * remaining_hours * avg_rate * 0.7
+            self._current_total_kw * remaining_hours * avg_rate * 0.7
         )
         predictions["predicted_daily_cost_usd"] = round(predicted_daily_cost, 2)
 
@@ -194,7 +180,7 @@ class EnergyManager:
 
     def _generate_load_shed_recommendations(self, allocations: list[dict]) -> list[dict]:
         """Generate recommendations for load shedding using AI/SHAP."""
-        excess_w = self._current_total_w - PEAK_THRESHOLD_W
+        excess_kw = self._current_total_kw - self._peak_threshold_kw
         recommendations = []
         
         now = datetime.now(timezone.utc)
@@ -204,7 +190,7 @@ class EnergyManager:
         season_encoded = 1
 
         for alloc in allocations:
-            if excess_w <= 0:
+            if excess_kw <= 0:
                 break
                 
             # Ask the ML model for SHAP-based reasons and recommendations
@@ -219,14 +205,16 @@ class EnergyManager:
             )
             
             for ai_rec in ai_recs:
-                if excess_w <= 0:
+                if excess_kw <= 0:
                     break
                 # Enhance the AI recommendation with specific action context
                 ai_rec["device_id"] = alloc["device_id"]
                 ai_rec["device_name"] = alloc["device_name"]
                 ai_rec["action"] = "power_off"
                 recommendations.append(ai_rec)
-                excess_w -= ai_rec.get("potential_savings_w", 0)
+                savings_w = ai_rec.get("potential_savings_w", 0)
+                ai_rec["potential_savings_kw"] = round(savings_w / 1000.0, 3)
+                excess_kw -= ai_rec["potential_savings_kw"]
 
         return recommendations
 

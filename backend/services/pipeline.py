@@ -220,10 +220,54 @@ class DataPipeline:
         self.reward_engine = RewardEngine()
         self.decision_engine = DecisionEngine()
         self._last_result: dict = {}
+        self._listener_task = None
+        self._running = False
+        self._last_cycle_time = 0.0
 
     @property
     def last_result(self) -> dict:
         return self._last_result
+
+    async def start(self) -> None:
+        """Start the background listener for event-driven processing."""
+        import asyncio
+        self._running = True
+        self._listener_task = asyncio.create_task(self._listen_loop())
+        logger.info("DataPipeline started listening to system:metrics")
+
+    async def stop(self) -> None:
+        """Stop the background listener."""
+        self._running = False
+        if self._listener_task:
+            self._listener_task.cancel()
+
+    async def _listen_loop(self) -> None:
+        import asyncio
+        import time
+        try:
+            while self._running:
+                if not redis_client.is_connected:
+                    await asyncio.sleep(1)
+                    continue
+
+                pubsub = await redis_client.subscribe("system:metrics")
+                try:
+                    async for message in pubsub.listen():
+                        if not self._running:
+                            break
+                        if message["type"] == "message":
+                            # Throttle pipeline to once every 2 seconds to ensure responsiveness
+                            now = time.monotonic()
+                            if now - self._last_cycle_time >= 2.0:
+                                await self.run_cycle()
+                                self._last_cycle_time = time.monotonic()
+                except Exception as e:
+                    logger.error("DataPipeline listener error: %s", e)
+                finally:
+                    await pubsub.close()
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            pass
 
     async def run_cycle(self) -> dict[str, Any]:
         """Run one complete pipeline cycle."""

@@ -39,6 +39,7 @@ from backend.models import (
     DeviceType,
     EnergyHistory,
     EventSeverity,
+    HouseConfig,
     HomePowerHistory,
     PowerState,
 )
@@ -82,9 +83,11 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
     },
     "washing_machine": {
         "idle": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "fill": {"kw": 0.15, "kvar": 0.080, "pf": 0.88, "noise_pct": 0.10},
+        "heat": {"kw": 2.00, "kvar": 1.060, "pf": 0.88, "noise_pct": 0.05},
         "wash": {"kw": 0.50, "kvar": 0.265, "pf": 0.88, "noise_pct": 0.08},
         "rinse": {"kw": 0.20, "kvar": 0.106, "pf": 0.88, "noise_pct": 0.10},
-        "spin": {"kw": 0.80, "kvar": 0.424, "pf": 0.88, "noise_pct": 0.06},
+        "spin": {"kw": 1.00, "kvar": 0.530, "pf": 0.88, "noise_pct": 0.06},
     },
     "dishwasher": {
         "idle": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
@@ -116,7 +119,7 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
     },
     "water_heater": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "heating": {"kw": 4.50, "kvar": 0.50, "pf": 0.99, "noise_pct": 0.04},
+        "heating": {"kw": 3.00, "kvar": 0.30, "pf": 0.99, "noise_pct": 0.04},
         "maintaining": {"kw": 0.80, "kvar": 0.10, "pf": 0.99, "noise_pct": 0.08},
     },
     "nebulizer": {
@@ -142,7 +145,24 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
     "energy_evse": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "charging": {"kw": 7.2, "kvar": 0.72, "pf": 0.99, "noise_pct": 0.02},
+        "cc_charging": {"kw": 7.2, "kvar": 0.72, "pf": 0.99, "noise_pct": 0.02},
+        "cv_taper": {"kw": 3.6, "kvar": 0.36, "pf": 0.99, "noise_pct": 0.05},
+        "trickle": {"kw": 0.5, "kvar": 0.05, "pf": 0.99, "noise_pct": 0.08},
         "standby": {"kw": 0.005, "kvar": 0.002, "pf": 0.90, "noise_pct": 0.10},
+    },
+    # --- NEW: Solar PV (generation = negative load) ---
+    "solar_pv": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "generating": {"kw": -5.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.05},
+        "standby": {"kw": 0.010, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+    },
+    # --- NEW: Battery Storage (charge = load, discharge = negative load) ---
+    "battery_storage": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "charging": {"kw": 3.3, "kvar": 0.17, "pf": 0.99, "noise_pct": 0.03},
+        "discharging": {"kw": -3.3, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.03},
+        "idle": {"kw": 0.020, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "standby": {"kw": 0.005, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
     },
 }
 
@@ -165,6 +185,8 @@ DEFAULT_ON_MODE: dict[str, str] = {
     "camera": "recording",
     "smart_tv": "on",
     "energy_evse": "charging",
+    "solar_pv": "generating",
+    "battery_storage": "idle",
 }
 
 # Auto-cycling devices: mode sequence and duration ranges (seconds)
@@ -177,6 +199,8 @@ DEVICE_CYCLES: dict[str, list[tuple[str, tuple[int, int]]]] = {
         ("defrost", (60, 120)),
     ],
     "washing_machine": [
+        ("fill", (120, 180)),
+        ("heat", (300, 600)),
         ("wash", (600, 1200)),
         ("rinse", (300, 600)),
         ("spin", (300, 600)),
@@ -395,6 +419,40 @@ class SimulationEngine:
         self._last_tick_time: float = 0
         self._history_accumulator: float = 0.0  # seconds since last history write
 
+        # --- House electrical constraints (loaded from DB) ---
+        self._house_config: dict | None = None
+        self._house_config_loaded = False
+
+        # --- Distributed Energy Resource (DER) state ---
+        self._ev_soc_pct: float = 20.0      # EV battery state of charge (0-100%)
+        self._ev_target_soc: float = 80.0   # Target SoC (percent)
+        self._ev_battery_kwh: float = 60.0  # EV battery total capacity
+        self._battery_soc_pct: float = 50.0 # Home battery SoC (0-100%)
+        self._battery_capacity_kwh: float = 10.0  # Home battery capacity
+        self._overload_trip_active: bool = False
+        self._overload_trip_cooldown: int = 0  # Ticks remaining before auto-reset
+
+        # Device priority for load shedding (lower number = shed first)
+        self._SHED_PRIORITY: dict[str, int] = {
+            "energy_evse": 1,       # EV charger is first to shed
+            "dishwasher": 2,
+            "washing_machine": 3,
+            "water_heater": 4,
+            "cooking": 5,
+            "smart_tv": 6,
+            "nebulizer": 7,
+            "smart_light": 8,
+            "hvac": 9,              # HVAC is high priority (comfort)
+            "refrigerator": 10,     # Fridge is critical
+            "camera": 10,
+            "router": 10,
+            "base_load": 99,        # Never shed
+            "door_lock": 99,
+            "garage_door": 99,
+            "solar_pv": 99,         # Never shed generation
+            "battery_storage": 99,
+        }
+
         # Historical playback
         self._playback_mode = False
         self._playback_time: datetime | None = None
@@ -440,6 +498,102 @@ class SimulationEngine:
         if device_id not in self._trackers:
             self._trackers[device_id] = DeviceStateTracker(device_id, device_type_str)
         return self._trackers[device_id]
+
+    async def _load_house_config(self, db: AsyncSession) -> dict:
+        """Load HouseConfig from DB (cached after first load)."""
+        if self._house_config_loaded:
+            return self._house_config or {}
+        try:
+            result = await db.execute(select(HouseConfig).limit(1))
+            config = result.scalar_one_or_none()
+            if config:
+                self._house_config = {
+                    "max_load_kw": config.max_load_kw,
+                    "overload_trip_enabled": config.overload_trip_enabled,
+                    "overload_tolerance_pct": config.overload_tolerance_pct,
+                    "supply_voltage_v": config.supply_voltage_v,
+                    "contracted_power_kva": config.contracted_power_kva,
+                    "main_breaker_a": config.main_breaker_a,
+                    "has_solar_pv": config.has_solar_pv,
+                    "solar_capacity_kwp": config.solar_capacity_kwp,
+                    "has_battery": config.has_battery,
+                    "battery_capacity_kwh": config.battery_capacity_kwh,
+                    "battery_max_charge_kw": config.battery_max_charge_kw,
+                    "battery_max_discharge_kw": config.battery_max_discharge_kw,
+                }
+                if config.battery_capacity_kwh > 0:
+                    self._battery_capacity_kwh = config.battery_capacity_kwh
+            else:
+                # Default fallback — medium family home
+                self._house_config = {
+                    "max_load_kw": 8.0,
+                    "overload_trip_enabled": True,
+                    "overload_tolerance_pct": 10.0,
+                    "supply_voltage_v": 230.0,
+                    "contracted_power_kva": 9.2,
+                    "main_breaker_a": 40.0,
+                    "has_solar_pv": False,
+                    "solar_capacity_kwp": 0.0,
+                    "has_battery": False,
+                    "battery_capacity_kwh": 0.0,
+                    "battery_max_charge_kw": 0.0,
+                    "battery_max_discharge_kw": 0.0,
+                }
+            self._house_config_loaded = True
+            logger.info("House config loaded: max_load=%.1f kW, breaker=%s A",
+                        self._house_config["max_load_kw"],
+                        self._house_config["main_breaker_a"])
+        except Exception as e:
+            logger.warning("Could not load HouseConfig: %s. Using defaults.", e)
+            self._house_config = {"max_load_kw": 8.0, "overload_trip_enabled": True,
+                                  "overload_tolerance_pct": 10.0}
+            self._house_config_loaded = True
+        return self._house_config
+
+    def _get_solar_generation_kw(self, hour: int, capacity_kwp: float) -> float:
+        """Calculate solar PV generation based on time-of-day irradiance model.
+
+        Uses a bell curve peaking at solar noon (13:00 local) with dawn at 06:00
+        and dusk at 20:00. Returns negative kW (generation subtracts from load).
+        """
+        if capacity_kwp <= 0 or hour < 6 or hour >= 20:
+            return 0.0
+        # Normalised irradiance: bell curve peaking at hour 13
+        solar_noon = 13.0
+        spread = 3.5  # hours
+        irradiance = math.exp(-((hour - solar_noon) ** 2) / (2 * spread ** 2))
+        # Apply cloud cover noise (±15%)
+        cloud_factor = 1.0 + random.gauss(0, 0.15)
+        cloud_factor = max(0.1, min(1.3, cloud_factor))
+        generation_kw = capacity_kwp * irradiance * cloud_factor * 0.85  # 85% system efficiency
+        return round(generation_kw, 4)
+
+    def _get_ev_charging_mode(self) -> str:
+        """Determine EV charging mode based on CC-CV curve and SoC."""
+        if self._ev_soc_pct >= self._ev_target_soc:
+            return "standby"  # Target reached
+        elif self._ev_soc_pct < 80.0:
+            return "cc_charging"  # Constant current (full power)
+        elif self._ev_soc_pct < 95.0:
+            return "cv_taper"     # Constant voltage (power tapers)
+        else:
+            return "trickle"      # Final trickle charge
+
+    def _update_ev_soc(self, power_kw: float, interval_s: float) -> None:
+        """Update EV battery SoC based on energy delivered."""
+        if power_kw <= 0 or self._ev_battery_kwh <= 0:
+            return
+        energy_kwh = power_kw * (interval_s / 3600.0)
+        soc_delta = (energy_kwh / self._ev_battery_kwh) * 100.0
+        self._ev_soc_pct = min(100.0, self._ev_soc_pct + soc_delta)
+
+    def _update_battery_soc(self, power_kw: float, interval_s: float) -> None:
+        """Update home battery SoC. Positive power = charging, negative = discharging."""
+        if self._battery_capacity_kwh <= 0:
+            return
+        energy_kwh = power_kw * (interval_s / 3600.0)
+        soc_delta = (energy_kwh / self._battery_capacity_kwh) * 100.0
+        self._battery_soc_pct = max(0.0, min(100.0, self._battery_soc_pct + soc_delta))
 
     async def start(self) -> None:
         """Start the simulation engine."""
@@ -544,6 +698,9 @@ class SimulationEngine:
                 if not devices:
                     return
 
+                # Load house electrical constraints (cached)
+                house_cfg = await self._load_house_config(db)
+
                 now = datetime.now(timezone.utc)
                 hour = now.hour
                 total_power_kw = 0.0
@@ -595,8 +752,25 @@ class SimulationEngine:
                     # Advance state machine
                     state_change = tracker.tick(self._speed)
 
+                    # DER Mode Overrides
+                    if device_type == DeviceType.ENERGY_EVSE and power_state == PowerState.ON:
+                        new_mode = self._get_ev_charging_mode()
+                        if new_mode != tracker.operating_mode:
+                            tracker.operating_mode = new_mode
+                            state_change["changed"] = True
+                            state_change["new_mode"] = new_mode
+                            
                     # Calculate power
                     kw, kvar, pf = tracker.get_power_kw_kvar()
+                    
+                    # Dynamic Power Overrides (Solar / EV SoC)
+                    if device_type == DeviceType.SOLAR_PV and power_state == PowerState.ON:
+                        kw = self._get_solar_generation_kw(hour, house_cfg.get("solar_capacity_kwp", 5.0))
+                    elif device_type == DeviceType.ENERGY_EVSE and power_state == PowerState.ON:
+                        self._update_ev_soc(kw, self._speed)
+                    elif device_type == DeviceType.BATTERY_STORAGE and power_state == PowerState.ON:
+                        self._update_battery_soc(kw, self._speed)
+
                     total_power_kw += kw
                     total_power_kvar += kvar
 
@@ -713,6 +887,129 @@ class SimulationEngine:
                     # Random events (disabled)
                     # if random.random() < 0.005:
                     #     await self._generate_event(db, device, device_type, now)
+
+                # =============================================================
+                # POWER BALANCE ENFORCEMENT (S2)
+                # Total Load ≤ Contracted Power (max_load_kw)
+                # =============================================================
+                max_load = house_cfg.get("max_load_kw", 8.0)
+                tolerance_pct = house_cfg.get("overload_tolerance_pct", 10.0)
+                trip_threshold = max_load * (1 + tolerance_pct / 100.0)
+                trip_enabled = house_cfg.get("overload_trip_enabled", True)
+
+                # Handle overload cooldown (breaker trip recovery)
+                if self._overload_trip_active:
+                    self._overload_trip_cooldown -= 1
+                    if self._overload_trip_cooldown <= 0:
+                        self._overload_trip_active = False
+                        logger.info("Breaker trip cooldown expired, power restored")
+                        await redis_client.publish_event({
+                            "event_type": "breaker_reset",
+                            "severity": "info",
+                            "message": f"Main breaker reset. Load was reduced to {total_power_kw:.2f} kW (limit: {max_load:.1f} kW)",
+                            "timestamp": now.isoformat(),
+                        })
+
+                # Check for overload condition
+                if total_power_kw > max_load and not self._overload_trip_active:
+                    overload_pct = ((total_power_kw - max_load) / max_load) * 100
+                    logger.warning(
+                        "OVERLOAD: Total load %.2f kW exceeds max %.1f kW (%.1f%% over)",
+                        total_power_kw, max_load, overload_pct
+                    )
+
+                    # Auto load-shed: sort running devices by priority, shed lowest first
+                    shedable_devices = []
+                    for dev in devices:
+                        dev_type_str = dev.type.value if isinstance(dev.type, DeviceType) else dev.type
+                        dev_ps = dev.power_state if isinstance(dev.power_state, PowerState) else PowerState(dev.power_state)
+                        if dev_ps == PowerState.ON:
+                            dev_id = str(dev.id)
+                            tracker = self._trackers.get(dev_id)
+                            dev_kw = tracker.get_power_kw_kvar()[0] if tracker else 0
+                            priority = self._SHED_PRIORITY.get(dev_type_str, 50)
+                            if priority < 99 and dev_kw > 0:  # Only shed non-critical devices
+                                shedable_devices.append((priority, dev_kw, dev, dev_id, tracker))
+
+                    # Sort by priority (lowest number = first to shed)
+                    shedable_devices.sort(key=lambda x: x[0])
+
+                    shed_log = []
+                    for priority, dev_kw, dev, dev_id, tracker in shedable_devices:
+                        if total_power_kw <= max_load:
+                            break  # Load is now under limit
+                        # Shed this device
+                        dev.power_state = PowerState.STANDBY
+                        if tracker:
+                            tracker.set_power_off()
+                        total_power_kw -= dev_kw
+                        shed_log.append(f"{dev.name} (-{dev_kw:.2f} kW)")
+                        logger.info("LOAD SHED: %s (priority %d, %.2f kW)", dev.name, priority, dev_kw)
+
+                    if shed_log:
+                        shed_event = DeviceEvent(
+                            device_id=devices[0].id,  # Attach to first device as system event
+                            event_type="overload_shed",
+                            severity=EventSeverity.WARNING,
+                            message=f"Load shed triggered ({overload_pct:.1f}% over {max_load:.0f}W limit). Shed: {', '.join(shed_log)}",
+                            metadata={"total_before_kw": round(total_power_kw + sum(d[1] for d in shedable_devices if d[3] in [s.split(' ')[0] for s in shed_log]), 4),
+                                      "total_after_kw": round(total_power_kw, 4),
+                                      "devices_shed": shed_log},
+                        )
+                        db.add(shed_event)
+                        self._total_events += 1
+
+                        await redis_client.publish_event({
+                            "event_type": "overload_shed",
+                            "severity": "warning",
+                            "message": shed_event.message,
+                            "timestamp": now.isoformat(),
+                        })
+
+                    # If STILL overloaded after shedding, trip the breaker
+                    if trip_enabled and total_power_kw > trip_threshold:
+                        self._overload_trip_active = True
+                        self._overload_trip_cooldown = 30  # 30 ticks (~30s) cooldown
+                        logger.critical(
+                            "BREAKER TRIP: Load %.2f kW exceeds trip threshold %.2f kW",
+                            total_power_kw, trip_threshold
+                        )
+                        # Trip all non-critical devices
+                        for dev in devices:
+                            dev_type_str = dev.type.value if isinstance(dev.type, DeviceType) else dev.type
+                            priority = self._SHED_PRIORITY.get(dev_type_str, 50)
+                            if priority < 99:
+                                dev.power_state = PowerState.OFF
+                                dev_id = str(dev.id)
+                                tracker = self._trackers.get(dev_id)
+                                if tracker:
+                                    tracker.set_power_off()
+
+                        trip_alert = Alert(
+                            device_id=devices[0].id,
+                            alert_type=AlertType.BREAKER_TRIP,
+                            severity=EventSeverity.CRITICAL,
+                            message=f"Main breaker tripped! Total load {total_power_kw:.1f} kW exceeded {trip_threshold:.1f} kW trip threshold.",
+                            is_active=True,
+                        )
+                        db.add(trip_alert)
+
+                        await redis_client.publish_event({
+                            "event_type": "breaker_trip",
+                            "severity": "critical",
+                            "message": trip_alert.message,
+                            "timestamp": now.isoformat(),
+                        })
+                        total_power_kw = 0.2  # Only base load remains
+
+                # Publish overload status in metrics
+                self._metrics["max_load_kw"] = max_load
+                self._metrics["load_utilisation_pct"] = round(
+                    (total_power_kw / max_load * 100) if max_load > 0 else 0, 1
+                )
+                self._metrics["overload_trip_active"] = 1.0 if self._overload_trip_active else 0.0
+                self._metrics["ev_soc_pct"] = round(self._ev_soc_pct, 1)
+                self._metrics["battery_soc_pct"] = round(self._battery_soc_pct, 1)
 
                 # Record to HomePowerHistory (every ~15s)
                 if write_history:

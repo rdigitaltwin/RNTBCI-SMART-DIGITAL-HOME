@@ -72,6 +72,8 @@ class DeviceType(str, enum.Enum):
     COOKING = "cooking"
     BASE_LOAD = "base_load"
     ENERGY_EVSE = "energy_evse"
+    SOLAR_PV = "solar_pv"
+    BATTERY_STORAGE = "battery_storage"
 
 
 class DeviceStatus(str, enum.Enum):
@@ -128,6 +130,8 @@ class AlertType(str, enum.Enum):
     DEVICE_OFFLINE = "device_offline"
     MOTION_DETECTED = "motion_detected"
     SECURITY_BREACH = "security_breach"
+    OVERLOAD = "overload"
+    BREAKER_TRIP = "breaker_trip"
 
 
 class RoomType(str, enum.Enum):
@@ -140,6 +144,21 @@ class RoomType(str, enum.Enum):
     GARAGE = "garage"
     UTILITY_ROOM = "utility_room"
     HALLWAY = "hallway"
+
+
+class HomeCategory(str, enum.Enum):
+    """Household electrical capacity category."""
+
+    SMALL_VILLA = "small_villa"        # 6-12 kVA, 30-60 A, single-phase
+    MEDIUM_FAMILY = "medium_family"    # 9-12 kVA, 30-45 A, single-phase
+    LARGE_VILLA = "large_villa"        # 12-24 kVA, 45-90 A, three-phase
+
+
+class PhaseType(str, enum.Enum):
+    """Electrical supply phase configuration."""
+
+    SINGLE_PHASE = "single_phase"      # 230V, 1 live wire
+    THREE_PHASE = "three_phase"        # 400V, 3 live wires
 
 
 # =============================================================================
@@ -264,6 +283,72 @@ class Room(Base):
 
     # Relationships
     devices: Mapped[list["Device"]] = relationship("Device", back_populates="room")
+
+
+class HouseConfig(Base):
+    """Household electrical infrastructure configuration.
+
+    Models the physical electrical constraints of the home:
+    supply voltage, contracted power, breaker ratings, and phase type.
+    Only ONE HouseConfig row should exist per deployment (singleton).
+    """
+
+    __tablename__ = "house_config"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=new_uuid
+    )
+    name: Mapped[str] = mapped_column(
+        String(200), nullable=False, default="Default Home"
+    )
+    category: Mapped[str] = mapped_column(
+        Enum(HomeCategory), default=HomeCategory.MEDIUM_FAMILY
+    )
+    phase_type: Mapped[str] = mapped_column(
+        Enum(PhaseType), default=PhaseType.SINGLE_PHASE
+    )
+    supply_voltage_v: Mapped[float] = mapped_column(
+        Float, default=230.0, comment="Nominal supply voltage in Volts"
+    )
+    contracted_power_kva: Mapped[float] = mapped_column(
+        Float, default=9.2, comment="Contracted apparent power in kVA"
+    )
+    main_breaker_a: Mapped[float] = mapped_column(
+        Float, default=40.0, comment="Main breaker / MCB rating in Amps"
+    )
+    max_load_kw: Mapped[float] = mapped_column(
+        Float, default=8.0,
+        comment="Maximum allowed real power draw in kW (derived from contracted_power × PF)"
+    )
+    overload_trip_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True,
+        comment="Whether to simulate breaker trips on overload"
+    )
+    overload_tolerance_pct: Mapped[float] = mapped_column(
+        Float, default=10.0,
+        comment="Percentage over max_load_kw before trip (accounts for inrush)"
+    )
+    has_solar_pv: Mapped[bool] = mapped_column(Boolean, default=False)
+    solar_capacity_kwp: Mapped[float] = mapped_column(
+        Float, default=0.0, comment="Installed solar PV capacity in kWp"
+    )
+    has_battery: Mapped[bool] = mapped_column(Boolean, default=False)
+    battery_capacity_kwh: Mapped[float] = mapped_column(
+        Float, default=0.0, comment="Battery storage capacity in kWh"
+    )
+    battery_max_charge_kw: Mapped[float] = mapped_column(
+        Float, default=0.0, comment="Max battery charge rate in kW"
+    )
+    battery_max_discharge_kw: Mapped[float] = mapped_column(
+        Float, default=0.0, comment="Max battery discharge rate in kW"
+    )
+    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class Device(Base):
