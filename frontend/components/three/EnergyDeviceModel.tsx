@@ -54,6 +54,7 @@ const DEVICE_POSITIONS: Record<string, [number, number, number]> = {
 
   // Outside
   ev_charger:      [-0.8 * SCALE, 0.20,  4.2 * SCALE],
+  solar_panel:     [ 0.5 * SCALE, 1.4 * SCALE + 0.45, -0.5 * SCALE],
 };
 
 // =============================================================================
@@ -73,6 +74,7 @@ const DEVICE_COLORS: Record<string, string> = {
   washing_machine: '#06B6D4',
   water_heater: '#F97316',
   energy_evse: '#10B981',
+  solar_panel: '#FCD34D',
 };
 
 // =============================================================================
@@ -313,6 +315,26 @@ function WaterHeaterModel({ isOn }: { isOn: boolean }) {
   );
 }
 
+function SolarPanelModel({ isOn }: { isOn: boolean }) {
+  return (
+    <group rotation={[Math.PI / 8, 0, 0]}>
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[1.2, 0.05, 1.8]} />
+        <meshStandardMaterial color="#2a3142" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1.1, 1.7]} />
+        <meshStandardMaterial 
+          color={isOn ? '#0e4a7a' : '#111'} 
+          emissive={isOn ? '#0e4a7a' : '#000'} 
+          emissiveIntensity={isOn ? 0.4 : 0} 
+        />
+      </mesh>
+      {isOn && <Sparkles count={20} scale={[1.1, 0.2, 1.7]} position={[0, 0.1, 0]} size={0.6} speed={0.2} color="#FCD34D" opacity={0.5} />}
+    </group>
+  );
+}
+
 // =============================================================================
 // DEVICE HUD (floating info panel on selection)
 // =============================================================================
@@ -480,6 +502,7 @@ function EnergyDeviceModelComponent({ device, isSelected, onClick }: EnergyDevic
       case 'air_conditioner': return <AirConditionerModel isOn={isOn} />;
       case 'washing_machine': return <WashingMachineModel isOn={isOn} />;
       case 'water_heater': return <WaterHeaterModel isOn={isOn} />;
+      case 'solar_panel': return <SolarPanelModel isOn={isOn} />;
       default:
         return (
           <mesh>

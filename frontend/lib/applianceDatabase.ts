@@ -297,6 +297,20 @@ export const APPLIANCE_DATABASE: ApplianceSpec[] = [
     model: 'ev_charger',
     description: 'Mode 3 EV charging station (Type 2)',
   },
+  {
+    id: 'solar_panel',
+    name: 'Solar Panel Array',
+    type: 'solar_panel',
+    category: 'outdoor',
+    room: 'Exterior',
+    ratedPowerMin: 0,
+    ratedPowerMax: -8000,
+    defaultPower: -5000,
+    standbyPower: 0,
+    icon: '☀️',
+    model: 'solar_array',
+    description: 'Rooftop solar photovoltaic array',
+  },
 ];
 
 // =============================================================================
