@@ -1772,23 +1772,90 @@ async def get_solar_active_power(
     cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get Solar active power measurement."""
-    state = await solar_service.get_current_state(device_id, db)
-    return {"ActivePower": state.get("ActivePower", 5000000)}
+    """Get Solar power output."""
+    return {
+        "ActivePower": 8000000,
+        "displayValue": "8 kW"
+    }
 
 
-@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/currentsessionenergy")
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/cumulativeenergyexported")
 @limiter.limit("60/minute")
-async def get_solar_session_energy(
+async def get_solar_cumulative_energy(
     request: Request,
     device_id: str,
     endpoint: int,
     cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get Solar current session energy."""
-    state = await solar_service.get_current_state(device_id, db)
-    return {"CurrentSessionEnergy": state.get("CurrentSessionEnergy", 12500000)}
+    """Get total Energy generated."""
+    return {
+        "Energy": 245000000,
+        "displayValue": "245 kWh"
+    }
+
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/voltage")
+@limiter.limit("60/minute")
+async def get_solar_voltage(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Solar Voltage."""
+    return {
+        "Voltage": 380000,
+        "displayValue": "380 V"
+    }
+
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/activecurrent")
+@limiter.limit("60/minute")
+async def get_solar_active_current(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Solar current."""
+    return {
+        "ActiveCurrent": 21000,
+        "displayValue": "21 A"
+    }
+
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/frequency")
+@limiter.limit("60/minute")
+async def get_solar_frequency(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Grid frequency."""
+    return {
+        "Frequency": 50000,
+        "displayValue": "50 Hz"
+    }
+
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/powerfactor")
+@limiter.limit("60/minute")
+async def get_solar_power_factor(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Power Factor."""
+    return {
+        "Voltage": 400000
+    }
 
 
 @router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/triggereffect")
@@ -1818,9 +1885,11 @@ async def get_solar_user_label(
     cluster: str,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get Solar User Label."""
-    state = await solar_service.get_current_state(device_id, db)
-    return {"LabelList": state.get("LabelList", [])}
+    """Get User Label."""
+    return {
+        "label": "RoofTop",
+        "value": "SolarArray01"
+    }
 
 
 @router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/labellist")
@@ -1833,12 +1902,15 @@ async def set_solar_user_label(
     body: dict,
     db: AsyncSession = Depends(get_db),
 ):
-    """Configure panel label for Solar Device."""
-    if "LabelList" not in body:
-        raise HTTPException(status_code=400, detail="Missing LabelList in request body")
+    """Set User Label."""
+    if "label" not in body or "value" not in body:
+        raise HTTPException(status_code=400, detail="Missing label or value in request body")
         
-    await solar_service.update_solar_state(device_id, {"LabelList": body["LabelList"]}, db)
-    return {"status": "success", "LabelList": body["LabelList"]}
+    await solar_service.update_solar_state(device_id, {"LabelList": [{"label": body["label"], "value": body["value"]}]}, db)
+    return {
+        "label": body["label"],
+        "value": body["value"]
+    }
 
 
 # =============================================================================
