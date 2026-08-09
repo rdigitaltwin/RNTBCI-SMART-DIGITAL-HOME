@@ -1809,6 +1809,38 @@ async def identify_solar(
     return {"id": "0x0040", "name": "TriggerEffect"}
 
 
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/labellist")
+@limiter.limit("60/minute")
+async def get_solar_user_label(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Solar User Label."""
+    state = await solar_service.get_current_state(device_id, db)
+    return {"LabelList": state.get("LabelList", [])}
+
+
+@router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/labellist")
+@limiter.limit("60/minute")
+async def set_solar_user_label(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Configure panel label for Solar Device."""
+    if "LabelList" not in body:
+        raise HTTPException(status_code=400, detail="Missing LabelList in request body")
+        
+    await solar_service.update_solar_state(device_id, {"LabelList": body["LabelList"]}, db)
+    return {"status": "success", "LabelList": body["LabelList"]}
+
+
 # =============================================================================
 # MCB SYNCHRONIZATION
 # =============================================================================
