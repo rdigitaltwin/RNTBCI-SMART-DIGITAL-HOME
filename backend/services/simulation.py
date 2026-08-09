@@ -703,8 +703,12 @@ class SimulationEngine:
 
                 now = datetime.now(timezone.utc)
                 hour = now.hour
-                total_power_kw = 0.0
-                total_power_kvar = 0.0
+                total_load_kw = 0.0
+                total_load_kvar = 0.0
+                total_solar_kw = 0.0
+                total_battery_kw = 0.0
+                total_ev_kw = 0.0
+                
                 self._history_accumulator += self._speed
 
                 # Should we write to history tables this tick?
@@ -752,31 +756,40 @@ class SimulationEngine:
                     # Advance state machine
                     state_change = tracker.tick(self._speed)
 
-                    # DER Mode Overrides
-                    if device_type == DeviceType.ENERGY_EVSE and power_state == PowerState.ON:
+                    # Calculate power
+                    kw, kvar, pf = tracker.get_power_kw_kvar()
+                    
+                    # Dynamic Power Overrides (Solar / EV / Battery)
+                    if device_type == DeviceType.SOLAR_PV and power_state == PowerState.ON:
+                        kw = self._get_solar_generation_kw(hour, house_cfg.get("solar_capacity_kwp", 5.0))
+                        total_solar_kw += kw
+                    elif device_type == DeviceType.ENERGY_EVSE and power_state == PowerState.ON:
                         new_mode = self._get_ev_charging_mode()
+                        # If mode is explicitly set to backup, override standard charging
+                        if tracker.operating_mode == "backup" and self._ev_soc_pct > 20:
+                            new_mode = "backup"
+                            kw = -5.0 # 5kW discharge to home
+                        elif tracker.operating_mode == "backup":
+                            new_mode = "standby"
+                            kw = 0.0
+                            
                         if new_mode != tracker.operating_mode:
                             tracker.operating_mode = new_mode
                             state_change["changed"] = True
                             state_change["new_mode"] = new_mode
-                            
-                    # Calculate power
-                    kw, kvar, pf = tracker.get_power_kw_kvar()
-                    
-                    # Dynamic Power Overrides (Solar / EV SoC)
-                    if device_type == DeviceType.SOLAR_PV and power_state == PowerState.ON:
-                        kw = self._get_solar_generation_kw(hour, house_cfg.get("solar_capacity_kwp", 5.0))
-                    elif device_type == DeviceType.ENERGY_EVSE and power_state == PowerState.ON:
                         self._update_ev_soc(kw, self._speed)
+                        total_ev_kw += kw
                     elif device_type == DeviceType.BATTERY_STORAGE and power_state == PowerState.ON:
+                        # Battery logic handled by Scenarios, assume kw is set on tracker for now
                         self._update_battery_soc(kw, self._speed)
-
-                    total_power_kw += kw
-                    total_power_kvar += kvar
+                        total_battery_kw += kw
+                    else:
+                        total_load_kw += kw
+                        total_load_kvar += kvar
 
                     interval_hours = (1.0 * self._speed) / 3600.0
-                    if kw > 0:
-                        tracker.accumulated_kwh += (kw * interval_hours)
+                    if abs(kw) > 0:
+                        tracker.accumulated_kwh += (abs(kw) * interval_hours)
                         
 
                     metadata = dict(device.extra_data or {})
@@ -890,8 +903,14 @@ class SimulationEngine:
 
                 # =============================================================
                 # POWER BALANCE ENFORCEMENT (S2)
-                # Total Load ≤ Contracted Power (max_load_kw)
                 # =============================================================
+                # Grid Power = Total Load + Battery Charging + EV Charging - Solar Generation
+                # Negative kw for Battery/EV means they are discharging (acting as supply)
+                total_power_kw = total_load_kw + total_battery_kw + total_ev_kw - total_solar_kw
+                
+                grid_import_kw = max(0.0, total_power_kw)
+                grid_export_kw = abs(min(0.0, total_power_kw))
+                
                 max_load = house_cfg.get("max_load_kw", 8.0)
                 tolerance_pct = house_cfg.get("overload_tolerance_pct", 10.0)
                 trip_threshold = max_load * (1 + tolerance_pct / 100.0)
@@ -906,16 +925,16 @@ class SimulationEngine:
                         await redis_client.publish_event({
                             "event_type": "breaker_reset",
                             "severity": "info",
-                            "message": f"Main breaker reset. Load was reduced to {total_power_kw:.2f} kW (limit: {max_load:.1f} kW)",
+                            "message": f"Main breaker reset. Grid load is {grid_import_kw:.2f} kW (limit: {max_load:.1f} kW)",
                             "timestamp": now.isoformat(),
                         })
 
-                # Check for overload condition
-                if total_power_kw > max_load and not self._overload_trip_active:
-                    overload_pct = ((total_power_kw - max_load) / max_load) * 100
+                # Check for overload condition (based on grid draw)
+                if grid_import_kw > max_load and not self._overload_trip_active:
+                    overload_pct = ((grid_import_kw - max_load) / max_load) * 100
                     logger.warning(
-                        "OVERLOAD: Total load %.2f kW exceeds max %.1f kW (%.1f%% over)",
-                        total_power_kw, max_load, overload_pct
+                        "OVERLOAD: Grid load %.2f kW exceeds max %.1f kW (%.1f%% over)",
+                        grid_import_kw, max_load, overload_pct
                     )
 
                     # Auto load-shed: sort running devices by priority, shed lowest first
@@ -928,7 +947,7 @@ class SimulationEngine:
                             tracker = self._trackers.get(dev_id)
                             dev_kw = tracker.get_power_kw_kvar()[0] if tracker else 0
                             priority = self._SHED_PRIORITY.get(dev_type_str, 50)
-                            if priority < 99 and dev_kw > 0:  # Only shed non-critical devices
+                            if priority < 99 and dev_kw > 0:  # Only shed non-critical load devices
                                 shedable_devices.append((priority, dev_kw, dev, dev_id, tracker))
 
                     # Sort by priority (lowest number = first to shed)
@@ -936,13 +955,13 @@ class SimulationEngine:
 
                     shed_log = []
                     for priority, dev_kw, dev, dev_id, tracker in shedable_devices:
-                        if total_power_kw <= max_load:
+                        if grid_import_kw <= max_load:
                             break  # Load is now under limit
                         # Shed this device
                         dev.power_state = PowerState.STANDBY
                         if tracker:
                             tracker.set_power_off()
-                        total_power_kw -= dev_kw
+                        grid_import_kw -= dev_kw
                         shed_log.append(f"{dev.name} (-{dev_kw:.2f} kW)")
                         logger.info("LOAD SHED: %s (priority %d, %.2f kW)", dev.name, priority, dev_kw)
 
@@ -952,8 +971,8 @@ class SimulationEngine:
                             event_type="overload_shed",
                             severity=EventSeverity.WARNING,
                             message=f"Load shed triggered ({overload_pct:.1f}% over {max_load:.0f}W limit). Shed: {', '.join(shed_log)}",
-                            metadata={"total_before_kw": round(total_power_kw + sum(d[1] for d in shedable_devices if d[3] in [s.split(' ')[0] for s in shed_log]), 4),
-                                      "total_after_kw": round(total_power_kw, 4),
+                            metadata={"total_before_kw": round(grid_import_kw + sum(d[1] for d in shedable_devices if d[3] in [s.split(' ')[0] for s in shed_log]), 4),
+                                      "total_after_kw": round(grid_import_kw, 4),
                                       "devices_shed": shed_log},
                         )
                         db.add(shed_event)
@@ -967,12 +986,12 @@ class SimulationEngine:
                         })
 
                     # If STILL overloaded after shedding, trip the breaker
-                    if trip_enabled and total_power_kw > trip_threshold:
+                    if trip_enabled and grid_import_kw > trip_threshold:
                         self._overload_trip_active = True
                         self._overload_trip_cooldown = 30  # 30 ticks (~30s) cooldown
                         logger.critical(
-                            "BREAKER TRIP: Load %.2f kW exceeds trip threshold %.2f kW",
-                            total_power_kw, trip_threshold
+                            "BREAKER TRIP: Grid Load %.2f kW exceeds trip threshold %.2f kW",
+                            grid_import_kw, trip_threshold
                         )
                         # Trip all non-critical devices
                         for dev in devices:
@@ -989,7 +1008,7 @@ class SimulationEngine:
                             device_id=devices[0].id,
                             alert_type=AlertType.BREAKER_TRIP,
                             severity=EventSeverity.CRITICAL,
-                            message=f"Main breaker tripped! Total load {total_power_kw:.1f} kW exceeded {trip_threshold:.1f} kW trip threshold.",
+                            message=f"Main breaker tripped! Grid load {grid_import_kw:.1f} kW exceeded {trip_threshold:.1f} kW trip threshold.",
                             is_active=True,
                         )
                         db.add(trip_alert)
@@ -1000,12 +1019,12 @@ class SimulationEngine:
                             "message": trip_alert.message,
                             "timestamp": now.isoformat(),
                         })
-                        total_power_kw = 0.2  # Only base load remains
+                        grid_import_kw = 0.2  # Base load only from grid
 
                 # Publish overload status in metrics
                 self._metrics["max_load_kw"] = max_load
                 self._metrics["load_utilisation_pct"] = round(
-                    (total_power_kw / max_load * 100) if max_load > 0 else 0, 1
+                    (grid_import_kw / max_load * 100) if max_load > 0 else 0, 1
                 )
                 self._metrics["overload_trip_active"] = 1.0 if self._overload_trip_active else 0.0
                 self._metrics["ev_soc_pct"] = round(self._ev_soc_pct, 1)
@@ -1013,13 +1032,22 @@ class SimulationEngine:
 
                 # Record to HomePowerHistory (every ~15s)
                 if write_history:
+                    # Update wide_kwargs with the new battery mapping metrics
+                    wide_kwargs["solar_generation_kw"] = round(total_solar_kw, 4)
+                    wide_kwargs["battery_charge_kw"] = round(max(0.0, total_battery_kw), 4)
+                    wide_kwargs["battery_discharge_kw"] = round(abs(min(0.0, total_battery_kw)), 4)
+                    wide_kwargs["battery_soc_percent"] = round(self._battery_soc_pct, 1)
+                    wide_kwargs["ev_discharge_kw"] = round(abs(min(0.0, total_ev_kw)), 4)
+                    wide_kwargs["grid_import_kw"] = round(grid_import_kw, 4)
+                    wide_kwargs["grid_export_kw"] = round(grid_export_kw, 4)
+                    
                     # Create dict with only columns that actually exist on the model
                     valid_columns = [c.key for c in HomePowerHistory.__table__.columns]
                     filtered_kwargs = {k: v for k, v in wide_kwargs.items() if k in valid_columns}
                     
                     home_record = HomePowerHistory(
                         timestamp=now,
-                        total_home_power_consumption_kw=round(total_power_kw, 4),
+                        total_home_power_consumption_kw=round(total_load_kw, 4),
                         **filtered_kwargs
                     )
                     db.add(home_record)
@@ -1027,14 +1055,14 @@ class SimulationEngine:
                     self._history_accumulator = 0.0
 
                 # Update metrics
-                total_power_w = total_power_kw * 1000
+                total_power_w = grid_import_kw * 1000
                 self._metrics["total_power_w"] = round(total_power_w, 1)
                 self._metrics["peak_power_w"] = max(
                     self._metrics["peak_power_w"], total_power_w
                 )
                 self._metrics["connected_devices"] = len(devices)
                 self._metrics["total_energy_kwh"] = round(
-                    self._metrics.get("total_energy_kwh", 0) + (total_power_kw) * (self._speed / 3600.0), 4
+                    self._metrics.get("total_energy_kwh", 0) + (grid_import_kw) * (self._speed / 3600.0), 4
                 )
                 self._metrics["electricity_cost_usd"] = round(
                     self._metrics["total_energy_kwh"] * 0.12, 4

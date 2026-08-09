@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import {
   Sunrise, Moon, Plane, AlertTriangle, Battery, Film,
   Play, Pause, CheckCircle, Loader, Settings, Plus,
+  Home, Sun, BatteryCharging
 } from 'lucide-react';
 import api from '@/services/api';
 
@@ -26,7 +27,7 @@ interface Scenario {
 const ICON_MAP: Record<string, any> = {
   sunrise: Sunrise, moon: Moon, plane: Plane,
   'alert-triangle': AlertTriangle, battery: Battery, film: Film,
-  settings: Settings,
+  settings: Settings, home: Home, sun: Sun, 'battery-charging': BatteryCharging
 };
 
 const GRADIENT_MAP: Record<string, string> = {
@@ -37,6 +38,9 @@ const GRADIENT_MAP: Record<string, string> = {
   battery: 'linear-gradient(135deg, #10B981 0%, #00FF9D 100%)',
   film: 'linear-gradient(135deg, #EC4899 0%, #A855F7 100%)',
   settings: 'linear-gradient(135deg, #94A3B8 0%, #64748B 100%)',
+  home: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+  sun: 'linear-gradient(135deg, #FBBF24 0%, #D97706 100%)',
+  'battery-charging': 'linear-gradient(135deg, #A855F7 0%, #7E22CE 100%)'
 };
 
 function ScenarioCard({ scenario, onToggle }: { scenario: Scenario; onToggle: () => void }) {
@@ -144,12 +148,12 @@ export default function ScenariosPage() {
         setScenarios(res as Scenario[]);
       } catch {
         setScenarios([
-          { id: 'morning_routine', name: 'Morning Routine', description: 'Prepare the home for the day — lights, AC, water heater, and media.', icon: 'sunrise', trigger: 'schedule', active: false, built_in: true },
-          { id: 'night_routine', name: 'Night Routine', description: 'Secure and dim the home for sleep — locks, cameras, low lights.', icon: 'moon', trigger: 'schedule', active: false, built_in: true },
-          { id: 'vacation_mode', name: 'Vacation Mode', description: 'Simulate occupancy with random lights, lock doors, minimize energy.', icon: 'plane', trigger: 'manual', active: false, built_in: true },
-          { id: 'emergency_mode', name: 'Emergency Mode', description: 'Maximum visibility and access — all lights on, doors unlocked.', icon: 'alert-triangle', trigger: 'manual', active: false, built_in: true },
-          { id: 'energy_saver', name: 'Energy Saver', description: 'Reduce consumption — dim lights, fan-only AC, lower water temp.', icon: 'battery', trigger: 'manual', active: false, built_in: true },
-          { id: 'movie_night', name: 'Movie Night', description: 'Perfect ambiance — dim purple lights, TV on, AC to 22°C.', icon: 'film', trigger: 'manual', active: false, built_in: true },
+          { id: 'normal', name: 'Normal', description: 'Standard household operation.', icon: 'home', trigger: 'manual', active: false, built_in: true },
+          { id: 'night_routine', name: 'Sleep', description: 'Secure and dim the home for sleep — locks, cameras, low lights.', icon: 'moon', trigger: 'schedule', active: false, built_in: true },
+          { id: 'vacation_mode', name: 'Away', description: 'Simulate occupancy with random lights, lock doors, minimize energy.', icon: 'plane', trigger: 'manual', active: false, built_in: true },
+          { id: 'energy_saver', name: 'Energy Saving', description: 'Reduce consumption — dim lights, fan-only AC, lower water temp.', icon: 'battery', trigger: 'manual', active: false, built_in: true },
+          { id: 'solar_priority', name: 'Solar Priority', description: 'Maximize solar self-consumption, limit grid draw.', icon: 'sun', trigger: 'manual', active: false, built_in: true },
+          { id: 'backup', name: 'Backup', description: 'Discharge EV and Battery to power the home during outages.', icon: 'battery-charging', trigger: 'manual', active: false, built_in: true },
         ]);
       }
     };

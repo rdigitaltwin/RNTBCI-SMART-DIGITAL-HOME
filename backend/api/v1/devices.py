@@ -32,6 +32,7 @@ from backend.models import (
 )
 from backend.redis.client import redis_client
 from backend.services.evse_service import evse_service
+from backend.services.solar_service import solar_service
 from backend.schemas import (
     DeviceControlRequest,
     DeviceCreateRequest,
@@ -1730,3 +1731,119 @@ async def identify_evse(
     await evse_service.update_evse_state(device_id, {"IdentifyTriggered": True}, db)
     return {"id": "0x0040", "name": "TriggerEffect"}
 
+
+# =============================================================================
+# SOLAR MATTER SUPPORT
+# =============================================================================
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}")
+@limiter.limit("60/minute")
+async def get_solar_device_details(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Solar device details matching the Matter JSON spec."""
+    try:
+        device_uuid = uuid.UUID(device_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid device_id format")
+
+    result = await db.execute(select(Device).where(Device.id == device_uuid))
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+
+    # Load the exact Matter JSON template for Solar
+    solar_data = await solar_service.get_solar_device("Solar_Panel")
+    if not solar_data:
+        raise HTTPException(status_code=404, detail="Solar Specification data not found")
+
+    return solar_data
+
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/activepower")
+@limiter.limit("60/minute")
+async def get_solar_active_power(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Solar active power measurement."""
+    state = await solar_service.get_current_state(device_id, db)
+    return {"ActivePower": state.get("ActivePower", 5000000)}
+
+
+@router.get("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/currentsessionenergy")
+@limiter.limit("60/minute")
+async def get_solar_session_energy(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Solar current session energy."""
+    state = await solar_service.get_current_state(device_id, db)
+    return {"CurrentSessionEnergy": state.get("CurrentSessionEnergy", 12500000)}
+
+
+@router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/triggereffect")
+@limiter.limit("60/minute")
+async def identify_solar(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Trigger identify effect on Solar Panel."""
+    if body.get("name") != "TriggerEffect":
+        raise HTTPException(status_code=400, detail="Invalid identify effect")
+
+    await solar_service.update_solar_state(device_id, {"IdentifyTriggered": True}, db)
+    return {"id": "0x0040", "name": "TriggerEffect"}
+
+
+# =============================================================================
+# MCB SYNCHRONIZATION
+# =============================================================================
+
+@router.post("/{device_id}/mcb/sync")
+@limiter.limit("60/minute")
+async def sync_mcb_state(
+    request: Request,
+    device_id: str,
+    body: DeviceStateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Synchronize physical MCB state with the Digital Twin."""
+    try:
+        device_uuid = uuid.UUID(device_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid device_id format")
+
+    result = await db.execute(select(Device).where(Device.id == device_uuid))
+    device = result.scalar_one_or_none()
+    
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+        
+    power_state = PowerState.ON if body.status == "ON" else PowerState.OFF
+    device.power_state = power_state
+    device.last_updated = datetime.now(timezone.utc)
+    
+    await db.commit()
+    
+    device_resp = _device_to_response(device)
+    await redis_client.publish_device_update(str(device.id), {
+        "action": "mcb_synced",
+        "device": device_resp.model_dump(mode="json"),
+        "status": body.status
+    })
+    
+    return {"status": "success", "device_id": device_id, "new_state": body.status}

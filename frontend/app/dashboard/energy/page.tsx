@@ -99,6 +99,42 @@ export default function EnergyPage() {
   const [hourlyData, setHourlyData] = useState<any[]>([]);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const devices = useDeviceStore((s) => s.devices);
+  const metrics = useSimulationStore((s) => s.metrics);
+  const [liveMap, setLiveMap] = useState<any[]>([]);
+
+  // Track Live Map Data
+  useEffect(() => {
+    if (!metrics || Object.keys(metrics).length === 0) return;
+    
+    setLiveMap(prev => {
+      const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+      
+      const gridImport = metrics.grid_import_kw || 0;
+      const gridExport = metrics.grid_export_kw || 0;
+      const solar = metrics.solar_generation_kw || 0;
+      const batCharge = metrics.battery_charge_kw || 0;
+      const batDischarge = metrics.battery_discharge_kw || 0;
+      const evDischarge = metrics.ev_discharge_kw || 0;
+      
+      const load = gridImport + solar + batDischarge + evDischarge - gridExport - batCharge;
+      
+      const newData = {
+        time: now,
+        gridImport,
+        gridExport,
+        solar,
+        batteryCharge: batCharge,
+        batteryDischarge: batDischarge,
+        evDischarge,
+        load: Math.max(0, Number(load.toFixed(4))),
+        batterySoc: metrics.battery_soc_pct || 0,
+      };
+      
+      if (prev.length > 0 && prev[prev.length - 1].time === now) return prev;
+      
+      return [...prev, newData].slice(-30);
+    });
+  }, [metrics]);
 
   // Fetch real data from backend
   useEffect(() => {
@@ -229,6 +265,35 @@ export default function EnergyPage() {
       </div>
 
       {/* Charts */}
+      
+      {/* Real-Time Battery Power Mapping */}
+      <div className="glass-card" style={{ padding: '20px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>Live Battery Power Map</h3>
+          <div style={{ display: 'flex', gap: '12px', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" }}>
+             <span style={{ color: '#00E5FF' }}>■ Grid Import</span>
+             <span style={{ color: '#FFC857' }}>■ Solar</span>
+             <span style={{ color: '#6366F1' }}>■ Battery SoC (%)</span>
+             <span style={{ color: '#00FF9D' }}>■ Battery Discharging</span>
+             <span style={{ color: '#FF4D6D' }}>■ Load</span>
+          </div>
+        </div>
+        <ResponsiveContainer minWidth={10} minHeight={10} width="100%" height={300}>
+          <ComposedChart data={liveMap}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+            <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="left" tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} label={{ value: 'kW', angle: -90, position: 'insideLeft', fill: '#64748B', fontSize: 10 }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 9, fill: '#64748B' }} axisLine={false} tickLine={false} domain={[0, 100]} label={{ value: 'SoC %', angle: 90, position: 'insideRight', fill: '#64748B', fontSize: 10 }} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Area yAxisId="left" type="monotone" dataKey="load" stroke="#FF4D6D" fill="#FF4D6D" fillOpacity={0.1} />
+            <Area yAxisId="left" type="monotone" dataKey="gridImport" stroke="#00E5FF" fill="#00E5FF" fillOpacity={0.2} />
+            <Area yAxisId="left" type="monotone" dataKey="solar" stroke="#FFC857" fill="#FFC857" fillOpacity={0.3} />
+            <Area yAxisId="left" type="monotone" dataKey="batteryDischarge" stroke="#00FF9D" fill="#00FF9D" fillOpacity={0.4} />
+            <Line yAxisId="right" type="monotone" dataKey="batterySoc" stroke="#6366F1" strokeWidth={2} dot={false} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
         {/* Power consumption over time */}
         <div className="glass-card" style={{ padding: '20px' }}>

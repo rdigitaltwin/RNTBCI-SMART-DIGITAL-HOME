@@ -74,6 +74,7 @@ class DeviceType(str, enum.Enum):
     ENERGY_EVSE = "energy_evse"
     SOLAR_PV = "solar_pv"
     BATTERY_STORAGE = "battery_storage"
+    MCB = "mcb"
 
 
 class DeviceStatus(str, enum.Enum):
@@ -664,6 +665,15 @@ class HomePowerHistory(Base):
     base_load_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     ev_charger_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     ev_charger_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    
+    # Battery Power Mapping
+    solar_generation_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    battery_charge_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    battery_discharge_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    battery_soc_percent: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    ev_discharge_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    grid_import_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    grid_export_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
 
     created_at: Mapped[datetime] = mapped_column(

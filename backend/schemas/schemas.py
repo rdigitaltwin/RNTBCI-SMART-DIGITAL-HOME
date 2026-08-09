@@ -388,6 +388,16 @@ class HomePowerHistoryResponse(BaseModel):
     induction_cooktop_kvar: float = Field(0.0)
     base_load_kw: float = Field(0.0)
     base_load_kvar: float = Field(0.0)
+    ev_charger_kw: float = Field(0.0)
+    ev_charger_kvar: float = Field(0.0)
+    
+    solar_generation_kw: float = Field(0.0)
+    battery_charge_kw: float = Field(0.0)
+    battery_discharge_kw: float = Field(0.0)
+    battery_soc_percent: float = Field(0.0)
+    ev_discharge_kw: float = Field(0.0)
+    grid_import_kw: float = Field(0.0)
+    grid_export_kw: float = Field(0.0)
 
     created_at: datetime
 

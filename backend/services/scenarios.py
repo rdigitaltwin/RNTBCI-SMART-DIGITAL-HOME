@@ -139,6 +139,38 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "set_mode", "params": {"target_temperature": 22, "fan_speed": "low"}},
         ],
     },
+    "normal": {
+        "name": "Normal",
+        "description": "Standard household operation",
+        "icon": "home",
+        "trigger": "manual",
+        "rules": [
+            {"device_type": "energy_evse", "rooms": ["*"], "action": "set_mode", "params": {"mode": "cc_charging"}},
+            {"device_type": "battery_storage", "rooms": ["*"], "action": "set_mode", "params": {"mode": "auto"}},
+        ],
+    },
+    "solar_priority": {
+        "name": "Solar Priority",
+        "description": "Maximize solar self-consumption, limit grid draw",
+        "icon": "sun",
+        "trigger": "manual",
+        "rules": [
+            {"device_type": "energy_evse", "rooms": ["*"], "action": "set_mode", "params": {"mode": "solar_charge"}},
+            {"device_type": "battery_storage", "rooms": ["*"], "action": "set_mode", "params": {"mode": "charge_from_solar"}},
+            {"device_type": "hvac", "rooms": ["*"], "action": "set_mode", "params": {"mode": "eco"}},
+        ],
+    },
+    "backup": {
+        "name": "Backup",
+        "description": "Discharge EV and Battery to power the home during outages",
+        "icon": "battery-charging",
+        "trigger": "manual",
+        "rules": [
+            {"device_type": "energy_evse", "rooms": ["*"], "action": "set_mode", "params": {"mode": "backup"}},
+            {"device_type": "battery_storage", "rooms": ["*"], "action": "set_mode", "params": {"mode": "backup"}},
+            {"device_type": "hvac", "rooms": ["*"], "action": "set_mode", "params": {"mode": "eco"}},
+        ],
+    },
 }
 
 
