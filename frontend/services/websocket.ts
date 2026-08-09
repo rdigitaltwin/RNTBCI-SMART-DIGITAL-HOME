@@ -144,6 +144,27 @@ class WebSocketClient {
 
       if (deviceId && deviceData) {
         useDeviceStore.getState().updateDevice(deviceId, deviceData as Partial<import('@/store').Device>);
+        
+        // Sync with local energy engine
+        if (deviceData.power_state) {
+            import('@/store/energyEngine').then(({ useEnergyStore }) => {
+                const energyStore = useEnergyStore.getState();
+                const energyDevice = Object.values(energyStore.devices).find(e => {
+                    const dName = ((deviceData as any).name || '').toLowerCase();
+                    if (!dName) return false;
+                    const eName = e.name.toLowerCase();
+                    if (dName === eName || dName.includes(eName) || eName.includes(dName)) return true;
+                    if (e.id === 'living_light_1' && dName.includes('living room main light')) return true;
+                    if (e.id === 'air_conditioner' && dName.includes('living room ac')) return true;
+                    if (e.id === 'bedroom_light' && dName.includes('master bedroom light')) return true;
+                    return false;
+                });
+                
+                if (energyDevice && energyDevice.powerState !== deviceData.power_state) {
+                    energyStore.toggleDevice(energyDevice.id, true);
+                }
+            });
+        }
       }
     }
 
