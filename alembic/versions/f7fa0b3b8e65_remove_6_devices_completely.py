@@ -24,13 +24,8 @@ def upgrade() -> None:
     # we need to delete by name explicitly if the type has already been mutated,
     # or by their original types just in case the previous migration wasn't run.
     op.execute(
-        "DELETE FROM devices WHERE name IN ("
-        "'Nebuliser', 'Nebulizer', 'WiFi Router', 'Router', "
-        "'LED TV', 'Smart TV', 'Smart TV 65\"', 'Garage Light', 'Garage Door', 'Induction Cooktop'"
-        ") OR type IN ("
-        "'NEBULIZER', 'nebulizer', 'ROUTER', 'router', 'SMART_TV', 'smart_tv', "
-        "'COOKING', 'cooking', 'GARAGE_DOOR', 'garage_door', 'GARAGE_LIGHT', 'garage_light', 'INDUCTION', 'induction'"
-        ")"
+        "DELETE FROM devices WHERE name IN ('Nebuliser', 'Nebulizer', 'WiFi Router', 'Router', 'LED TV', 'Smart TV', 'Smart TV 65\"', 'Garage Light', 'Garage Door', 'Induction Cooktop') "
+        "OR type::varchar IN ('NEBULIZER', 'nebulizer', 'ROUTER', 'router', 'SMART_TV', 'smart_tv', 'COOKING', 'cooking', 'GARAGE_DOOR', 'garage_door', 'GARAGE_LIGHT', 'garage_light', 'INDUCTION', 'induction')"
     )
 
 def downgrade() -> None:

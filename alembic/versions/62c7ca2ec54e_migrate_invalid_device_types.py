@@ -23,7 +23,7 @@ def upgrade() -> None:
     # The database string used for Enum is its property name, e.g. 'SMART_PLUG'.
     op.execute(
         "UPDATE devices SET type = 'SMART_PLUG' "
-        "WHERE type IN ('COOKING', 'cooking', 'SMART_TV', 'smart_tv', 'ROUTER', 'router')"
+        "WHERE type::varchar IN ('COOKING', 'cooking', 'SMART_TV', 'smart_tv', 'ROUTER', 'router')"
     )
 
 
