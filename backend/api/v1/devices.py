@@ -1,7 +1,7 @@
 """RNTBCI Smart Home Digital Twin - Device API Routes."""
 
-from __future__ import annotations
 import logging
+from typing import Optional
 import uuid
 import os
 import json
@@ -89,10 +89,10 @@ def _device_to_response(device: Device) -> DeviceResponse:
 @limiter.limit("100/minute")
 async def list_devices(
     request: Request,
-    room_id: uuid.UUID | None = Query(None),
-    device_type: str | None = Query(None),
-    status_filter: str | None = Query(None, alias="status"),
-    search: str | None = Query(None),
+    room_id: Optional[uuid.UUID] = Query(None),
+    device_type: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
@@ -1063,7 +1063,7 @@ async def public_get_device_data(
         )
 
 
-def _find_device_file(identifier: str) -> str | None:
+def _find_device_file(identifier: str) -> Optional[str]:
     """Find a device JSON file by its device_id or device_name (e.g. Bathroom_Light)."""
     logs_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../data"))
     if not os.path.isdir(logs_dir):
@@ -1337,7 +1337,7 @@ async def get_device_energy(
 async def get_device_events(
     request: Request,
     device_id: uuid.UUID,
-    severity: str | None = Query(None),
+    severity: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
@@ -1516,7 +1516,7 @@ async def disable_evse_charging(
     device_id: str,
     endpoint: int,
     cluster: str,
-    payload: EVSECommandRequest = Body(...),
+    payload: EVSECommandRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Disable EVSE charging via Matter command."""
@@ -1544,7 +1544,7 @@ async def enable_evse_charging(
     device_id: str,
     endpoint: int,
     cluster: str,
-    payload: EVSECommandRequest = Body(...),
+    payload: EVSECommandRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Enable EVSE charging via Matter command."""
@@ -1572,7 +1572,7 @@ async def set_evse_targets(
     device_id: str,
     endpoint: int,
     cluster: str,
-    payload: EVSESetTargetsRequest = Body(...),
+    payload: EVSESetTargetsRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Set EVSE charging targets via Matter command."""
@@ -1615,7 +1615,7 @@ async def clear_evse_targets(
     device_id: str,
     endpoint: int,
     cluster: str,
-    payload: EVSECommandRequest = Body(...),
+    payload: EVSECommandRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Clear EVSE charging targets."""
