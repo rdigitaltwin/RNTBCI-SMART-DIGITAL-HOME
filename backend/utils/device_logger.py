@@ -408,20 +408,21 @@ class DeviceLogger:
 
     # ── Dispatcher ───────────────────────────────────────────────────────
 
-    _SCHEMA_BUILDERS = {
-        "light":      _schema_light.__func__,
-        "camera":     _schema_camera.__func__,
-        "dishwasher": _schema_dishwasher.__func__,
-        "doorlock":   _schema_doorlock.__func__,
-        "heatpump":   _schema_heatpump.__func__,
-        "switch":     _schema_switch.__func__,
+    _SCHEMA_BUILDER_MAP: dict[str, str] = {
+        "light":      "_schema_light",
+        "camera":     "_schema_camera",
+        "dishwasher": "_schema_dishwasher",
+        "doorlock":   "_schema_doorlock",
+        "heatpump":   "_schema_heatpump",
+        "switch":     "_schema_switch",
     }
 
     @classmethod
     def _get_matter_schema(cls, device_name: str, device_id: str) -> dict:
         """Returns the correct Matter-style JSON schema for a device based on its name."""
         dtype = cls._resolve_device_type(device_name)
-        builder = cls._SCHEMA_BUILDERS.get(dtype, cls._SCHEMA_BUILDERS["light"])
+        method_name = cls._SCHEMA_BUILDER_MAP.get(dtype, "_schema_light")
+        builder = getattr(cls, method_name)
         return builder(device_name, device_id)
 
     @classmethod

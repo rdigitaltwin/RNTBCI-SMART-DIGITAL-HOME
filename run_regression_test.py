@@ -69,6 +69,7 @@ async def run_regression():
         logger.info("Turning ON EVSE...")
         async with async_session_factory() as db:
             evse_db = await db.get(Device, evse.id)
+            assert evse_db is not None, "EVSE device not found in DB"
             evse_db.power_state = PowerState.ON
             await db.commit()
             
@@ -78,6 +79,7 @@ async def run_regression():
         logger.info("Turning ON HVAC...")
         async with async_session_factory() as db:
             hvac_db = await db.get(Device, hvac.id)
+            assert hvac_db is not None, "HVAC device not found in DB"
             hvac_db.power_state = PowerState.ON
             await db.commit()
             
@@ -89,6 +91,8 @@ async def run_regression():
         async with async_session_factory() as db:
             evse_final = await db.get(Device, evse.id)
             hvac_final = await db.get(Device, hvac.id)
+            assert evse_final is not None, "EVSE device not found in DB for validation"
+            assert hvac_final is not None, "HVAC device not found in DB for validation"
             
             logger.info(f"Final EVSE State: {evse_final.power_state}, Power: {evse_final.energy_usage_kw} kW")
             logger.info(f"Final HVAC State: {hvac_final.power_state}, Power: {hvac_final.energy_usage_kw} kW")

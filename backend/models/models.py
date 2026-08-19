@@ -72,6 +72,8 @@ class DeviceType(str, enum.Enum):
     SOLAR_PV = "solar_pv"
     BATTERY_STORAGE = "battery_storage"
     MCB = "mcb"
+    NEBULIZER = "nebulizer"
+    GARAGE_DOOR = "garage_door"
 
 
 class DeviceStatus(str, enum.Enum):

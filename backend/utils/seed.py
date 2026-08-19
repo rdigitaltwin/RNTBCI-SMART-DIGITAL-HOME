@@ -326,7 +326,7 @@ async def _seed_energy_history(db: AsyncSession, devices: list[Device]) -> None:
                             power = 0.001
                         else:
                             power = base_power * (0.5 + 0.5 * time_factor)
-                    elif dtype == DeviceType.SMART_TV:
+                    elif dtype == DeviceType.SMART_SWITCH:
                         # Evening usage
                         if 18 <= hour <= 23:
                             power = base_power * weekend_factor

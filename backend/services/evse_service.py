@@ -39,7 +39,7 @@ class EVSEService:
         return None
 
     @staticmethod
-    async def get_evse_device(identifier: str) -> dict:
+    async def get_evse_device(identifier: str) -> dict | None:
         file_path = EVSEService._find_evse_file(identifier)
         if not file_path:
             return None
