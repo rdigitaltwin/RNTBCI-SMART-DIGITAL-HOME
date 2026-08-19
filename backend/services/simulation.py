@@ -413,14 +413,11 @@ class SimulationEngine:
             "dishwasher": 2,
             "washing_machine": 3,
             "water_heater": 4,
-            "cooking": 5,
-            "smart_tv": 6,
             "nebulizer": 7,
             "smart_light": 8,
             "hvac": 9,              # HVAC is high priority (comfort)
             "refrigerator": 10,     # Fridge is critical
             "camera": 10,
-            "router": 10,
             "base_load": 99,        # Never shed
             "door_lock": 99,
             "garage_door": 99,
@@ -693,8 +690,14 @@ class SimulationEngine:
                 wide_kwargs: dict[str, float] = {}
 
                 for device in devices:
-                    device_type = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
-                    power_state = device.power_state if isinstance(device.power_state, PowerState) else PowerState(device.power_state)
+                    try:
+                        device_type = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
+                        power_state = device.power_state if isinstance(device.power_state, PowerState) else PowerState(device.power_state)
+                    except ValueError as e:
+                        # Skip device on Enum mapping error to prevent simulation crash
+                        logger.error(f"Enum mismatch skipping device {device.id} ({device.name}): {e}")
+                        continue
+                        
                     device_id = str(device.id)
                     device_type_str = device_type.value
 
