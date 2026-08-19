@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Download, Search, Filter, FileDown } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
@@ -24,13 +24,7 @@ export default function AppliancePowerDashboard() {
   const [hoveredDevice, setHoveredDevice] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch devices list for id→name mapping
       const devicesRes = await api.getDevices() as any;
@@ -84,7 +78,13 @@ export default function AppliancePowerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeDevices.size]);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const toggleDevice = (device: string) => {
     setActiveDevices(prev => {

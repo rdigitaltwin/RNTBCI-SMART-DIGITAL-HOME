@@ -4,7 +4,7 @@
  * Central API client for all backend communication.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface RequestOptions {
