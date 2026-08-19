@@ -58,19 +58,26 @@ class EVSEService:
         metadata.update(updates)
         device.extra_data = metadata
         
-        state = DeviceState(
-            device_id=device.id,
-            state_json=metadata,
-        )
-        db.add(state)
-        await db.commit()
+        try:
+            state = DeviceState(
+                device_id=device.id,
+                state_json=metadata,
+            )
+            db.add(state)
+            await db.commit()
+        except Exception as e:
+            logger.warning(f"EVSE DB commit failed (non-fatal): {e}")
+            await db.rollback()
         
-        from backend.api.v1.devices import _device_to_response
-        device_resp = _device_to_response(device)
-        await redis_client.publish_device_update(str(device.id), {
-            "action": "device.updated",
-            "device": device_resp.model_dump(mode="json"),
-        })
+        try:
+            from backend.api.v1.devices import _device_to_response
+            device_resp = _device_to_response(device)
+            await redis_client.publish_device_update(str(device.id), {
+                "action": "device.updated",
+                "device": device_resp.model_dump(mode="json"),
+            })
+        except Exception as e:
+            logger.warning(f"EVSE Redis publish failed (non-fatal): {e}")
         return device
 
     @staticmethod
