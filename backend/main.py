@@ -45,16 +45,12 @@ async def lifespan(app: FastAPI):
     """Application lifecycle manager."""
     logger.info("Starting RNTBCI Smart Home Digital Twin v%s", settings.app_version)
 
-    import asyncio
-
-    # Start database initialization and seeding in the background 
-    # so the application can start even if the database is temporarily offline
-    async def startup_db_tasks():
-        db_ready = await init_db()
-        if not db_ready:
-            logger.warning("Database unavailable.")
-
-    asyncio.create_task(startup_db_tasks())
+    # Connect to the Database
+    # This intentionally blocks startup until the database is ready or max retries are hit.
+    db_ready = await init_db()
+    if not db_ready:
+        logger.error("Failed to initialize database. Aborting startup to prevent cascaded failures.")
+        raise RuntimeError("Database unavailable")
 
     # Connect Redis (Redis client handles its own offline states usually)
     try:

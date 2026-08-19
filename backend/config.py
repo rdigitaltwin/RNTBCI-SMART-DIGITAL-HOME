@@ -23,10 +23,17 @@ def _resolve_jwt_secret() -> str:
 
     logging.warning(
         "JWT_SECRET_KEY not found in environment or jwt_secret.txt. "
-        "Generating ephemeral secret. This instance will be isolated - "
-        "tokens will NOT be valid across restarts or multiple instances."
+        "Generating and saving a new secret to jwt_secret.txt. "
+        "For production, set JWT_SECRET_KEY in your environment."
     )
-    return secrets.token_hex(32)
+    new_secret = secrets.token_hex(32)
+    try:
+        with open(secret_file, "w") as f:
+            f.write(new_secret)
+    except IOError:
+        logging.warning("Could not write to jwt_secret.txt. Generating ephemeral secret.")
+        
+    return new_secret
 
 
 class Settings(BaseSettings):
