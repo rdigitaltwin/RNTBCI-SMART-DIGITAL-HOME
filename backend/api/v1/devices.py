@@ -1017,7 +1017,6 @@ async def public_get_device_data(
     - Living_Room_AC
     - Front_Door_Lock
     - Dishwasher
-    - Nebulizer
 
     Returns the complete device type definition and communication history.
     """
@@ -1400,9 +1399,6 @@ def _get_default_state(device_type: DeviceType) -> dict:
             "auto_lock": True,
             "auto_lock_delay": 30,
         },
-        DeviceType.GARAGE_DOOR: {
-            "position": "closed",
-        },
         DeviceType.HVAC: {
             "temperature": 22.0,
             "target_temperature": 22.0,
@@ -1428,26 +1424,10 @@ def _get_default_state(device_type: DeviceType) -> dict:
             "temperature": 45.0,
             "target_temperature": 50.0,
         },
-        DeviceType.NEBULIZER: {
-            "intensity": 50,
-            "duration": 0,
-            "running": False,
-        },
-        DeviceType.ROUTER: {
-            "upload_speed": 50.0,
-            "download_speed": 100.0,
-            "internet_status": "connected",
-            "connected_clients": 0,
-        },
         DeviceType.CAMERA: {
             "recording": False,
             "motion_detection": True,
             "night_vision": True,
-        },
-        DeviceType.SMART_TV: {
-            "volume": 30,
-            "channel": 1,
-            "input_source": "hdmi1",
         },
     }
     return defaults.get(device_type, {})

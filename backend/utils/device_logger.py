@@ -20,12 +20,7 @@ class DeviceLogger:
         "Dishwasher":  "dishwasher",
         "Washing":     "dishwasher",
         "Lock":        "doorlock",
-        "Garage":      "garagedoor",
-        "AC":          "heatpump",
         "Heater":      "heatpump",
-        "Nebulizer":   "nebulizer",
-        "Router":      "router",
-        "WiFi":        "router",
         "Switch":      "switch",
     }
 
@@ -294,76 +289,6 @@ class DeviceLogger:
         }
 
     @staticmethod
-    def _schema_garagedoor(device_name: str, device_id: str) -> dict:
-        """GarageDoor – Matter 0x0601."""
-        return {
-            "deviceType": {
-                "id": "0x0601",
-                "name": "GarageDoor",
-                "device_name": device_name,
-                "device_id": device_id,
-                "revision": 1,
-                "classification": {"class": "simple", "scope": "endpoint"},
-                "endpoints": [{
-                    "endpointId": 1,
-                    "deviceType": "GarageDoor",
-                    "clusters": [
-                        {
-                            "clusterId": "0x2000",
-                            "name": "DoorControl",
-                            "side": "server",
-                            "mandatory": True,
-                            "attributes": [
-                                {"name": "DoorState", "type": "enum"},
-                                {"name": "Position", "type": "percent"},
-                                {"name": "LockState", "type": "enum"}
-                            ],
-                            "commands": [
-                                {"name": "OpenDoor"},
-                                {"name": "CloseDoor"},
-                                {"name": "StopDoor"},
-                                {"name": "SetPosition"},
-                                {"name": "LockDoor"},
-                                {"name": "UnlockDoor"}
-                            ]
-                        },
-                        {
-                            "clusterId": "0x2001",
-                            "name": "SafetySensors",
-                            "side": "server",
-                            "mandatory": True,
-                            "attributes": [
-                                {"name": "ObstructionDetected", "type": "bool"},
-                                {"name": "SafetyBeamStatus", "type": "enum"}
-                            ]
-                        },
-                        {
-                            "clusterId": "0x2002",
-                            "name": "UsageAlerts",
-                            "side": "server",
-                            "mandatory": False,
-                            "attributes": [
-                                {"name": "OpenCount", "type": "uint32"},
-                                {"name": "LastOperationTime", "type": "timestamp"}
-                            ]
-                        },
-                        {
-                            "clusterId": "0x2003",
-                            "name": "Connectivity",
-                            "side": "server",
-                            "mandatory": False,
-                            "attributes": [
-                                {"name": "OnlineStatus", "type": "enum"},
-                                {"name": "SignalStrength", "type": "int"}
-                            ]
-                        }
-                    ]
-                }]
-            },
-            "communication_history": []
-        }
-
-    @staticmethod
     def _schema_heatpump(device_name: str, device_id: str) -> dict:
         """HeatPump – Matter 0x0309.  Used for AC and water heater devices."""
         return {
@@ -422,118 +347,6 @@ class DeviceLogger:
                             ]
                         }
                     ]
-                }]
-            },
-            "communication_history": []
-        }
-
-    @staticmethod
-    def _schema_nebulizer(device_name: str, device_id: str) -> dict:
-        """Nebulizer – Matter 0x0701."""
-        return {
-            "deviceType": {
-                "id": "0x0701",
-                "name": "Nebulizer",
-                "device_name": device_name,
-                "device_id": device_id,
-                "revision": 1,
-                "classification": {"class": "simple", "scope": "endpoint"},
-                "endpoints": [{
-                    "endpointId": 1,
-                    "deviceType": "Nebulizer",
-                    "clusters": [
-                        {
-                            "clusterId": "0x1000",
-                            "name": "NebulizerControl",
-                            "side": "server",
-                            "mandatory": True,
-                            "attributes": [
-                                {"name": "PowerState", "type": "enum"},
-                                {"name": "CurrentSessionTime", "type": "uint32"},
-                                {"name": "TotalUsageTime", "type": "uint32"},
-                                {"name": "MistLevel", "type": "enum"}
-                            ],
-                            "commands": [
-                                {"name": "StartSession"},
-                                {"name": "PauseSession"},
-                                {"name": "StopSession"},
-                                {"name": "SetMistLevel"}
-                            ]
-                        },
-                        {
-                            "clusterId": "0x1001",
-                            "name": "MedicationMonitoring",
-                            "side": "server",
-                            "mandatory": True,
-                            "attributes": [
-                                {"name": "MedicationLevel", "type": "percent"},
-                                {"name": "MedicationStatus", "type": "enum"}
-                            ]
-                        },
-                        {
-                            "clusterId": "0x1002",
-                            "name": "HealthSessionData",
-                            "side": "server",
-                            "mandatory": False,
-                            "attributes": [
-                                {"name": "LastSessionDuration", "type": "uint32"},
-                                {"name": "SessionsToday", "type": "uint8"}
-                            ]
-                        },
-                        {
-                            "clusterId": "0x1003",
-                            "name": "DeviceSafety",
-                            "side": "server",
-                            "mandatory": True,
-                            "attributes": [
-                                {"name": "TemperatureStatus", "type": "enum"},
-                                {"name": "MaskAttached", "type": "bool"},
-                                {"name": "DeviceError", "type": "enum"}
-                            ]
-                        }
-                    ]
-                }]
-            },
-            "communication_history": []
-        }
-
-    @staticmethod
-    def _schema_router(device_name: str, device_id: str) -> dict:
-        """WiFiNetworkManager – Matter 0x0090."""
-        return {
-            "deviceType": {
-                "id": "0x0090",
-                "name": "WiFiNetworkManager",
-                "device_name": device_name,
-                "device_id": device_id,
-                "revision": 2,
-                "classification": {"class": "simple", "scope": "endpoint"},
-                "endpoints": [{
-                    "endpointId": 1,
-                    "deviceType": "WiFiNetworkManager",
-                    "clusters": [{
-                        "clusterId": "0x0451",
-                        "name": "WiFiNetworkManagement",
-                        "side": "server",
-                        "mandatory": True,
-                        "attributes": [
-                            {"attributeId": "0x0000", "name": "SSID", "type": "string"},
-                            {"attributeId": "0x0001", "name": "ConnectionStatus", "type": "enum",
-                             "values": ["Disconnected", "Connecting", "Connected", "Error"]},
-                            {"attributeId": "0x0002", "name": "SignalStrength", "type": "int", "unit": "dBm"}
-                        ],
-                        "commands": [
-                            {"commandId": "0x00", "name": "ConnectNetwork"},
-                            {"commandId": "0x01", "name": "DisconnectNetwork"},
-                            {"commandId": "0x03", "name": "ScanNetworks"}
-                        ],
-                        "events": [
-                            {"name": "Connected"},
-                            {"name": "Disconnected"},
-                            {"name": "ConnectionFailed"},
-                            {"name": "SignalWeak"}
-                        ]
-                    }]
                 }]
             },
             "communication_history": []
@@ -600,10 +413,7 @@ class DeviceLogger:
         "camera":     _schema_camera.__func__,
         "dishwasher": _schema_dishwasher.__func__,
         "doorlock":   _schema_doorlock.__func__,
-        "garagedoor": _schema_garagedoor.__func__,
         "heatpump":   _schema_heatpump.__func__,
-        "nebulizer":  _schema_nebulizer.__func__,
-        "router":     _schema_router.__func__,
         "switch":     _schema_switch.__func__,
     }
 

@@ -24,8 +24,6 @@ logger = logging.getLogger(__name__)
 # Device priority for load shedding (lower = shed first)
 DEVICE_PRIORITY = {
     DeviceType.SMART_LIGHT: 3,
-    DeviceType.SMART_TV: 2,
-    DeviceType.NEBULIZER: 2,
     DeviceType.SMART_PLUG: 3,
     DeviceType.WASHING_MACHINE: 4,
     DeviceType.DISHWASHER: 4,
@@ -33,9 +31,7 @@ DEVICE_PRIORITY = {
     DeviceType.HVAC: 7,
     DeviceType.REFRIGERATOR: 9,
     DeviceType.CAMERA: 8,
-    DeviceType.ROUTER: 10,
     DeviceType.DOOR_LOCK: 10,
-    DeviceType.GARAGE_DOOR: 6,
     DeviceType.SMART_SWITCH: 5,
 }
 

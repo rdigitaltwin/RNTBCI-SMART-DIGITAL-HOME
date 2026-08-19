@@ -61,17 +61,12 @@ class DeviceType(str, enum.Enum):
     SMART_SWITCH = "smart_switch"
     SMART_PLUG = "smart_plug"
     DOOR_LOCK = "door_lock"
-    GARAGE_DOOR = "garage_door"
     HVAC = "hvac"
     WASHING_MACHINE = "washing_machine"
     DISHWASHER = "dishwasher"
     REFRIGERATOR = "refrigerator"
     WATER_HEATER = "water_heater"
-    NEBULIZER = "nebulizer"
-    ROUTER = "router"
     CAMERA = "camera"
-    SMART_TV = "smart_tv"
-    COOKING = "cooking"
     BASE_LOAD = "base_load"
     ENERGY_EVSE = "energy_evse"
     SOLAR_PV = "solar_pv"
@@ -621,8 +616,6 @@ class HomePowerHistory(Base):
     living_room_main_light_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_ac_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_ac_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    smart_tv_65_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    smart_tv_65_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_switch_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     living_room_switch_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     kitchen_light_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
@@ -641,12 +634,6 @@ class HomePowerHistory(Base):
     bathroom_light_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     water_heater_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     water_heater_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    nebulizer_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    nebulizer_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    garage_door_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    garage_door_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    garage_light_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    garage_light_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     security_camera_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     security_camera_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     washing_machine_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
@@ -657,12 +644,8 @@ class HomePowerHistory(Base):
     utility_light_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     hallway_light_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     hallway_light_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    wifi_router_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    wifi_router_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     front_door_lock_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     front_door_lock_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    induction_cooktop_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    induction_cooktop_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     base_load_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     base_load_kvar: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     ev_charger_kw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)

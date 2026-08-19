@@ -95,12 +95,7 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
         "wash": {"kw": 0.80, "kvar": 0.387, "pf": 0.90, "noise_pct": 0.06},
         "dry": {"kw": 1.20, "kvar": 0.581, "pf": 0.90, "noise_pct": 0.06},
     },
-    "cooking": {
-        "idle": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "low": {"kw": 0.50, "kvar": 0.164, "pf": 0.95, "noise_pct": 0.08},
-        "medium": {"kw": 1.50, "kvar": 0.493, "pf": 0.95, "noise_pct": 0.06},
-        "high": {"kw": 3.00, "kvar": 0.986, "pf": 0.95, "noise_pct": 0.05},
-    },
+
     # Generic profiles for other devices (single-mode when ON)
     "smart_switch": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
@@ -114,35 +109,19 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "locked": {"kw": 0.002, "kvar": 0.0005, "pf": 0.97, "noise_pct": 0.15},
     },
-    "garage_door": {
-        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "standby": {"kw": 0.003, "kvar": 0.001, "pf": 0.95, "noise_pct": 0.10},
-    },
+
     "water_heater": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "heating": {"kw": 3.00, "kvar": 0.30, "pf": 0.99, "noise_pct": 0.04},
         "maintaining": {"kw": 0.80, "kvar": 0.10, "pf": 0.99, "noise_pct": 0.08},
     },
-    "nebulizer": {
-        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "low": {"kw": 0.025, "kvar": 0.008, "pf": 0.95, "noise_pct": 0.10},
-        "medium": {"kw": 0.040, "kvar": 0.013, "pf": 0.95, "noise_pct": 0.10},
-        "high": {"kw": 0.055, "kvar": 0.018, "pf": 0.95, "noise_pct": 0.10},
-    },
-    "router": {
-        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "active": {"kw": 0.012, "kvar": 0.004, "pf": 0.95, "noise_pct": 0.12},
-    },
+
     "camera": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "recording": {"kw": 0.015, "kvar": 0.005, "pf": 0.95, "noise_pct": 0.10},
         "night_vision": {"kw": 0.018, "kvar": 0.006, "pf": 0.95, "noise_pct": 0.10},
     },
-    "smart_tv": {
-        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "on": {"kw": 0.120, "kvar": 0.040, "pf": 0.95, "noise_pct": 0.08},
-        "standby": {"kw": 0.001, "kvar": 0.0003, "pf": 0.95, "noise_pct": 0.15},
-    },
+
     "energy_evse": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "charging": {"kw": 7.2, "kvar": 0.72, "pf": 0.99, "noise_pct": 0.02},
@@ -175,16 +154,11 @@ DEFAULT_ON_MODE: dict[str, str] = {
     "hvac": "cool",
     "washing_machine": "wash",
     "dishwasher": "wash",
-    "cooking": "medium",
     "smart_switch": "on",
     "smart_plug": "on",
     "door_lock": "locked",
-    "garage_door": "standby",
     "water_heater": "heating",
-    "nebulizer": "medium",
-    "router": "active",
     "camera": "recording",
-    "smart_tv": "on",
     "energy_evse": "charging",
     "solar_pv": "generating",
     "battery_storage": "idle",
@@ -1204,14 +1178,6 @@ class SimulationEngine:
             metadata["door_state"] = "closed"
             metadata["cooling_status"] = "active" if sim_state in ("compressor", "cooling") else "standby"
 
-        elif device_type == DeviceType.ROUTER:
-            base_down = 80 + 20 * math.sin(hour * math.pi / 12)
-            metadata["download_speed"] = round(base_down + random.gauss(0, 10), 1)
-            metadata["upload_speed"] = round(base_down * 0.4 + random.gauss(0, 5), 1)
-            metadata["connected_clients"] = random.randint(3, 15)
-            metadata["signal_quality"] = round(85 + random.gauss(0, 5), 0)
-            metadata["packet_loss"] = round(max(0, random.gauss(0.5, 0.3)), 2)
-            metadata["internet_status"] = "connected"
 
         elif device_type == DeviceType.WATER_HEATER:
             target = metadata.get("target_temperature", 50.0)
@@ -1236,8 +1202,6 @@ class SimulationEngine:
             metadata["motion_detected"] = random.random() < 0.03
             metadata["night_vision"] = hour < 6 or hour >= 20
 
-        elif device_type == DeviceType.SMART_TV:
-            metadata["volume"] = max(0, min(100, metadata.get("volume", 30) + random.randint(-1, 1)))
 
         elif device_type == DeviceType.WASHING_MACHINE:
             sim_state = metadata.get("sim_state", "idle")
@@ -1247,10 +1211,6 @@ class SimulationEngine:
                 metadata["spin_speed"] = 1200 if sim_state == "spin" else 0
                 metadata["wash_mode"] = "normal"
 
-        elif device_type == DeviceType.NEBULIZER:
-            intensity = metadata.get("intensity", 50)
-            metadata["intensity"] = intensity
-            metadata["mist_level"] = round(intensity * 0.8 + random.gauss(0, 3), 0)
 
         return metadata
 
@@ -1273,14 +1233,7 @@ class SimulationEngine:
                 ("auto_locked", EventSeverity.INFO, f"{device.name}: auto-locked after timeout"),
                 ("tamper_alert", EventSeverity.CRITICAL, f"{device.name}: tamper attempt detected"),
             ],
-            DeviceType.GARAGE_DOOR: [
-                ("open_timeout", EventSeverity.WARNING, f"{device.name}: open longer than 30 minutes"),
-            ],
-            DeviceType.ROUTER: [
-                ("bandwidth_spike", EventSeverity.WARNING, f"{device.name}: unusual bandwidth usage detected"),
-                ("new_connection", EventSeverity.INFO, f"{device.name}: new device connected"),
-                ("speed_degradation", EventSeverity.WARNING, f"{device.name}: internet speed below threshold"),
-            ],
+
             DeviceType.CAMERA: [
                 ("motion_detected", EventSeverity.INFO, f"{device.name}: motion detected"),
                 ("recording_started", EventSeverity.INFO, f"{device.name}: recording started"),

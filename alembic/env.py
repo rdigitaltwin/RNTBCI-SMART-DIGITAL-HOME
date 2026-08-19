@@ -28,7 +28,7 @@ target_metadata = Base.metadata
 
 def get_url():
     # Use the connection string from backend settings
-    return str(settings.DATABASE_URL)
+    return str(settings.database_url)
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

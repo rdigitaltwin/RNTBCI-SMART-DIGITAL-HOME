@@ -216,8 +216,6 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"brightness": 85, "rgb": {"r": 255, "g": 240, "b": 220}, "color_temperature": 4000}, 1.0, 2.8, 1.0),
         ("Living Room AC", DeviceType.HVAC, "living_room", PowerState.OFF, 2.1,
          {"temperature": 23.5, "target_temperature": 22, "mode": "cooling", "fan_speed": "medium"}, 0.5, 2.5, 0.0),
-        ("Smart TV 65\"", DeviceType.SMART_TV, "living_room", PowerState.OFF, 0.12,
-         {"volume": 35, "channel": 1, "input_source": "hdmi1"}, 3.0, 0.1, 1.2),
         ("Living Room Switch", DeviceType.SMART_SWITCH, "living_room", PowerState.OFF, 0.001,
          {"state": "on"}, 0.0, 1.2, 5.0),
 
@@ -242,14 +240,8 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 5000}, 6.5, 2.8, 6.5),
         ("Water Heater", DeviceType.WATER_HEATER, "bathroom", PowerState.OFF, 1.2,
          {"temperature": 48, "target_temperature": 50}, 7.5, 0.5, 5.5),
-        ("Nebulizer", DeviceType.NEBULIZER, "bathroom", PowerState.OFF, 0.0,
-         {"intensity": 50, "duration": 0, "running": False}, 6.0, 1.0, 7.0),
 
         # Garage
-        ("Garage Door", DeviceType.GARAGE_DOOR, "garage", PowerState.OFF, 0.005,
-         {"position": "closed"}, -5.5, 0.0, 2.5),
-        ("Garage Light", DeviceType.SMART_LIGHT, "garage", PowerState.OFF, 0.0,
-         {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 6000}, -5.5, 2.8, 0.0),
         ("Security Camera", DeviceType.CAMERA, "garage", PowerState.OFF, 0.015,
          {"recording": True, "motion_detection": True, "night_vision": False}, -3.0, 2.5, 0.0),
         ("EV Charger", DeviceType.ENERGY_EVSE, "garage", PowerState.OFF, 0.0,
@@ -272,14 +264,8 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
         # Hallway
         ("Hallway Light", DeviceType.SMART_LIGHT, "hallway", PowerState.OFF, 0.008,
          {"brightness": 40, "rgb": {"r": 200, "g": 200, "b": 255}, "color_temperature": 4000}, 3.0, 2.8, 4.0),
-        ("WiFi Router", DeviceType.ROUTER, "hallway", PowerState.OFF, 0.012,
-         {"upload_speed": 45, "download_speed": 95, "internet_status": "connected", "connected_clients": 8}, 3.5, 2.0, 2.5),
         ("Front Door Lock", DeviceType.DOOR_LOCK, "hallway", PowerState.OFF, 0.003,
          {"lock_state": "locked", "auto_lock": True, "auto_lock_delay": 60}, 3.0, 1.0, 0.0),
-
-        # Kitchen — Cooking appliance
-        ("Induction Cooktop", DeviceType.COOKING, "kitchen", PowerState.OFF, 0.0,
-         {"mode": "off", "burner": 1}, 8.0, 1.0, 1.0),
     ]
 
     for name, dtype, room_key, pstate, energy, meta, px, py, pz in device_configs:
@@ -415,23 +401,15 @@ async def _seed_home_power_history(db: AsyncSession, devices: list[Device]) -> N
                     elif dtype == DeviceType.SMART_LIGHT:
                         is_active = hour >= 18 or hour < 6
                         mode = "normal" if is_active else "off"
-                    elif dtype == DeviceType.SMART_TV:
-                        is_active = 18 <= hour <= 23 and random.random() < 0.7
                     elif dtype == DeviceType.WASHING_MACHINE:
                         is_active = hour in (9, 10, 11) and random.random() < 0.3
                         mode = random.choice(["wash", "rinse", "spin"])
                     elif dtype == DeviceType.DISHWASHER:
                         is_active = hour in (20, 21) and random.random() < 0.4
                         mode = random.choice(["wash", "dry"])
-                    elif dtype == DeviceType.COOKING:
-                        is_active = hour in (7, 8, 12, 13, 18, 19) and random.random() < 0.5
-                        mode = random.choice(["low", "medium", "high"])
                     elif dtype == DeviceType.WATER_HEATER:
                         is_active = hour in (6, 7, 18, 19) and random.random() < 0.3
                         mode = "heating"
-                    elif dtype == DeviceType.ROUTER:
-                        is_active = True  # Always on
-                        mode = "active"
                     elif dtype == DeviceType.CAMERA:
                         is_active = True  # Always on
                         mode = "recording"
@@ -494,24 +472,15 @@ async def _seed_device_power_history(db: AsyncSession, devices: list[Device]) ->
                     elif dtype == DeviceType.SMART_LIGHT:
                         is_active = hour >= 18 or hour < 6
                         mode = "normal" if is_active else "off"
-                    elif dtype == DeviceType.SMART_TV:
-                        is_active = 18 <= hour <= 23 and random.random() < 0.7
-                        mode = "on" if is_active else "off"
                     elif dtype == DeviceType.WASHING_MACHINE:
                         is_active = hour in (9, 10, 11) and random.random() < 0.3
                         mode = random.choice(["wash", "rinse", "spin"]) if is_active else "idle"
                     elif dtype == DeviceType.DISHWASHER:
                         is_active = hour in (20, 21) and random.random() < 0.4
                         mode = random.choice(["wash", "dry"]) if is_active else "idle"
-                    elif dtype == DeviceType.COOKING:
-                        is_active = hour in (7, 8, 12, 13, 18, 19) and random.random() < 0.5
-                        mode = random.choice(["low", "medium", "high"]) if is_active else "idle"
                     elif dtype == DeviceType.WATER_HEATER:
                         is_active = hour in (6, 7, 18, 19) and random.random() < 0.3
                         mode = "heating" if is_active else "off"
-                    elif dtype == DeviceType.ROUTER:
-                        is_active = True
-                        mode = "active"
                     elif dtype == DeviceType.CAMERA:
                         is_active = True
                         mode = "recording"
