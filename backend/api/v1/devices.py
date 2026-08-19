@@ -9,7 +9,7 @@ import csv
 import io
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status, BackgroundTasks, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import func, select
@@ -1516,18 +1516,18 @@ async def disable_evse_charging(
     device_id: str,
     endpoint: int,
     cluster: str,
-    body: EVSECommandRequest,
+    payload: EVSECommandRequest = Body(...),
     db: AsyncSession = Depends(get_db),
 ):
     """Disable EVSE charging via Matter command."""
-    if body.command != "Disable":
+    if payload.command != "Disable":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'Disable'.")
 
     await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
     return {
         "status": "success",
-        "commandId": body.commandId,
-        "command": body.command,
+        "commandId": payload.commandId,
+        "command": payload.command,
         "cluster": cluster,
         "endpoint": endpoint,
         "response": {
@@ -1544,18 +1544,18 @@ async def enable_evse_charging(
     device_id: str,
     endpoint: int,
     cluster: str,
-    body: EVSECommandRequest,
+    payload: EVSECommandRequest = Body(...),
     db: AsyncSession = Depends(get_db),
 ):
     """Enable EVSE charging via Matter command."""
-    if body.command != "EnableCharging":
+    if payload.command != "EnableCharging":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'EnableCharging'.")
 
     await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
     return {
         "status": "success",
-        "commandId": body.commandId,
-        "command": body.command,
+        "commandId": payload.commandId,
+        "command": payload.command,
         "cluster": cluster,
         "endpoint": endpoint,
         "response": {
@@ -1572,21 +1572,21 @@ async def set_evse_targets(
     device_id: str,
     endpoint: int,
     cluster: str,
-    body: EVSESetTargetsRequest,
+    payload: EVSESetTargetsRequest = Body(...),
     db: AsyncSession = Depends(get_db),
 ):
     """Set EVSE charging targets via Matter command."""
-    if body.command != "SetTargets":
+    if payload.command != "SetTargets":
         raise HTTPException(status_code=400, detail="Invalid command")
 
-    await evse_service.update_evse_state(device_id, {"chargingTargetSchedules": body.chargingTargetSchedules}, db)
+    await evse_service.update_evse_state(device_id, {"chargingTargetSchedules": payload.chargingTargetSchedules}, db)
     return {
         "status": "success",
-        "commandId": body.commandId,
-        "command": body.command,
+        "commandId": payload.commandId,
+        "command": payload.command,
         "cluster": cluster,
         "endpoint": endpoint,
-        "chargingTargetSchedules": body.chargingTargetSchedules
+        "chargingTargetSchedules": payload.chargingTargetSchedules
     }
 
 
@@ -1600,10 +1600,11 @@ async def get_evse_targets(
     db: AsyncSession = Depends(get_db),
 ):
     """Get EVSE charging targets."""
-    # The spec strictly requires only these two fields in the response
+    state = await evse_service.get_current_state(device_id, db)
     return {
         "commandId": "0x06",
-        "command": "GetTargets"
+        "command": "GetTargets",
+        "chargingTargetSchedules": state.get("chargingTargetSchedules", [])
     }
 
 
@@ -1614,11 +1615,11 @@ async def clear_evse_targets(
     device_id: str,
     endpoint: int,
     cluster: str,
-    body: EVSECommandRequest,
+    payload: EVSECommandRequest = Body(...),
     db: AsyncSession = Depends(get_db),
 ):
     """Clear EVSE charging targets."""
-    if body.command != "ClearTargets":
+    if payload.command != "ClearTargets":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'ClearTargets'.")
 
     await evse_service.update_evse_state(device_id, {"chargingTargetSchedules": []}, db)
@@ -1702,20 +1703,90 @@ async def identify_evse(
     device_id: str,
     endpoint: int,
     cluster: str,
-    body: dict,
+    payload: dict = Body(...),
     db: AsyncSession = Depends(get_db),
 ):
     """Trigger identify effect on EVSE."""
-    if body.get("name") != "TriggerEffect":
+    if payload.get("name") != "TriggerEffect":
         raise HTTPException(status_code=400, detail="Invalid identify effect")
 
     await evse_service.update_evse_state(device_id, {"IdentifyTriggered": True}, db)
     return {"id": "0x0040", "name": "TriggerEffect"}
 
 
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/setactivepower")
+@limiter.limit("60/minute")
+async def set_evse_active_power(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    payload: dict = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EVSE active power measurement (milliwatts)."""
+    active_power = payload.get("ActivePower")
+    if active_power is None:
+        raise HTTPException(status_code=400, detail="Missing 'ActivePower' in body")
+    await evse_service.update_evse_state(device_id, {"ActivePower": active_power}, db)
+    return {
+        "status": "success",
+        "cluster": cluster,
+        "endpoint": endpoint,
+        "ActivePower": active_power
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/setvoltage")
+@limiter.limit("60/minute")
+async def set_evse_voltage(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    payload: dict = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EVSE voltage measurement (millivolts)."""
+    voltage = payload.get("Voltage")
+    if voltage is None:
+        raise HTTPException(status_code=400, detail="Missing 'Voltage' in body")
+    await evse_service.update_evse_state(device_id, {"Voltage": voltage}, db)
+    return {
+        "status": "success",
+        "cluster": cluster,
+        "endpoint": endpoint,
+        "Voltage": voltage
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/setactivecurrent")
+@limiter.limit("60/minute")
+async def set_evse_active_current(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    payload: dict = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EVSE active current measurement (milliamps)."""
+    active_current = payload.get("ActiveCurrent")
+    if active_current is None:
+        raise HTTPException(status_code=400, detail="Missing 'ActiveCurrent' in body")
+    await evse_service.update_evse_state(device_id, {"ActiveCurrent": active_current}, db)
+    return {
+        "status": "success",
+        "cluster": cluster,
+        "endpoint": endpoint,
+        "ActiveCurrent": active_current
+    }
+
+
 # =============================================================================
 # SOLAR MATTER SUPPORT
 # =============================================================================
+
 
 @router.get("/{device_id}/solar/endpoint/{endpoint}")
 @limiter.limit("60/minute")
