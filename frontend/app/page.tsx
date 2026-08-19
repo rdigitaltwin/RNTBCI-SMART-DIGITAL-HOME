@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps, react-hooks/immutability */
 'use client';
 
 /**
@@ -7,10 +8,10 @@
  * walls form → devices glow → camera orbits → text fades in → CTA button
  */
 
-import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
+import { useEffect, useRef, useState, useCallback, Suspense, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Stars, Float, Text3D, Center } from '@react-three/drei';
+import { Stars, Float } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
@@ -33,19 +34,19 @@ function CanvasCleanup() {
 
 function ParticleField({ count = 2000 }: { count?: number }) {
   const points = useRef<THREE.Points>(null);
-  const positions = useRef(new Float32Array(count * 3));
-  const velocities = useRef(new Float32Array(count * 3));
+  const positions = useMemo(() => new Float32Array(count * 3), [count]);
+  const velocities = useMemo(() => new Float32Array(count * 3), [count]);
 
   useEffect(() => {
     for (let i = 0; i < count; i++) {
-      positions.current[i * 3] = (Math.random() - 0.5) * 40;
-      positions.current[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      positions.current[i * 3 + 2] = (Math.random() - 0.5) * 40;
-      velocities.current[i * 3] = (Math.random() - 0.5) * 0.002;
-      velocities.current[i * 3 + 1] = (Math.random() - 0.5) * 0.002;
-      velocities.current[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
+      positions[i * 3] = (Math.random() - 0.5) * 40;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+      velocities[i * 3] = (Math.random() - 0.5) * 0.002;
+      velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.002;
+      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
     }
-  }, [count]);
+  }, [count, positions, velocities]);
 
   useFrame(() => {
     if (!points.current) return;
@@ -54,11 +55,11 @@ function ParticleField({ count = 2000 }: { count?: number }) {
     for (let i = 0; i < count; i++) {
       for (let j = 0; j < 3; j++) {
         const idx = i * 3 + j;
-        positions.current[idx] += velocities.current[idx];
-        if (Math.abs(positions.current[idx]) > 20) velocities.current[idx] *= -1;
+        positions[idx] += velocities[idx];
+        if (Math.abs(positions[idx]) > 20) velocities[idx] *= -1;
       }
     }
-    (pos.array as Float32Array).set(positions.current);
+    (pos.array as Float32Array).set(positions);
     pos.needsUpdate = true;
   });
 
@@ -67,7 +68,7 @@ function ParticleField({ count = 2000 }: { count?: number }) {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          args={[positions.current, 3]}
+          args={[positions, 3]}
         />
       </bufferGeometry>
       <pointsMaterial size={0.03} color="#00E5FF" transparent opacity={0.6} sizeAttenuation />
@@ -184,7 +185,6 @@ function HolographicHouse({ progress }: { progress: number }) {
 // =============================================================================
 
 function CameraAnimator({ progress }: { progress: number }) {
-  const { camera } = useThree();
   const timeRef = useRef(0);
 
   useFrame((state, delta) => {
@@ -193,10 +193,10 @@ function CameraAnimator({ progress }: { progress: number }) {
     const radius = 8 - progress * 2;
     const height = 4 + Math.sin(t * 0.3) * 0.5;
 
-    camera.position.x = Math.sin(t * 0.15) * radius;
-    camera.position.z = Math.cos(t * 0.15) * radius;
-    camera.position.y = height;
-    camera.lookAt(0, 0.5, 1);
+    state.camera.position.x = Math.sin(t * 0.15) * radius;
+    state.camera.position.z = Math.cos(t * 0.15) * radius;
+    state.camera.position.y = height;
+    state.camera.lookAt(0, 0.5, 1);
   });
 
   return null;

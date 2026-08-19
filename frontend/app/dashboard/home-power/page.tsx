@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Download, Activity, Zap, Clock, FileDown } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
@@ -19,14 +20,7 @@ export default function HomePowerDashboard() {
   const maxKw = data.length > 0 ? Math.max(...data.map(d => d.total_home_power_consumption_kw)) : 0;
   const avgKw = data.length > 0 ? data.reduce((sum, d) => sum + d.total_home_power_consumption_kw, 0) / data.length : 0;
 
-  useEffect(() => {
-    fetchData();
-    // Poll every 15 seconds
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
-  }, [timeRange]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const targetCount = { '15m': 60, '1h': 240, '6h': 1440, '24h': 5760 }[timeRange] || 60;
       let allRecords: any[] = [];
@@ -66,7 +60,14 @@ export default function HomePowerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]);
+
+  useEffect(() => {
+    fetchData();
+    // Poll every 15 seconds
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const downloadCsv = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/home-power/download/csv`;
