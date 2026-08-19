@@ -7,8 +7,10 @@ All 12 database tables for the platform:
 - Alerts, AuditLogs, Notifications, WebSocketSessions (Operations)
 """
 
+from __future__ import annotations
 import enum
 import uuid
+from typing import Optional
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -211,7 +213,7 @@ class User(Base):
         UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_login: Mapped[datetime | None] = mapped_column(
+    last_login: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -377,7 +379,7 @@ class Device(Base):
     energy_usage_kw: Mapped[float] = mapped_column(Float, default=0.0)
     total_energy_kwh: Mapped[float] = mapped_column(Float, default=0.0)
     efficiency_percent: Mapped[float] = mapped_column(Float, default=100.0)
-    turned_on_at: Mapped[datetime | None] = mapped_column(
+    turned_on_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
@@ -507,7 +509,7 @@ class Alert(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=new_uuid
     )
-    device_id: Mapped[uuid.UUID | None] = mapped_column(
+    device_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("devices.id", ondelete="SET NULL"), nullable=True
     )
     type: Mapped[str] = mapped_column(Enum(AlertType), nullable=False)
@@ -516,7 +518,7 @@ class Alert(Base):
     )
     message: Mapped[str] = mapped_column(Text, nullable=False)
     acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
-    acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(
+    acknowledged_by: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
     extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
@@ -525,7 +527,7 @@ class Alert(Base):
     )
 
     # Relationships
-    device: Mapped["Device | None"] = relationship("Device", back_populates="alerts")
+    device: Mapped[Optional["Device"]] = relationship("Device", back_populates="alerts")
 
 
 class AuditLog(Base):
@@ -536,7 +538,7 @@ class AuditLog(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=new_uuid
     )
-    user_id: Mapped[uuid.UUID | None] = mapped_column(
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     action: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -548,7 +550,7 @@ class AuditLog(Base):
     )
 
     # Relationships
-    user: Mapped["User | None"] = relationship("User", back_populates="audit_logs")
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_logs")
 
 
 class Notification(Base):

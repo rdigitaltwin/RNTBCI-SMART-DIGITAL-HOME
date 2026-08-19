@@ -12,6 +12,7 @@ Key features:
 - Noise injection for realistic fluctuations
 """
 
+from __future__ import annotations
 import asyncio
 import logging
 import math

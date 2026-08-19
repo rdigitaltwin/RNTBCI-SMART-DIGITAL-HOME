@@ -3,6 +3,7 @@
 Covers: Simulation control, Scenarios, HEMS, Metrics, Time Travel, Controller Hub.
 """
 
+from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone

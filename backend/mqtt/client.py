@@ -3,6 +3,7 @@
 Bridges MQTT messages with the Redis PubSub system.
 """
 
+from __future__ import annotations
 import asyncio
 import json
 import logging

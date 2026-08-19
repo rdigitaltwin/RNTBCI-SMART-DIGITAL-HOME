@@ -3,6 +3,7 @@
 Endpoints for querying and exporting total home power consumption time-series.
 """
 
+from __future__ import annotations
 import csv
 import io
 import logging

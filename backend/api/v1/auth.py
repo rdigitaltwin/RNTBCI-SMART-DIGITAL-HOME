@@ -4,7 +4,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -201,11 +201,11 @@ async def refresh_token(
     return TokenResponse(**tokens)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
 async def logout(
     request: Request,
     current_user: User = Depends(get_current_user),
-) -> None:
+):
     """Logout and invalidate the current token."""
     # Extract token from header to blacklist
     auth_header = request.headers.get("Authorization", "")

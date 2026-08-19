@@ -4,6 +4,7 @@ Manages predefined and custom automation scenarios like Morning Routine,
 Night Routine, Vacation Mode, Emergency Mode, etc.
 """
 
+from __future__ import annotations
 import asyncio
 import logging
 import uuid

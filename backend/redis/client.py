@@ -3,6 +3,7 @@
 Handles Redis connections, PubSub, and token blacklist management.
 """
 
+from __future__ import annotations
 import json
 import logging
 from datetime import timedelta

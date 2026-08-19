@@ -4,6 +4,7 @@ Central integration layer routing all device commands through adapters.
 Supports Alexa, Google Home, HomeAssistant, HEMS, MQTT, and REST adapters.
 """
 
+from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone

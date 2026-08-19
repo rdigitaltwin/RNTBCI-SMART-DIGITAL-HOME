@@ -1,5 +1,6 @@
 """RNTBCI Smart Home Digital Twin - Device API Routes."""
 
+from __future__ import annotations
 import logging
 import uuid
 import os
@@ -294,14 +295,14 @@ async def update_device(
     return device_resp
 
 
-@router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
 @limiter.limit("10/minute")
 async def delete_device(
     request: Request,
     device_id: uuid.UUID,
     current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
-) -> None:
+):
     """Delete a device (Admin only)."""
     result = await db.execute(select(Device).where(Device.id == device_id))
     device = result.scalar_one_or_none()

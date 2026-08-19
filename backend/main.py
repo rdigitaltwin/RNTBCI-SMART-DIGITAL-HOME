@@ -1,5 +1,6 @@
 """RNTBCI Smart Home Digital Twin - FastAPI Application Entry Point."""
 
+from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 

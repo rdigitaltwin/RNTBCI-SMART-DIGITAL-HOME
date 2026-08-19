@@ -3,6 +3,7 @@
 Request/response validation schemas for all API endpoints.
 """
 
+from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum

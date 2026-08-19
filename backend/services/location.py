@@ -3,6 +3,7 @@
 Geofencing, ETA prediction, and location-triggered home automation.
 """
 
+from __future__ import annotations
 import asyncio
 import logging
 import math

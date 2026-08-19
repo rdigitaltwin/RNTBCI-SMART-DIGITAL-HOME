@@ -4,6 +4,7 @@ Endpoints for querying and exporting per-device power consumption time-series.
 Table schema: device_id | timestamp (IST) | total_power_consumption_kw
 """
 
+from __future__ import annotations
 import csv
 import io
 import logging

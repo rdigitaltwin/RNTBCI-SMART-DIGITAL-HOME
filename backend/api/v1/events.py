@@ -1,5 +1,6 @@
 """RNTBCI Smart Home Digital Twin - Events & Alerts API Routes."""
 
+from __future__ import annotations
 import csv
 import io
 import logging
