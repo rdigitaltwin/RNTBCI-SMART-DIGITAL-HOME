@@ -36,15 +36,15 @@ export default function EventsPage() {
         const demoEvents: DeviceEvent[] = Array.from({ length: 30 }, (_, i) => ({
           id: String(i),
           device_id: '',
-          device_name: ['Living Room AC', 'Refrigerator', 'WiFi Router', 'Door Lock', 'Security Camera'][i % 5],
-          event_type: ['state_change', 'temperature_reached', 'motion_detected', 'filter_check', 'power_toggle'][i % 5],
-          severity: ['info', 'info', 'warning', 'info', 'warning'][i % 5],
+          device_name: ['Living Room AC', 'Refrigerator', 'Smart Switch', 'Door Lock', 'Security Camera'][i % 5],
+          event_type: ['state_change', 'temperature_reached', 'power_toggle', 'filter_check', 'motion_detected'][i % 5],
+          severity: ['info', 'info', 'info', 'info', 'warning'][i % 5],
           message: [
             'Target temperature reached',
             'Compressor cycle completed',
-            'Unusual bandwidth spike detected',
+            'Turned on remotely',
             'Auto-locked after timeout',
-            'Motion detected in garage',
+            'Motion detected in driveway',
           ][i % 5],
           timestamp: new Date(Date.now() - i * 120000).toISOString(),
         }));

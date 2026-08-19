@@ -101,14 +101,6 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "on": {"kw": 0.0015, "kvar": 0.0005, "pf": 0.95, "noise_pct": 0.10},
     },
-    "router": {
-        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "on": {"kw": 0.015, "kvar": 0.005, "pf": 0.95, "noise_pct": 0.05},
-    },
-    "cooking": {
-        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
-        "on": {"kw": 2.0, "kvar": 0.2, "pf": 0.99, "noise_pct": 0.10},
-    },
     "smart_plug": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
         "on": {"kw": 0.80, "kvar": 0.30, "pf": 0.94, "noise_pct": 0.10},
@@ -170,8 +162,6 @@ DEFAULT_ON_MODE: dict[str, str] = {
     "energy_evse": "charging",
     "solar_pv": "generating",
     "battery_storage": "idle",
-    "router": "on",
-    "cooking": "on",
 }
 
 # Auto-cycling devices: mode sequence and duration ranges (seconds)
@@ -423,14 +413,12 @@ class SimulationEngine:
             "dishwasher": 2,
             "washing_machine": 3,
             "water_heater": 4,
-            "nebulizer": 7,
             "smart_light": 8,
             "hvac": 9,              # HVAC is high priority (comfort)
             "refrigerator": 10,     # Fridge is critical
             "camera": 10,
             "base_load": 99,        # Never shed
             "door_lock": 99,
-            "garage_door": 99,
             "solar_pv": 99,         # Never shed generation
             "battery_storage": 99,
         }

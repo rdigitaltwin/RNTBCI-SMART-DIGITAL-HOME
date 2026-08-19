@@ -37,8 +37,7 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "power_on", "params": {"brightness": 80, "color_temperature": 5000}},
             {"device_type": "hvac", "rooms": ["*"],
              "action": "set_mode", "params": {"mode": "cooling", "target_temperature": 23, "fan_speed": "auto"}},
-            {"device_type": "smart_tv", "rooms": ["kitchen"],
-             "action": "power_on", "params": {"channel": 1, "volume": 20}},
+
             {"device_type": "water_heater", "rooms": ["*"],
              "action": "set_temperature", "params": {"target_temperature": 55}},
             {"device_type": "camera", "rooms": ["*"],
@@ -58,12 +57,10 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "power_on", "params": {"brightness": 10, "rgb": {"r": 255, "g": 150, "b": 50}}},
             {"device_type": "door_lock", "rooms": ["*"],
              "action": "lock", "params": {"auto_lock": True}},
-            {"device_type": "garage_door", "rooms": ["*"],
-             "action": "close", "params": {}},
+
             {"device_type": "hvac", "rooms": ["master_bedroom"],
              "action": "set_mode", "params": {"mode": "cooling", "target_temperature": 21, "fan_speed": "low"}},
-            {"device_type": "smart_tv", "rooms": ["*"],
-             "action": "power_off", "params": {}},
+
             {"device_type": "camera", "rooms": ["*"],
              "action": "set_mode", "params": {"recording": True, "night_vision": True}},
         ],
@@ -78,14 +75,12 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "random_toggle", "params": {"interval_min": 1800, "interval_max": 7200}},
             {"device_type": "door_lock", "rooms": ["*"],
              "action": "lock", "params": {"auto_lock": True}},
-            {"device_type": "garage_door", "rooms": ["*"],
-             "action": "close", "params": {}},
+
             {"device_type": "camera", "rooms": ["*"],
              "action": "set_mode", "params": {"recording": True, "motion_detection": True}},
             {"device_type": "hvac", "rooms": ["*"],
              "action": "set_mode", "params": {"mode": "cooling", "target_temperature": 28, "fan_speed": "low"}},
-            {"device_type": "smart_tv", "rooms": ["*"],
-             "action": "power_off", "params": {}},
+
             {"device_type": "water_heater", "rooms": ["*"],
              "action": "power_off", "params": {}},
         ],
@@ -100,12 +95,10 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "power_on", "params": {"brightness": 100, "rgb": {"r": 255, "g": 0, "b": 0}}},
             {"device_type": "door_lock", "rooms": ["*"],
              "action": "unlock", "params": {}},
-            {"device_type": "garage_door", "rooms": ["*"],
-             "action": "open", "params": {}},
+
             {"device_type": "camera", "rooms": ["*"],
              "action": "set_mode", "params": {"recording": True, "motion_detection": True}},
-            {"device_type": "smart_tv", "rooms": ["*"],
-             "action": "power_on", "params": {"volume": 80}},
+
         ],
     },
     "energy_saver": {
@@ -120,8 +113,7 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "set_mode", "params": {"mode": "fan_only", "fan_speed": "low"}},
             {"device_type": "water_heater", "rooms": ["*"],
              "action": "set_temperature", "params": {"target_temperature": 40}},
-            {"device_type": "smart_tv", "rooms": ["*"],
-             "action": "power_off", "params": {}},
+
         ],
     },
     "movie_night": {
@@ -134,8 +126,7 @@ BUILT_IN_SCENARIOS: dict[str, dict[str, Any]] = {
              "action": "power_on", "params": {"brightness": 10, "rgb": {"r": 30, "g": 0, "b": 80}}},
             {"device_type": "smart_light", "rooms": ["kitchen", "hallway", "master_bedroom", "bathroom"],
              "action": "power_off", "params": {}},
-            {"device_type": "smart_tv", "rooms": ["living_room"],
-             "action": "power_on", "params": {"volume": 45, "input_source": "hdmi1"}},
+
             {"device_type": "hvac", "rooms": ["living_room"],
              "action": "set_mode", "params": {"target_temperature": 22, "fan_speed": "low"}},
         ],

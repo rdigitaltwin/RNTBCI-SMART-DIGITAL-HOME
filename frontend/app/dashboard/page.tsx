@@ -242,9 +242,9 @@ function QuickDeviceList() {
   }
 
   const typeIcons: Record<string, string> = {
-    hvac: '❄️', refrigerator: '🧊', smart_tv: '📺', router: '📡',
+    hvac: '❄️', refrigerator: '🧊',
     door_lock: '🔒', washing_machine: '🧺', dishwasher: '🍽️', smart_light: '💡',
-    camera: '📷', water_heater: '🔥', nebulizer: '💨', garage_door: '🚗',
+    camera: '📷', water_heater: '🔥',
     smart_switch: '🔌', smart_plug: '🔌', energy_evse: '🚗⚡',
   };
 

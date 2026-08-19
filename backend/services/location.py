@@ -94,13 +94,10 @@ ARRIVAL_RULES: list[dict[str, Any]] = [
         "trigger": "arrival",
         "eta_threshold": 0.5,
         "actions": [
-            {"device_type": "garage_door", "command": "open", "params": {}},
             {"device_type": "door_lock", "command": "unlock", "params": {}},
             {"device_type": "camera", "command": "set_mode", "params": {"recording": True}},
-            {"device_type": "smart_tv", "rooms": ["living_room"],
-             "command": "power_on", "params": {"volume": 20}},
         ],
-        "description": "Open garage, unlock door, activate cameras, start media",
+        "description": "Unlock door, activate cameras",
     },
 ]
 
@@ -109,7 +106,6 @@ DEPARTURE_RULES: list[dict[str, Any]] = [
         "trigger": "departure",
         "actions": [
             {"device_type": "door_lock", "command": "lock", "params": {"auto_lock": True}},
-            {"device_type": "garage_door", "command": "close", "params": {}},
             {"device_type": "smart_light", "rooms": ["*"], "command": "power_off", "params": {}},
             {"device_type": "hvac", "command": "set_mode", "params": {"mode": "eco", "target_temperature": 28}},
             {"device_type": "camera", "command": "set_mode", "params": {"recording": True, "motion_detection": True}},

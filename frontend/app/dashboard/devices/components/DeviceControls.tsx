@@ -48,20 +48,6 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
     </div>
   );
 
-  const renderTVControls = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-        <button onClick={() => handleControl('volume_down')} style={{ padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: 'none', color: '#FFF' }}>Vol -</button>
-        <button onClick={() => handleControl('mute')} style={{ padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: 'none', color: '#FFF' }}>Mute</button>
-        <button onClick={() => handleControl('volume_up')} style={{ padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: 'none', color: '#FFF' }}>Vol +</button>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-        <button onClick={() => handleControl('launch_app', { app: 'netflix' })} style={{ padding: '8px', background: '#E5091420', color: '#E50914', borderRadius: '8px', border: 'none' }}>Netflix</button>
-        <button onClick={() => handleControl('launch_app', { app: 'youtube' })} style={{ padding: '8px', background: '#FF000020', color: '#FF0000', borderRadius: '8px', border: 'none' }}>YouTube</button>
-      </div>
-    </div>
-  );
-
   const renderLightControls = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -91,15 +77,7 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
     </div>
   );
 
-  const renderRouterControls = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-       <button 
-        onClick={() => handleControl('reboot')}
-        style={{ padding: '12px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer' }}
-      >Restart Router</button>
-    </div>
-  );
-  
+
   const renderWashingMachineControls = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
        <button onClick={() => handleControl('start')} style={{ padding: '8px', background: '#10B98120', color: '#10B981', borderRadius: '8px', border: 'none' }}>Start</button>
@@ -111,13 +89,11 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
   return (
     <div style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s', pointerEvents: loading ? 'none' : 'auto' }}>
       {device.type === 'hvac' && renderACControls()}
-      {device.type === 'smart_tv' && renderTVControls()}
       {device.type === 'smart_light' && renderLightControls()}
       {device.type === 'door_lock' && renderDoorLockControls()}
-      {device.type === 'router' && renderRouterControls()}
       {device.type === 'washing_machine' && renderWashingMachineControls()}
       {/* Fallback for others if needed */}
-      {!['hvac', 'smart_tv', 'smart_light', 'door_lock', 'router', 'washing_machine'].includes(device.type) && (
+      {!['hvac', 'smart_light', 'door_lock', 'washing_machine'].includes(device.type) && (
         <div style={{ fontSize: '13px', color: '#94A3B8', textAlign: 'center', padding: '16px' }}>
           Specific controls for {device.type} are not available.
         </div>
