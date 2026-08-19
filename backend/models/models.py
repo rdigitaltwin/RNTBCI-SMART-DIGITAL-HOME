@@ -74,6 +74,8 @@ class DeviceType(str, enum.Enum):
     MCB = "mcb"
     NEBULIZER = "nebulizer"
     GARAGE_DOOR = "garage_door"
+    ROUTER = "router"
+    COOKING = "cooking"
 
 
 class DeviceStatus(str, enum.Enum):

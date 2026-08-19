@@ -26,45 +26,22 @@ import { StatCard } from '@/components/ui/DashboardCards';
 
 function EnergyChart() {
   const devices = useDeviceStore((s) => s.devices);
-  const totalPower = useMemo(() => {
-    return devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0);
-  }, [devices]);
-
-  const powerRef = useRef(totalPower);
-
-  useEffect(() => {
-    powerRef.current = totalPower;
-  }, [totalPower]);
-
+  const metrics = useSimulationStore((s) => s.metrics);
   const [data, setData] = useState<Array<{ time: string; power: number }>>([]);
 
   useEffect(() => {
-    // Generate initial data
-    const now = Date.now();
-    const initial = Array.from({ length: 30 }, (_, i) => ({
-      time: new Date(now - (29 - i) * 60000).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-      power: powerRef.current,
-    }));
-    setData(initial);
-
-    const interval = setInterval(() => {
-      setData((prev) => {
-        const lastPower = powerRef.current;
-        // Minor visual noise if >0, otherwise strictly 0
-        const noise = lastPower > 0 ? (Math.random() - 0.5) * 0.1 : 0;
-        const newPower = Math.max(0, lastPower + noise);
-        return [
-          ...prev.slice(1),
-          {
-            time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-            power: parseFloat(newPower.toFixed(2)),
-          },
-        ];
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+    const totalPower = (metrics?.total_power_w || 0) / 1000;
+    setData((prev) => {
+      const newData = [
+        ...prev,
+        {
+          time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          power: parseFloat(totalPower.toFixed(2)),
+        },
+      ];
+      return newData.length > 30 ? newData.slice(newData.length - 30) : newData;
+    });
+  }, [metrics?.total_power_w]);
 
   return (
     <div className="glass-card" style={{ padding: '20px', height: '100%' }}>
@@ -186,15 +163,18 @@ function RoomEnergyBreakdown() {
     });
 
     if (result.length === 0) {
-      return [
-        { name: 'Living', energy: 2200 }, { name: 'Kitchen', energy: 1800 },
-        { name: 'Bedroom', energy: 1500 }, { name: 'Utility', energy: 900 },
-        { name: 'Garage', energy: 400 }, { name: 'Bathroom', energy: 1200 },
-        { name: 'Hallway', energy: 200 },
-      ];
+      return [];
     }
     return result;
   }, [rooms, devices]);
+
+  if (roomData.length === 0) {
+    return (
+      <div className="glass-card" style={{ padding: '20px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#64748B', fontSize: '13px' }}>No room data available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card" style={{ padding: '20px', height: '100%' }}>
@@ -240,23 +220,6 @@ function QuickDeviceList() {
     // Optimistic UI update
     useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
     
-    // Sync with local energy engine simulator so 3D model and Energy Command stay in sync
-    const energyStore = useEnergyStore.getState();
-    const energyDevice = Object.values(energyStore.devices).find(e => {
-      const dName = device.name.toLowerCase();
-      const eName = e.name.toLowerCase();
-      if (dName === eName || dName.includes(eName) || eName.includes(dName)) return true;
-      if (e.id === 'living_light_1' && dName.includes('living room main light')) return true;
-      if (e.id === 'air_conditioner' && dName.includes('living room ac')) return true;
-      if (e.id === 'bedroom_light' && dName.includes('master bedroom light')) return true;
-      return false;
-    });
-    
-    if (energyDevice && energyDevice.powerState !== newState) {
-      // Pass skipBackendSync=true to avoid double API calls
-      energyStore.toggleDevice(energyDevice.id, true);
-    }
-    
     try {
       const updatedDevice = await api.togglePower(device.id, newState) as Partial<Device>;
       useDeviceStore.getState().updateDevice(device.id, updatedDevice);
@@ -267,14 +230,15 @@ function QuickDeviceList() {
     setTogglingId(null);
   };
 
-  const displayDevices = devices.length > 0 ? devices.slice(0, 6) : [
-    { id: '1', name: 'Living Room AC', type: 'hvac', status: 'online', power_state: 'on', energy_usage_kw: 2.1 },
-    { id: '2', name: 'Refrigerator', type: 'refrigerator', status: 'online', power_state: 'on', energy_usage_kw: 0.08 },
-    { id: '3', name: 'Smart TV 65"', type: 'smart_tv', status: 'online', power_state: 'on', energy_usage_kw: 0.12 },
-    { id: '4', name: 'WiFi Router', type: 'router', status: 'online', power_state: 'on', energy_usage_kw: 0.012 },
-    { id: '5', name: 'Front Door Lock', type: 'door_lock', status: 'online', power_state: 'on', energy_usage_kw: 0.003 },
-    { id: '6', name: 'Washing Machine', type: 'washing_machine', status: 'offline', power_state: 'off', energy_usage_kw: 0 },
-  ] as Array<{ id: string; name: string; type: string; status: string; power_state: string; energy_usage_kw: number }>;
+  const displayDevices = devices.slice(0, 6);
+
+  if (displayDevices.length === 0) {
+    return (
+      <div className="glass-card" style={{ padding: '20px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#64748B', fontSize: '13px' }}>No devices found.</p>
+      </div>
+    );
+  }
 
   const typeIcons: Record<string, string> = {
     hvac: '❄️', refrigerator: '🧊', smart_tv: '📺', router: '📡',
