@@ -226,6 +226,8 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"temperature": 3.8, "door_state": "closed", "cooling_status": "active"}, 9.5, 0.3, 0.0),
         ("Dishwasher", DeviceType.DISHWASHER, "kitchen", PowerState.OFF, 0.0,
          {"wash_mode": "normal", "cycle": "idle"}, 8.0, 0.3, 0.0),
+        ("Microwave Oven", DeviceType.MICROWAVE, "kitchen", PowerState.OFF, 0.0,
+         {"power_level": 100, "timer_seconds": 0, "mode": "standby"}, 7.0, 1.0, 0.5),
 
         # Master Bedroom
         ("Bedroom Light", DeviceType.SMART_LIGHT, "master_bedroom", PowerState.OFF, 0.0,

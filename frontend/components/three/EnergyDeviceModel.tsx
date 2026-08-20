@@ -474,7 +474,7 @@ function EnergyDeviceModelComponent({ device, isSelected, onClick }: EnergyDevic
   const isOn = device.powerState === 'on';
   const color = DEVICE_COLORS[device.type] || '#00E5FF';
   const statusColor = DEVICE_STATUS_COLORS[device.status];
-  const pos = DEVICE_POSITIONS[device.id] || [0, 0.15, 0];
+  const pos = DEVICE_POSITIONS[device.applianceId] || [0, 0.15, 0];
 
   // Animate
   useFrame((_, delta) => {

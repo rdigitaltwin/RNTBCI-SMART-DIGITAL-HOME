@@ -215,20 +215,8 @@ export default function DevicesPage() {
   const types = ['all', ...Object.keys(DEVICE_TYPE_CONFIG)];
   const statuses = ['all', 'online', 'offline', 'warning', 'faulty'];
 
-  // Fallback devices if API not connected
-  const displayDevices = filteredDevices.length > 0 ? filteredDevices : [
-    { id: '00000000-0000-0000-0000-000000000001', name: 'Living Room AC', type: 'hvac', status: 'online', power_state: 'on', energy_usage_kw: 2.1, efficiency_percent: 94, metadata: { temperature: 23.5, target_temperature: 22, mode: 'cooling', fan_speed: 'medium' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000002', name: 'Refrigerator', type: 'refrigerator', status: 'online', power_state: 'on', energy_usage_kw: 0.08, efficiency_percent: 91, metadata: { temperature: 3.8, cooling_status: 'active', door_state: 'closed' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000005', name: 'Front Door Lock', type: 'door_lock', status: 'online', power_state: 'on', energy_usage_kw: 0.003, efficiency_percent: 99, metadata: { lock_state: 'locked', auto_lock: true }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000006', name: 'Washing Machine', type: 'washing_machine', status: 'online', power_state: 'off', energy_usage_kw: 0, efficiency_percent: 85, metadata: { running: false }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000007', name: 'Kitchen Light', type: 'smart_light', status: 'online', power_state: 'on', energy_usage_kw: 0.015, efficiency_percent: 95, metadata: { brightness: 100, color_temperature: 5500 }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000008', name: 'Water Heater', type: 'water_heater', status: 'online', power_state: 'on', energy_usage_kw: 1.2, efficiency_percent: 82, metadata: { temperature: 48, target_temperature: 50 }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000009', name: 'Security Camera', type: 'camera', status: 'online', power_state: 'on', energy_usage_kw: 0.015, efficiency_percent: 96, metadata: { recording: true, night_vision: false, motion_detection: true }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000011', name: 'EV Charger', type: 'energy_evse', status: 'online', power_state: 'on', energy_usage_kw: 7.2, efficiency_percent: 98, metadata: { matter_device_type: '0x050C', state: 'Charging' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000012', name: 'Solar Array', type: 'solar_panel', status: 'online', power_state: 'on', energy_usage_kw: -8.0, efficiency_percent: 100, metadata: { matter_device_type: '0x050D' }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000013', name: 'Home Battery', type: 'battery_storage', status: 'online', power_state: 'on', energy_usage_kw: -2.0, efficiency_percent: 95, metadata: { matter_device_type: '0x050E', soc: 85 }, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-    { id: '00000000-0000-0000-0000-000000000014', name: 'Main Circuit Breaker', type: 'mcb', status: 'online', power_state: 'on', energy_usage_kw: 0, efficiency_percent: 100, metadata: {}, position_x: 0, position_y: 0, position_z: 0, room_id: '', connectivity: 'connected', last_updated: '' },
-  ] as unknown as Device[];
+  // Use only actual filtered devices
+  const displayDevices = filteredDevices;
 
   return (
     <div className="fade-in">
