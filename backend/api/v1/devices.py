@@ -1506,6 +1506,9 @@ async def get_evse_device_details(
     if not evse_data:
         raise HTTPException(status_code=404, detail="EVSE Specification data not found")
 
+    # Merge live state from device.extra_data so callers see current EnableCharging/Disable state
+    evse_data["live_state"] = device.extra_data or {}
+
     return evse_data
 
 
@@ -1523,7 +1526,9 @@ async def disable_evse_charging(
     if payload.command != "Disable":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'Disable'.")
 
-    await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
+    result = await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Device not found")
     return {
         "status": "success",
         "commandId": payload.commandId,
@@ -1551,7 +1556,9 @@ async def enable_evse_charging(
     if payload.command != "EnableCharging":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'EnableCharging'.")
 
-    await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
+    result = await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Device not found")
     return {
         "status": "success",
         "commandId": payload.commandId,

@@ -58,17 +58,15 @@ class EVSEService:
         metadata.update(updates)
         device.extra_data = metadata
         
-        try:
-            state = DeviceState(
-                device_id=device.id,
-                state_json=metadata,
-            )
-            db.add(state)
-            await db.commit()
-        except Exception as e:
-            logger.warning(f"EVSE DB commit failed (non-fatal): {e}")
-            await db.rollback()
-        
+        # DB commit must propagate on failure — a failed write must never appear as success
+        state = DeviceState(
+            device_id=device.id,
+            state_json=metadata,
+        )
+        db.add(state)
+        await db.commit()
+
+        # Redis publish is soft-failure only — durable state is already committed above
         try:
             from backend.api.v1.devices import _device_to_response
             device_resp = _device_to_response(device)
