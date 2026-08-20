@@ -15,6 +15,8 @@ class DeviceLogger:
     # Maps recognisable substrings in a device name to the correct schema
     # builder.  Order matters: first match wins.
     _DEVICE_TYPE_KEYWORDS = {
+        "Charger":     "evse",
+        "EVSE":        "evse",
         "Light":       "light",
         "Camera":      "camera",
         "Dishwasher":  "dishwasher",
@@ -406,9 +408,164 @@ class DeviceLogger:
             "communication_history": []
         }
 
+    @staticmethod
+    def _schema_evse(device_name: str, device_id: str) -> dict:
+        """EnergyEVSE – Matter 0x050C."""
+        return {
+            "deviceType": {
+                "id": "0x050C",
+                "name": "EnergyEVSE",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 2,
+                "classification": {"class": "simple", "scope": "endpoint"},
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "EnergyEVSE",
+                    "clusters": [
+                        {
+                            "clusterId": "0x0003",
+                            "name": "Identify",
+                            "side": "server",
+                            "mandatory": False,
+                            "commands": [{
+                                "commandId": "0x0040",
+                                "name": "TriggerEffect",
+                                "direction": "invoke",
+                                "fields": [
+                                    {"name": "EffectIdentifier", "type": "enum8"},
+                                    {"name": "EffectVariant", "type": "enum8"}
+                                ]
+                            }]
+                        },
+                        {
+                            "clusterId": "0x0099",
+                            "name": "EnergyEVSE",
+                            "side": "server",
+                            "mandatory": True,
+                            "attributes": [
+                                {"name": "State", "type": "enum", "value": "NotPluggedIn"},
+                                {"name": "SupplyState", "type": "enum", "value": "Disabled"},
+                                {"name": "FaultState", "type": "enum", "value": "NoError"},
+                                {"name": "ChargingEnabledUntil", "type": "epoch-s", "value": None},
+                                {"name": "MinimumChargeCurrent", "type": "int64", "unit": "mA", "value": 6000},
+                                {"name": "MaximumChargeCurrent", "type": "int64", "unit": "mA", "value": 80000},
+                                {"name": "UserMaximumChargeCurrent", "type": "int64", "unit": "mA", "value": 80000},
+                                {"name": "SessionDuration", "type": "elapsed-s", "unit": "s", "value": 0},
+                                {"name": "SessionEnergyCharged", "type": "energy-mWh", "unit": "mWh", "value": 0},
+                                {"name": "StateOfCharge", "type": "percent", "unit": "%", "value": None},
+                                {"name": "NextChargeStartTime", "type": "epoch-s", "unit": "s", "value": None},
+                                {"name": "NextChargeTargetTime", "type": "epoch-s", "unit": "s", "value": None},
+                                {"name": "NextChargeRequiredEnergy", "type": "energy-mWh", "unit": "mWh", "value": None},
+                                {"name": "NextChargeTargetSoC", "type": "percent", "unit": "%", "value": None}
+                            ],
+                            "commands": [
+                                {"commandId": "0x01", "name": "Disable", "direction": "invoke", "fields": []},
+                                {
+                                    "commandId": "0x02",
+                                    "name": "EnableCharging",
+                                    "direction": "invoke",
+                                    "fields": [
+                                        {"name": "ChargingEnabledUntil", "type": "epoch-s"},
+                                        {"name": "MinimumChargeCurrent", "type": "int64"},
+                                        {"name": "MaximumChargeCurrent", "type": "int64"}
+                                    ]
+                                },
+                                {
+                                    "commandId": "0x03",
+                                    "name": "EnableDischarging",
+                                    "direction": "invoke",
+                                    "fields": [
+                                        {"name": "DischargingEnabledUntil", "type": "epoch-s"},
+                                        {"name": "MaximumDischargeCurrent", "type": "int64"}
+                                    ]
+                                },
+                                {"commandId": "0x04", "name": "StartDiagnostics", "direction": "invoke", "fields": []},
+                                {
+                                    "commandId": "0x05",
+                                    "name": "SetTargets",
+                                    "direction": "invoke",
+                                    "fields": [{"name": "ChargingTargetSchedules", "type": "list"}]
+                                },
+                                {"commandId": "0x06", "name": "GetTargets", "direction": "invoke", "fields": []},
+                                {"commandId": "0x07", "name": "ClearTargets", "direction": "invoke", "fields": []}
+                            ],
+                            "events": [
+                                {"name": "EVConnected", "priority": "info"},
+                                {"name": "EVNotDetected", "priority": "info"},
+                                {"name": "EnergyTransferStarted", "priority": "info"},
+                                {"name": "EnergyTransferStopped", "priority": "info"},
+                                {"name": "Fault", "priority": "critical"},
+                                {"name": "RFID", "priority": "info"}
+                            ],
+                            "features": [
+                                {"bit": 0, "name": "ChargingPreferences"},
+                                {"bit": 1, "name": "SoCReporting"},
+                                {"bit": 2, "name": "PlugAndCharge"},
+                                {"bit": 3, "name": "RFID"},
+                                {"bit": 4, "name": "V2X"}
+                            ]
+                        },
+                        {
+                            "clusterId": "0x009D",
+                            "name": "EnergyEVSEMode",
+                            "side": "server",
+                            "mandatory": True,
+                            "attributes": [
+                                {
+                                    "name": "SupportedModes",
+                                    "type": "list",
+                                    "value": [
+                                        {"label": "Manual", "mode": 0},
+                                        {"label": "TimeOfUse", "mode": 1},
+                                        {"label": "SolarCharging", "mode": 2}
+                                    ]
+                                },
+                                {"name": "CurrentMode", "type": "uint8", "value": 0}
+                            ],
+                            "commands": [{
+                                "commandId": "0x00",
+                                "name": "ChangeToMode",
+                                "direction": "invoke",
+                                "fields": [{"name": "NewMode", "type": "uint8"}]
+                            }]
+                        },
+                        {
+                            "clusterId": "0x0090",
+                            "name": "ElectricalPowerMeasurement",
+                            "side": "server",
+                            "mandatory": True,
+                            "attributes": [
+                                {"name": "PowerMode", "type": "enum", "value": "AC"},
+                                {"name": "Voltage", "type": "int64", "unit": "mV", "value": 230000},
+                                {"name": "ActiveCurrent", "type": "int64", "unit": "mA", "value": 0},
+                                {"name": "ActivePower", "type": "int64", "unit": "mW", "value": 0},
+                                {"name": "Frequency", "type": "int64", "unit": "mHz", "value": 50000},
+                                {"name": "PowerFactor", "type": "int64", "value": 100}
+                            ]
+                        },
+                        {
+                            "clusterId": "0x0091",
+                            "name": "ElectricalEnergyMeasurement",
+                            "side": "server",
+                            "mandatory": True,
+                            "attributes": [
+                                {"name": "CumulativeEnergyImported", "type": "energy-mWh", "unit": "mWh", "value": 0},
+                                {"name": "CumulativeEnergyExported", "type": "energy-mWh", "unit": "mWh", "value": 0},
+                                {"name": "PeriodicEnergyImported", "type": "energy-mWh", "unit": "mWh", "value": 0},
+                                {"name": "PeriodicEnergyExported", "type": "energy-mWh", "unit": "mWh", "value": 0}
+                            ]
+                        }
+                    ]
+                }]
+            },
+            "communication_history": []
+        }
+
     # ── Dispatcher ───────────────────────────────────────────────────────
 
     _SCHEMA_BUILDER_MAP: dict[str, str] = {
+        "evse":       "_schema_evse",
         "light":      "_schema_light",
         "camera":     "_schema_camera",
         "dishwasher": "_schema_dishwasher",
