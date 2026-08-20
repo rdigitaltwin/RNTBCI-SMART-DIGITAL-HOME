@@ -14,6 +14,7 @@ from typing import Optional
 from datetime import datetime, timezone
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Enum,
@@ -29,6 +30,9 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database.connection import Base
+
+# Universal JSON type: compiles to PostgreSQL JSONB in production and SQLite JSON locally
+JSON_TYPE = JSON().with_variant(JSONB, "postgresql")
 
 
 def utcnow() -> datetime:
@@ -278,7 +282,7 @@ class Room(Base):
     width: Mapped[float] = mapped_column(Float, default=4.0)
     depth: Mapped[float] = mapped_column(Float, default=4.0)
     height: Mapped[float] = mapped_column(Float, default=3.0)
-    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSON_TYPE, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
     )
@@ -344,7 +348,7 @@ class HouseConfig(Base):
     battery_max_discharge_kw: Mapped[float] = mapped_column(
         Float, default=0.0, comment="Max battery discharge rate in kW"
     )
-    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSON_TYPE, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
     )
@@ -381,7 +385,7 @@ class Device(Base):
     turned_on_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSON_TYPE, default=dict)
     position_x: Mapped[float] = mapped_column(Float, default=0.0)
     position_y: Mapped[float] = mapped_column(Float, default=0.0)
     position_z: Mapped[float] = mapped_column(Float, default=0.0)
@@ -424,7 +428,7 @@ class DeviceState(Base):
     device_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=False
     )
-    state_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    state_json: Mapped[dict] = mapped_column(JSON_TYPE, nullable=False)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -449,7 +453,7 @@ class DeviceEvent(Base):
         Enum(EventSeverity), default=EventSeverity.INFO
     )
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSON_TYPE, default=dict)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -520,7 +524,7 @@ class Alert(Base):
     acknowledged_by: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
-    extra_data: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    extra_data: Mapped[dict] = mapped_column("metadata", JSON_TYPE, default=dict)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -542,7 +546,7 @@ class AuditLog(Base):
     )
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     resource: Mapped[str] = mapped_column(String(200), nullable=False)
-    details: Mapped[dict] = mapped_column("details", JSONB, default=dict)
+    details: Mapped[dict] = mapped_column("details", JSON_TYPE, default=dict)
     ip_address: Mapped[str] = mapped_column(String(45), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
