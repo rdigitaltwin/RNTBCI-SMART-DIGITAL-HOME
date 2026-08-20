@@ -1,10 +1,10 @@
 {
     "deviceType": {
-        "id": "0x0100",
-        "name": "OnOffLight",
+        "id": "0x050C",
+        "name": "EnergyEVSE",
         "device_name": "EV Charger",
         "device_id": "849cbe00-8b17-4498-b476-541b3a9b7b1d",
-        "revision": 3,
+        "revision": 2,
         "classification": {
             "class": "simple",
             "scope": "endpoint"
@@ -12,144 +12,353 @@
         "endpoints": [
             {
                 "endpointId": 1,
-                "deviceType": "OnOffLight",
+                "deviceType": "EnergyEVSE",
                 "clusters": [
                     {
                         "clusterId": "0x0003",
                         "name": "Identify",
                         "side": "server",
-                        "mandatory": true,
+                        "mandatory": false,
                         "commands": [
                             {
                                 "commandId": "0x0040",
                                 "name": "TriggerEffect",
                                 "direction": "invoke",
-                                "mandatory": true,
-                                "request": {
-                                    "effectIdentifier": "uint8",
-                                    "effectVariant": "uint8"
-                                }
+                                "fields": [
+                                    {
+                                        "name": "EffectIdentifier",
+                                        "type": "enum8"
+                                    },
+                                    {
+                                        "name": "EffectVariant",
+                                        "type": "enum8"
+                                    }
+                                ]
                             }
                         ]
                     },
                     {
-                        "clusterId": "0x0006",
-                        "name": "OnOff",
+                        "clusterId": "0x0099",
+                        "name": "EnergyEVSE",
                         "side": "server",
                         "mandatory": true,
-                        "features": [
-                            {
-                                "code": "LT",
-                                "name": "Lighting",
-                                "mandatory": true
-                            }
-                        ],
                         "attributes": [
                             {
-                                "attributeId": "0x0000",
-                                "name": "OnOff",
-                                "type": "boolean",
-                                "access": "readWrite",
-                                "default": false
+                                "name": "State",
+                                "type": "enum",
+                                "value": "NotPluggedIn"
+                            },
+                            {
+                                "name": "SupplyState",
+                                "type": "enum",
+                                "value": "Disabled"
+                            },
+                            {
+                                "name": "FaultState",
+                                "type": "enum",
+                                "value": "NoError"
+                            },
+                            {
+                                "name": "ChargingEnabledUntil",
+                                "type": "epoch-s",
+                                "value": null
+                            },
+                            {
+                                "name": "MinimumChargeCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 6000
+                            },
+                            {
+                                "name": "MaximumChargeCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 80000
+                            },
+                            {
+                                "name": "UserMaximumChargeCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 80000
+                            },
+                            {
+                                "name": "SessionDuration",
+                                "type": "elapsed-s",
+                                "unit": "s",
+                                "value": 0
+                            },
+                            {
+                                "name": "SessionEnergyCharged",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "StateOfCharge",
+                                "type": "percent",
+                                "unit": "%",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeStartTime",
+                                "type": "epoch-s",
+                                "unit": "s",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeTargetTime",
+                                "type": "epoch-s",
+                                "unit": "s",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeRequiredEnergy",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": null
+                            },
+                            {
+                                "name": "NextChargeTargetSoC",
+                                "type": "percent",
+                                "unit": "%",
+                                "value": null
                             }
                         ],
                         "commands": [
                             {
-                                "commandId": "0x0000",
-                                "name": "Off"
+                                "commandId": "0x01",
+                                "name": "Disable",
+                                "direction": "invoke",
+                                "fields": []
                             },
                             {
-                                "commandId": "0x0001",
-                                "name": "On"
+                                "commandId": "0x02",
+                                "name": "EnableCharging",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "ChargingEnabledUntil",
+                                        "type": "epoch-s"
+                                    },
+                                    {
+                                        "name": "MinimumChargeCurrent",
+                                        "type": "int64"
+                                    },
+                                    {
+                                        "name": "MaximumChargeCurrent",
+                                        "type": "int64"
+                                    }
+                                ]
                             },
                             {
-                                "commandId": "0x0002",
-                                "name": "Toggle"
+                                "commandId": "0x03",
+                                "name": "EnableDischarging",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "DischargingEnabledUntil",
+                                        "type": "epoch-s"
+                                    },
+                                    {
+                                        "name": "MaximumDischargeCurrent",
+                                        "type": "int64"
+                                    }
+                                ]
+                            },
+                            {
+                                "commandId": "0x04",
+                                "name": "StartDiagnostics",
+                                "direction": "invoke",
+                                "fields": []
+                            },
+                            {
+                                "commandId": "0x05",
+                                "name": "SetTargets",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "ChargingTargetSchedules",
+                                        "type": "list"
+                                    }
+                                ]
+                            },
+                            {
+                                "commandId": "0x06",
+                                "name": "GetTargets",
+                                "direction": "invoke",
+                                "fields": []
+                            },
+                            {
+                                "commandId": "0x07",
+                                "name": "ClearTargets",
+                                "direction": "invoke",
+                                "fields": []
                             }
-                        ]
-                    },
-                    {
-                        "clusterId": "0x0008",
-                        "name": "LevelControl",
-                        "side": "server",
-                        "mandatory": false,
+                        ],
+                        "events": [
+                            {
+                                "name": "EVConnected",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "EVNotDetected",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "EnergyTransferStarted",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "EnergyTransferStopped",
+                                "priority": "info"
+                            },
+                            {
+                                "name": "Fault",
+                                "priority": "critical"
+                            },
+                            {
+                                "name": "RFID",
+                                "priority": "info"
+                            }
+                        ],
                         "features": [
                             {
-                                "code": "OO",
-                                "name": "OnOff",
-                                "mandatory": true
+                                "bit": 0,
+                                "name": "ChargingPreferences"
                             },
                             {
-                                "code": "LT",
-                                "name": "Lighting",
-                                "mandatory": true
-                            }
-                        ],
-                        "attributes": [
-                            {
-                                "attributeId": "0x0000",
-                                "name": "CurrentLevel",
-                                "type": "uint8",
-                                "range": [
-                                    1,
-                                    254
-                                ],
-                                "access": "readWrite"
+                                "bit": 1,
+                                "name": "SoCReporting"
                             },
                             {
-                                "attributeId": "0x0002",
-                                "name": "MinLevel",
-                                "type": "uint8",
-                                "value": 1,
-                                "access": "readOnly"
+                                "bit": 2,
+                                "name": "PlugAndCharge"
                             },
                             {
-                                "attributeId": "0x0003",
-                                "name": "MaxLevel",
-                                "type": "uint8",
-                                "value": 254,
-                                "access": "readOnly"
-                            }
-                        ],
-                        "commands": [
+                                "bit": 3,
+                                "name": "RFID"
+                            },
                             {
-                                "commandId": "0x0000",
-                                "name": "MoveToLevel",
-                                "request": {
-                                    "level": "uint8",
-                                    "transitionTime": "uint16"
-                                }
+                                "bit": 4,
+                                "name": "V2X"
                             }
                         ]
                     },
                     {
-                        "clusterId": "0x0062",
-                        "name": "ScenesManagement",
+                        "clusterId": "0x009D",
+                        "name": "EnergyEVSEMode",
                         "side": "server",
                         "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "SupportedModes",
+                                "type": "list",
+                                "value": [
+                                    {
+                                        "label": "Manual",
+                                        "mode": 0
+                                    },
+                                    {
+                                        "label": "TimeOfUse",
+                                        "mode": 1
+                                    },
+                                    {
+                                        "label": "SolarCharging",
+                                        "mode": 2
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "CurrentMode",
+                                "type": "uint8",
+                                "value": 0
+                            }
+                        ],
                         "commands": [
                             {
-                                "commandId": "0x0040",
-                                "name": "CopyScene",
-                                "request": {
-                                    "mode": "uint8",
-                                    "groupId": "uint16",
-                                    "sceneId": "uint8"
-                                }
+                                "commandId": "0x00",
+                                "name": "ChangeToMode",
+                                "direction": "invoke",
+                                "fields": [
+                                    {
+                                        "name": "NewMode",
+                                        "type": "uint8"
+                                    }
+                                ]
                             }
                         ]
                     },
                     {
-                        "clusterId": "0x0406",
-                        "name": "OccupancySensing",
-                        "side": "client",
-                        "mandatory": false,
+                        "clusterId": "0x0090",
+                        "name": "ElectricalPowerMeasurement",
+                        "side": "server",
+                        "mandatory": true,
                         "attributes": [
                             {
-                                "attributeId": "0x0000",
-                                "name": "Occupancy",
-                                "type": "bitmap",
-                                "description": "Indicates occupied/unoccupied state"
+                                "name": "PowerMode",
+                                "type": "enum",
+                                "value": "AC"
+                            },
+                            {
+                                "name": "Voltage",
+                                "type": "int64",
+                                "unit": "mV",
+                                "value": 230000
+                            },
+                            {
+                                "name": "ActiveCurrent",
+                                "type": "int64",
+                                "unit": "mA",
+                                "value": 0
+                            },
+                            {
+                                "name": "ActivePower",
+                                "type": "int64",
+                                "unit": "mW",
+                                "value": 0
+                            },
+                            {
+                                "name": "Frequency",
+                                "type": "int64",
+                                "unit": "mHz",
+                                "value": 50000
+                            },
+                            {
+                                "name": "PowerFactor",
+                                "type": "int64",
+                                "value": 100
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0091",
+                        "name": "ElectricalEnergyMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CumulativeEnergyImported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "CumulativeEnergyExported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "PeriodicEnergyImported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
+                            },
+                            {
+                                "name": "PeriodicEnergyExported",
+                                "type": "energy-mWh",
+                                "unit": "mWh",
+                                "value": 0
                             }
                         ]
                     }
