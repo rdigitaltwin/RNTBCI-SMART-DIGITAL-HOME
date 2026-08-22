@@ -977,6 +977,16 @@ useDeviceStore.subscribe((state, prevState) => {
         // Toggle it locally without syncing back to the backend
         energyState.toggleDevice(energyId, true);
       }
+      
+      // Also sync EV Charger specifically
+      if (device.type === 'energy_evse') {
+        const currentEvState = energyState.evCharger.state;
+        if (targetState === 'on' && currentEvState !== 'charging') {
+          energyState.setEVChargerState('charging');
+        } else if (targetState === 'off' && currentEvState !== 'disconnected') {
+          energyState.setEVChargerState('disconnected');
+        }
+      }
     }
   });
   
