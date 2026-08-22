@@ -15,6 +15,7 @@
  */
 
 import { create } from 'zustand';
+import { useSimulationStore } from './index';
 import {
   APPLIANCE_DATABASE,
   type ApplianceSpec,
@@ -385,7 +386,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         deviceStore.updateDevice(deviceId, { power_state: newPowerState });
         // Make API call (ignoring await to not block UI)
         import('@/services/api').then(({ default: api }) => {
-          api.togglePower(deviceId, newPowerState.toUpperCase()).catch(err => {
+          api.togglePower(deviceId, newPowerState).catch(err => {
             console.error('Failed to sync device to backend', err);
             // Revert on error
             deviceStore.updateDevice(deviceId, { power_state: device.powerState });
@@ -554,7 +555,8 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
   // ─── EV Charger ────────────────────────────────────────────────────
   setEVChargerState: (evState: EVChargerState) => {
     const state = get();
-    const evDevice = state.devices['ev_charger'];
+    const evDevice = Object.values(state.devices).find((d) => d.type === 'energy_evse');
+    const evDeviceId = evDevice?.id;
     const now = Date.now();
 
     if (evState === 'charging') {
@@ -574,7 +576,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         set((s) => ({
           devices: {
             ...s.devices,
-            ev_charger: {
+            [evDeviceId as string]: {
               ...evDevice,
               powerState: 'on',
               status: 'running',
@@ -597,7 +599,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         set((s) => ({
           devices: {
             ...s.devices,
-            ev_charger: { ...evDevice, powerState: 'off', status: 'standby', currentConsumption: 0 },
+            [evDeviceId as string]: { ...evDevice, powerState: 'off', status: 'standby', currentConsumption: 0 },
           },
         }));
       }
@@ -612,7 +614,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         set((s) => ({
           devices: {
             ...s.devices,
-            ev_charger: { ...evDevice, powerState: 'off', status: 'standby', currentConsumption: 0 },
+            [evDeviceId as string]: { ...evDevice, powerState: 'off', status: 'standby', currentConsumption: 0 },
           },
         }));
       }
@@ -627,7 +629,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         set((s) => ({
           devices: {
             ...s.devices,
-            ev_charger: { ...evDevice, powerState: 'off', status: 'disconnected', currentConsumption: 0 },
+            [evDeviceId as string]: { ...evDevice, powerState: 'off', status: 'disconnected', currentConsumption: 0 },
           },
         }));
       }
@@ -647,13 +649,14 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     // If currently charging, update consumption
     if (get().evCharger.state === 'charging') {
-      const evDevice = get().devices['ev_charger'];
+      const state = get();
+      const evDevice = Object.values(state.devices).find((d) => d.type === 'energy_evse');
       if (evDevice) {
         set((s) => ({
           evCharger: { ...s.evCharger, power: clamped },
           devices: {
             ...s.devices,
-            ev_charger: { ...evDevice, currentConsumption: clamped },
+            [evDevice.id]: { ...evDevice, currentConsumption: clamped },
           },
         }));
       }
@@ -688,8 +691,16 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     const state = get();
     const devices = Object.values(state.devices);
 
-    // Current load = sum of all ON device consumption
-    const currentLoad = devices.reduce((sum, d) => sum + d.currentConsumption, 0);
+    // Current load = sum of all ON device consumption (excluding generation devices)
+    const rawLoad = devices
+      .filter((d) => d.type !== 'solar_panel' && d.type !== 'energy_solar')
+      .reduce((sum, d) => sum + d.currentConsumption, 0);
+
+    const solarGenerationKw = useSimulationStore.getState().metrics.solar_generation_kw || 0;
+    const solarGenerationWatts = solarGenerationKw * 1000;
+    
+    // Net load after solar generation (can be negative, but bounded to 0 for load metrics)
+    const currentLoad = Math.max(0, rawLoad - solarGenerationWatts);
 
     // Peak load tracking
     const peakLoad = Math.max(state.metrics.peakLoad, currentLoad);

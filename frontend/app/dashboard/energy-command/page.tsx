@@ -28,6 +28,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line,
 } from 'recharts';
 import { useEnergyStore, selectRunningDevices, selectDeviceCountsByStatus, selectRoomConsumption, selectActiveAlerts } from '@/store/energyEngine';
+import { useEventStore } from '@/store';
 import { formatPower, formatEnergy, DEVICE_STATUS_COLORS } from '@/lib/applianceDatabase';
 import { HOME_PROFILES, LOAD_LEVEL_COLORS, LOAD_LEVEL_LABELS, type HomeProfileType } from '@/lib/homeCapacity';
 import { StatCard } from '@/components/ui/DashboardCards';
@@ -765,7 +766,7 @@ function RoomConsumptionChart() {
 // =============================================================================
 
 function CompactEventLog() {
-  const events = useEnergyStore((s) => s.events).slice(0, 20);
+  const events = useEventStore((s) => s.events).slice(0, 20);
 
   const severityColors: Record<string, string> = {
     info: '#00E5FF',
