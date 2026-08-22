@@ -2,7 +2,6 @@ import os
 import numpy as np
 import logging
 import math
-import traceback
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -10,8 +9,18 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 MODELS_DIR = os.path.join(BASE_DIR, 'ml', 'models')
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-MODELS_DIR = os.path.join(BASE_DIR, 'ml', 'models')
+import typing
+from typing import Any
+
+# Optional modules
+pd: Any = None
+torch: Any = None
+joblib: Any = None
+EnergyLSTM: Any = None
+appliance_encoder: Any = None
+energy_scaler: Any = None
+anomaly_model: Any = None
+energy_model: Any = None
 
 # Load models and scalers
 try:
@@ -40,7 +49,7 @@ SEQ_LEN = 12
 
 def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
     """Predicts power consumption in kWh using PyTorch LSTM."""
-    if not models_loaded:
+    if not models_loaded or energy_model is None or energy_scaler is None or appliance_encoder is None or pd is None or torch is None:
         return 0.0
 
     try:
@@ -73,29 +82,27 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
         return max(0.0, pred_kwh)
     except Exception:
         logger.exception("Prediction failed")
-        logger.error(traceback.format_exc())
         return 0.0
 
 def detect_anomaly(energy_consumption, hour, outdoor_temp):
     """Returns True if the usage is an anomaly."""
-    if not models_loaded or anomaly_model is None:
+    if not models_loaded or anomaly_model is None or pd is None:
         return False
     
     try:
         features = pd.DataFrame(
             [[energy_consumption, hour, outdoor_temp]],
-            columns=['energy_consumption', 'hour', 'outdoor_temp']
+            columns=['Energy Consumption (kWh)', 'Hour', 'Outdoor Temperature (°C)']
         )
         pred = anomaly_model.predict(features)[0]
         return pred == -1  # Isolation forest returns -1 for anomalies
     except Exception:
         logger.exception("Anomaly detection failed")
-        logger.error(traceback.format_exc())
         return False
 
 def generate_recommendation(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
     """Uses SHAP to explain power consumption and generate recommendations."""
-    if not models_loaded or energy_model is None:
+    if not models_loaded or energy_model is None or appliance_encoder is None:
         return []
         
     try:
@@ -125,7 +132,6 @@ def generate_recommendation(outdoor_temp, season_encoded, hour, is_weekend, prev
         return recs
     except Exception:
         logger.exception("Recommendation failed")
-        logger.error(traceback.format_exc())
         return []
 
 def predict_forecast_consumption(current_kw, hour_offset):

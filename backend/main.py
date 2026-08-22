@@ -23,7 +23,14 @@ os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, "system.log")
 
 root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
+settings = get_settings()
+root_logger.setLevel(logging.DEBUG if settings.debug else logging.INFO)
+
+# Suppress verbose SQLAlchemy logs in production
+if not settings.debug:
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+
 
 # JSON File Handler
 file_handler = logging.FileHandler(log_file)

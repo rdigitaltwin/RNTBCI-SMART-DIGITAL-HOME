@@ -1084,7 +1084,7 @@ def _find_device_file(identifier: str) -> Optional[str]:
                     data = json.load(f)
                     if data.get("deviceType", {}).get("device_id") == identifier:
                         return filepath
-            except Exception:
+            except (IOError, ValueError, json.JSONDecodeError):
                 continue
                 
     return None
@@ -1105,7 +1105,8 @@ async def matter_get_device(
     try:
         with open(file_path, "r") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load device file: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -1123,7 +1124,7 @@ async def matter_post_command_path(
     """Matter Protocol POST endpoint for commands specified in URL (e.g. /cluster/OnOff/On)."""
     try:
         payload = await request.json()
-    except Exception:
+    except (ValueError, json.JSONDecodeError):
         payload = {}
         
     # Try to extract actual command name
@@ -1156,7 +1157,7 @@ async def matter_post_command_body(
     """Matter Protocol POST endpoint for commands specified in body (e.g. {"command": "On"})."""
     try:
         payload = await request.json()
-    except Exception:
+    except (ValueError, json.JSONDecodeError):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
         
     command = payload.get("command")
@@ -1183,7 +1184,7 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
             if json_name:
                 device_name = json_name
             device_id = data.get("deviceType", {}).get("device_id", "")
-    except Exception:
+    except (IOError, ValueError, json.JSONDecodeError):
         pass
         
     # Also update Postgres DB and fire websockets if it's a known state command
@@ -1293,8 +1294,8 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
     # Now log it to JSON with the generated response as the payload
     try:
         DeviceLogger.log_communication(device_id, device_name, action, response_data, source="matter_api")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"DeviceLogger failed to log communication: {e}")
         
     return response_data
 
