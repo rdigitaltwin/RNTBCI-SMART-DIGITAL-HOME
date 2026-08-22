@@ -49,19 +49,25 @@ SEQ_LEN = 12
 
 def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
     """Predicts power consumption in kWh using PyTorch LSTM."""
-    if not models_loaded or energy_model is None or energy_scaler is None or appliance_encoder is None or pd is None or torch is None:
+    # Capture globals in local variables to satisfy static type checkers (e.g. Pyright)
+    # Since they are global, the type checker assumes they could change at any time.
+    scaler = energy_scaler
+    encoder = appliance_encoder
+    model = energy_model
+
+    if not models_loaded or model is None or scaler is None or encoder is None or pd is None or torch is None:
         return 0.0
 
     try:
         if appliance_type not in sequence_buffer:
             sequence_buffer[appliance_type] = []
             
-        appliance_encoded = appliance_encoder.transform([appliance_type])[0] if appliance_type in appliance_encoder.classes_ else 0
+        appliance_encoded = encoder.transform([appliance_type])[0] if appliance_type in encoder.classes_ else 0
         features = pd.DataFrame(
             [[outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_encoded, household_size]],
             columns=['outdoor_temp', 'season_encoded', 'hour', 'is_weekend', 'prev_energy', 'appliance_encoded', 'household_size']
         )
-        features_scaled = energy_scaler.transform(features)[0] # Shape (7,)
+        features_scaled = scaler.transform(features)[0] # Shape (7,)
         
         # Append to buffer
         sequence_buffer[appliance_type].append(features_scaled)
@@ -77,7 +83,7 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
         x_tensor = torch.tensor(np.array([seq]), dtype=torch.float32)
         
         with torch.no_grad():
-            pred_kwh = energy_model(x_tensor).item()
+            pred_kwh = model(x_tensor).item()
         
         return max(0.0, pred_kwh)
     except Exception:
@@ -86,7 +92,9 @@ def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, pr
 
 def detect_anomaly(energy_consumption, hour, outdoor_temp):
     """Returns True if the usage is an anomaly."""
-    if not models_loaded or anomaly_model is None or pd is None:
+    model = anomaly_model
+    
+    if not models_loaded or model is None or pd is None:
         return False
     
     try:
@@ -94,7 +102,7 @@ def detect_anomaly(energy_consumption, hour, outdoor_temp):
             [[energy_consumption, hour, outdoor_temp]],
             columns=['Energy Consumption (kWh)', 'Hour', 'Outdoor Temperature (°C)']
         )
-        pred = anomaly_model.predict(features)[0]
+        pred = model.predict(features)[0]
         return pred == -1  # Isolation forest returns -1 for anomalies
     except Exception:
         logger.exception("Anomaly detection failed")
@@ -102,11 +110,12 @@ def detect_anomaly(energy_consumption, hour, outdoor_temp):
 
 def generate_recommendation(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
     """Uses SHAP to explain power consumption and generate recommendations."""
-    if not models_loaded or energy_model is None or appliance_encoder is None:
+    encoder = appliance_encoder
+    if not models_loaded or energy_model is None or encoder is None:
         return []
         
     try:
-        appliance_encoded = appliance_encoder.transform([appliance_type])[0] if appliance_type in appliance_encoder.classes_ else 0
+        appliance_encoded = encoder.transform([appliance_type])[0] if appliance_type in encoder.classes_ else 0
         
         # We simulate a "shap" style insight without calculating deep tensor gradients for latency
         # A true SHAP explainer for LSTMs can be intensive, so we use a fallback heuristic explanation based on inputs
