@@ -104,36 +104,34 @@ export default function EnergyPage() {
 
   // Track Live Map Data
   useEffect(() => {
-    if (!metrics || Object.keys(metrics).length === 0) return;
-    
-    setLiveMap(prev => {
+    const interval = setInterval(() => {
+      if (!metrics || Object.keys(metrics).length === 0) return;
+
       const now = new Date().toLocaleTimeString('en-US', { hour12: false });
-      
       const gridImport = metrics.grid_import_kw || 0;
       const gridExport = metrics.grid_export_kw || 0;
       const solar = metrics.solar_generation_kw || 0;
       const batCharge = metrics.battery_charge_kw || 0;
       const batDischarge = metrics.battery_discharge_kw || 0;
       const evDischarge = metrics.ev_discharge_kw || 0;
-      
       const load = gridImport + solar + batDischarge + evDischarge - gridExport - batCharge;
-      
-      const newData = {
-        time: now,
-        gridImport,
-        gridExport,
-        solar,
-        batteryCharge: batCharge,
-        batteryDischarge: batDischarge,
-        evDischarge,
-        load: Math.max(0, Number(load.toFixed(4))),
-        batterySoc: metrics.battery_soc_pct || 0,
-      };
-      
-      if (prev.length > 0 && prev[prev.length - 1].time === now) return prev;
-      
-      return [...prev, newData].slice(-30);
-    });
+
+      setLiveMap(prev => {
+        const newData = {
+          time: now,
+          gridImport,
+          gridExport,
+          solar,
+          batteryCharge: batCharge,
+          batteryDischarge: batDischarge,
+          evDischarge,
+          load: Math.max(0, Number(load.toFixed(4))),
+          batterySoc: metrics.battery_soc_pct || 0,
+        };
+        return [...prev, newData].slice(-30);
+      });
+    }, 2000);
+    return () => clearInterval(interval);
   }, [metrics]);
 
   // Fetch real data from backend

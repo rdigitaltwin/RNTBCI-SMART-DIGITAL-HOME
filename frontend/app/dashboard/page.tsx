@@ -31,18 +31,19 @@ function EnergyChart() {
   const [data, setData] = useState<Array<{ time: string; power: number }>>([]);
 
   useEffect(() => {
-    const totalPower = (metrics?.total_power_w || 0) / 1000;
-    setData((prev) => {
-      const newData = [
-        ...prev,
-        {
+    const interval = setInterval(() => {
+      const totalPower = (metrics?.total_power_w || 0) / 1000;
+      setData((prev) => {
+        const newPoint = {
           time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           power: parseFloat(totalPower.toFixed(2)),
-        },
-      ];
-      return newData.length > 30 ? newData.slice(newData.length - 30) : newData;
-    });
-  }, [metrics?.total_power_w]);
+        };
+        const newData = [...prev, newPoint];
+        return newData.length > 30 ? newData.slice(newData.length - 30) : newData;
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [metrics]);
 
   return (
     <div className="glass-card" style={{ padding: '20px', height: '100%' }}>

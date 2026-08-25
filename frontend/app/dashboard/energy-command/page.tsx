@@ -451,9 +451,13 @@ function MCBControlPanel() {
 
 function EVChargerPanel() {
   const evCharger = useEnergyStore((s) => s.evCharger);
+  const homeConfig = useEnergyStore((s) => s.homeConfig);
   const setEVChargerState = useEnergyStore((s) => s.setEVChargerState);
   const setEVChargingPower = useEnergyStore((s) => s.setEVChargingPower);
   const setEVBatteryLevel = useEnergyStore((s) => s.setEVBatteryLevel);
+
+  const evVoltage = homeConfig.voltage;
+  const evCurrent = evCharger.targetPower > 0 ? evCharger.targetPower / (evVoltage * homeConfig.powerFactor) : 0;
 
   const stateColors = {
     charging: '#00FF9D',
@@ -525,6 +529,22 @@ function EVChargerPanel() {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#64748B' }}>
           <span>6 kW</span>
           <span>11 kW</span>
+        </div>
+      </div>
+
+      {/* Voltage / Current readout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '4px' }}>Voltage</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 600, color: '#00E5FF' }}>
+            {evVoltage}<span style={{ fontSize: '10px', color: '#94A3B8', marginLeft: '3px' }}>V</span>
+          </div>
+        </div>
+        <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '4px' }}>Current</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 600, color: '#00FF9D' }}>
+            {evCurrent.toFixed(1)}<span style={{ fontSize: '10px', color: '#94A3B8', marginLeft: '3px' }}>A</span>
+          </div>
         </div>
       </div>
 
