@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Activity, Server, Radio, Power, Download, Zap, Gauge } from 'lucide-react';
-import { type Device } from '@/store';
+import { useDeviceStore, type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG } from '../constants';
 import DeviceControls from './DeviceControls';
 import DeviceToggle from './DeviceToggle';
+import api from '@/services/api';
 
 interface DevicePanelProps {
   device: Device | null;
@@ -19,15 +20,47 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    if (device?.type === 'energy_solar' || device?.type === 'solar_panel' || device?.type === 'solar_pv') {
+      const fetchSolar = async () => {
+        try {
+          const [voltage, current, power, freq, pf, label] = (await Promise.all([
+            api.getSolarVoltage(device.id).catch(() => ({})),
+            api.getSolarCurrent(device.id).catch(() => ({})),
+            api.getSolarPowerOutput(device.id).catch(() => ({})),
+            api.getGridFrequency(device.id).catch(() => ({})),
+            api.getPowerFactor(device.id).catch(() => ({})),
+            api.getSolarUserLabel(device.id).catch(() => ({}))
+          ])) as any[];
+          
+          useDeviceStore.getState().updateDevice(device.id, {
+            metadata: {
+              ...(device.metadata || {}),
+              Voltage: voltage.Voltage || device.metadata?.Voltage,
+              ActiveCurrent: current.ActiveCurrent || device.metadata?.ActiveCurrent,
+              ActivePower: power.ActivePower || device.metadata?.ActivePower,
+              Frequency: freq.Frequency || device.metadata?.Frequency,
+              PowerFactor: pf.Voltage || pf.PowerFactor || device.metadata?.PowerFactor,
+              LabelList: label.LabelList || device.metadata?.LabelList
+            }
+          });
+        } catch (err) {
+          console.error("Failed to fetch solar telemetry", err);
+        }
+      };
+      fetchSolar();
+    }
+  }, [device?.id, device?.type]);
 
   if (!device) return null;
 
   const config = DEVICE_TYPE_CONFIG[device.type] || { emoji: '📱', label: device.type, color: '#94A3B8' };
   const isOn = device.power_state === 'on';
-  const meta = device.metadata || {};
+  const meta = (device.metadata || {}) as any;
 
   return (
     <AnimatePresence>
@@ -122,8 +155,12 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 <Power size={20} />
               </div>
               <div>
-                <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>Device Power</div>
-                <div style={{ fontSize: '12px', color: '#94A3B8' }}>Toggle power state</div>
+                <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>
+                  {device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Power Generation' : 'Device Power'}
+                </div>
+                <div style={{ fontSize: '12px', color: '#94A3B8' }}>
+                  {device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state'}
+                </div>
               </div>
             </div>
             <DeviceToggle device={device} color={config.color} />
@@ -157,6 +194,102 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 </div>
                 <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>{device.connectivity || 'wifi'}</div>
               </div>
+
+              {device.type === 'energy_evse' && (
+                <>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Zap size={14} color="#F59E0B" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Voltage</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.Voltage != null ? (meta.Voltage / 1000).toFixed(1) + ' V' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Gauge size={14} color="#3B82F6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Current</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.ActiveCurrent != null ? (meta.ActiveCurrent / 1000).toFixed(1) + ' A' : '—'}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {(device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv') && (
+                <>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', gridColumn: '1 / -1' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>Panel Identification</div>
+                        <div style={{ fontSize: '14px', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          Label: {meta.LabelList?.[0]?.value || 'Unknown'}
+                          <button 
+                            onClick={() => {
+                              const newLabel = window.prompt("Enter new label value:", meta.LabelList?.[0]?.value || "");
+                              if (newLabel) {
+                                api.setSolarUserLabel(device.id, meta.LabelList?.[0]?.label || "name", newLabel);
+                              }
+                            }}
+                            style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', padding: 0 }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => api.identifySolar(device.id)}
+                        style={{
+                          background: `${config.color}20`, border: `1px solid ${config.color}40`,
+                          color: config.color, padding: '8px 16px', borderRadius: '8px',
+                          cursor: 'pointer', fontSize: '12px', fontWeight: 500
+                        }}
+                      >
+                        Trigger Identify
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Zap size={14} color="#F59E0B" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Voltage</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.Voltage != null ? (meta.Voltage / 1000).toFixed(1) + ' V' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Gauge size={14} color="#3B82F6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Current</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.ActiveCurrent != null ? (meta.ActiveCurrent / 1000).toFixed(1) + ' A' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Activity size={14} color="#10B981" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Frequency</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.Frequency != null ? (meta.Frequency / 1000).toFixed(1) + ' Hz' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Activity size={14} color="#8B5CF6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Power Factor</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.PowerFactor != null ? (meta.PowerFactor / 10000).toFixed(2) : '—'}
+                    </div>
+                  </div>
+                </>
+              )}
 
             </div>
           </div>

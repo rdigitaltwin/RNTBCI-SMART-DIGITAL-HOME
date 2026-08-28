@@ -69,25 +69,27 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
           }
         })()}
       </span>
-      <button 
-        onClick={handlePowerToggle}
-        disabled={toggling}
-        style={{
-          width: '44px', height: '24px', borderRadius: '12px',
-          background: isOn ? `${color}40` : 'rgba(255,255,255,0.1)',
-          border: `1px solid ${isOn ? color : 'rgba(255,255,255,0.2)'}`,
-          position: 'relative', cursor: toggling ? 'wait' : 'pointer',
-          marginLeft: '8px', transition: 'all 0.3s'
-        }}
-      >
-        <div style={{
-          width: '18px', height: '18px', borderRadius: '50%',
-          background: isOn ? '#FFF' : '#94A3B8', position: 'absolute', top: '2px',
-          left: isOn ? '22px' : '3px',
-          transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-        }} />
-      </button>
+      {device.type !== 'energy_solar' && device.type !== 'solar_panel' && device.type !== 'solar_pv' && (
+        <button 
+          onClick={handlePowerToggle}
+          disabled={toggling}
+          style={{
+            width: '44px', height: '24px', borderRadius: '12px',
+            background: isOn ? `${color}40` : 'rgba(255,255,255,0.1)',
+            border: `1px solid ${isOn ? color : 'rgba(255,255,255,0.2)'}`,
+            position: 'relative', cursor: toggling ? 'wait' : 'pointer',
+            marginLeft: '8px', transition: 'all 0.3s'
+          }}
+        >
+          <div style={{
+            width: '18px', height: '18px', borderRadius: '50%',
+            background: isOn ? '#FFF' : '#94A3B8', position: 'absolute', top: '2px',
+            left: isOn ? '22px' : '3px',
+            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          }} />
+        </button>
+      )}
     </div>
   );
 }
