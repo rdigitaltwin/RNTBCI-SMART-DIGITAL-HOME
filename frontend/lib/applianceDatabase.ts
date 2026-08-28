@@ -300,7 +300,7 @@ export const APPLIANCE_DATABASE: ApplianceSpec[] = [
   {
     id: 'solar_panel',
     name: 'Solar Panel Array',
-    type: 'solar_panel',
+    type: 'solar_pv',
     category: 'outdoor',
     room: 'Exterior',
     ratedPowerMin: 0,

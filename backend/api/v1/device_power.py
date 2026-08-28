@@ -237,6 +237,7 @@ async def download_device_power_xlsx(
 
     wb = Workbook()
     ws = wb.active
+    assert ws is not None
     ws.title = "Device Power History"
     ws.append(headers)
 
@@ -249,9 +250,12 @@ async def download_device_power_xlsx(
         ])
 
     # Auto-width columns
+    from openpyxl.cell import Cell
     for col in ws.columns:
         max_len = max(len(str(cell.value or "")) for cell in col)
-        ws.column_dimensions[col[0].column_letter].width = max_len + 2
+        first_cell = col[0]
+        if isinstance(first_cell, Cell):
+            ws.column_dimensions[first_cell.column_letter].width = max_len + 2
 
     output = io.BytesIO()
     wb.save(output)
