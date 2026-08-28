@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Server, Radio, Power, Download } from 'lucide-react';
+import { X, Activity, Server, Radio, Power, Download, Zap, Gauge } from 'lucide-react';
 import { type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG } from '../constants';
 import DeviceControls from './DeviceControls';

@@ -57,6 +57,13 @@ class EVSEService:
         metadata = dict(device.extra_data or {})
         metadata.update(updates)
         device.extra_data = metadata
+
+        # If ActivePower was set, immediately update energy_usage_kw so the
+        # dashboard reflects the new value without waiting for the simulation tick.
+        if "ActivePower" in updates:
+            active_power_mw = updates["ActivePower"]
+            device.energy_usage_kw = round(active_power_mw / 1_000_000, 4)
+            device.last_updated = datetime.now(timezone.utc)
         
         # DB commit must propagate on failure — a failed write must never appear as success
         state = DeviceState(

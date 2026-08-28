@@ -769,17 +769,19 @@ class SimulationEngine:
                         
 
                     metadata = dict(device.extra_data or {})
-                        
+
+                    # Always update live power reading every tick so the
+                    # dashboard reflects current values immediately (fixes
+                    # the ~5-second Active Power delay).
+                    device.energy_usage_kw = round(kw, 4)
+                    device.last_updated = now
+
+                    if power_state == PowerState.ON and device.turned_on_at is None:
+                        device.turned_on_at = now
+                    elif power_state == PowerState.OFF:
+                        device.turned_on_at = None
+
                     if write_history or state_change.get("changed"):
-                        # Update device DB record
-                        device.energy_usage_kw = round(kw, 4)
-                        device.last_updated = now
-    
-                        if power_state == PowerState.ON and device.turned_on_at is None:
-                            device.turned_on_at = now
-                        elif power_state == PowerState.OFF:
-                            device.turned_on_at = None
-    
                         # Update metadata with state info
                         metadata["sim_state"] = tracker.operating_mode
                         metadata["sim_phase"] = tracker.power_phase

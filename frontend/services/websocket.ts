@@ -143,6 +143,24 @@ class WebSocketClient {
       if (deviceId && deviceData) {
         useDeviceStore.getState().updateDevice(deviceId, deviceData as Partial<import('@/store').Device>);
       }
+
+      // Handle real-time telemetry updates from the simulation engine.
+      // These carry power_kw (and metadata with Voltage/ActiveCurrent) at the
+      // top level without a nested `device` object.
+      const action = (payload as Record<string, unknown>).action as string | undefined;
+      if (deviceId && action === 'telemetry') {
+        const powerKw = (payload as Record<string, unknown>).power_kw as number | undefined;
+        const meta = (payload as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
+        if (powerKw !== undefined) {
+          const patch: Partial<import('@/store').Device> = {
+            energy_usage_kw: powerKw,
+          };
+          if (meta) {
+            patch.metadata = meta as Record<string, unknown>;
+          }
+          useDeviceStore.getState().updateDevice(deviceId, patch);
+        }
+      }
     }
 
     if (channel === 'events:stream') {
