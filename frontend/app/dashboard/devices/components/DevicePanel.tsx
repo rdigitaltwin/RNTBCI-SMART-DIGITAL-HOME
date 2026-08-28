@@ -37,15 +37,18 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
             api.getSolarUserLabel(device.id).catch(() => ({}))
           ])) as any[];
           
+          const currentDevice = useDeviceStore.getState().devices.find(d => d.id === device.id);
+          const currentMeta = (currentDevice?.metadata || {}) as any;
+
           useDeviceStore.getState().updateDevice(device.id, {
             metadata: {
-              ...(device.metadata || {}),
-              Voltage: voltage.Voltage || device.metadata?.Voltage,
-              ActiveCurrent: current.ActiveCurrent || device.metadata?.ActiveCurrent,
-              ActivePower: power.ActivePower || device.metadata?.ActivePower,
-              Frequency: freq.Frequency || device.metadata?.Frequency,
-              PowerFactor: pf.Voltage || pf.PowerFactor || device.metadata?.PowerFactor,
-              LabelList: label.LabelList || device.metadata?.LabelList
+              ...currentMeta,
+              Voltage: voltage.Voltage || currentMeta?.Voltage,
+              ActiveCurrent: current.ActiveCurrent || currentMeta?.ActiveCurrent,
+              ActivePower: power.ActivePower || currentMeta?.ActivePower,
+              Frequency: freq.Frequency || currentMeta?.Frequency,
+              PowerFactor: pf.Voltage || pf.PowerFactor || currentMeta?.PowerFactor,
+              LabelList: label.LabelList || currentMeta?.LabelList
             }
           });
         } catch (err) {
