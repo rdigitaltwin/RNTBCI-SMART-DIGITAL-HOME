@@ -55,21 +55,22 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
       </div>
 
       {device.type === 'energy_evse' && (
-        <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-              {device.metadata?.Voltage != null ? ((device.metadata.Voltage as number) / 1000).toFixed(1) + ' V' : '—'}
-            </div>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-              {device.metadata?.ActiveCurrent != null ? ((device.metadata.ActiveCurrent as number) / 1000).toFixed(1) + ' A' : '—'}
-            </div>
-          </div>
-        </div>
-      )}
+  <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
+      <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+        {isOn && device.metadata?.Voltage != null ? ((device.metadata.Voltage as number) / 1000).toFixed(1) + ' V' : '0.0 V'}
+      </div>
+    </div>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
+      <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+        {isOn && device.metadata?.ActiveCurrent != null ? ((device.metadata.ActiveCurrent as number) / 1000).toFixed(1) + ' A' : '0.0 A'}
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Efficiency bar */}
       <div style={{ marginTop: '16px' }}>
