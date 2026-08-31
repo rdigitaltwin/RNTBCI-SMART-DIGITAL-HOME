@@ -92,6 +92,10 @@ class ConnectionManager:
         await self._subscribe(conn_id, "device:updates")
         await self._subscribe(conn_id, "events:stream")
         await self._subscribe(conn_id, "system:alerts")
+        await self._subscribe(conn_id, "system:metrics")
+        await self._subscribe(conn_id, "system:hems")
+        await self._subscribe(conn_id, "system:pipeline")
+        await self._subscribe(conn_id, "system:replay")
 
         # Send welcome message
         await self._send(conn_id, {
@@ -249,6 +253,10 @@ class ConnectionManager:
                 "device:updates",
                 "events:stream",
                 "system:alerts",
+                "system:metrics",
+                "system:hems",
+                "system:pipeline",
+                "system:replay",
             )
 
             async for message in pubsub.listen():
