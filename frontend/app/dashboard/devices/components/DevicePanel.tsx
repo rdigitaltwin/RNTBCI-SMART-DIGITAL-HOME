@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Server, Radio, Power, Download, Zap, Gauge } from 'lucide-react';
+import { X, Activity, Server, Radio, Power, Download, Zap, Gauge, Wifi, WifiOff, ShieldAlert } from 'lucide-react';
 import { useDeviceStore, type Device } from '@/store';
-import { DEVICE_TYPE_CONFIG } from '../constants';
+import { DEVICE_TYPE_CONFIG, isDeviceConnected } from '../constants';
 import DeviceControls from './DeviceControls';
 import DeviceToggle from './DeviceToggle';
 import api from '@/services/api';
@@ -25,7 +25,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
   }, [onClose]);
 
   useEffect(() => {
-    if (device?.type === 'energy_solar' || device?.type === 'solar_panel' || device?.type === 'solar_pv') {
+    if (device && isDeviceConnected(device) && (device?.type === 'energy_solar' || device?.type === 'solar_panel' || device?.type === 'solar_pv')) {
       const fetchSolar = async () => {
         try {
           const [voltage, current, power, freq, pf, label] = (await Promise.all([
@@ -57,13 +57,35 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
       };
       fetchSolar();
     }
-  }, [device?.id, device?.type]);
+  }, [device?.id, device?.type, device?.status, device?.connectivity]);
 
   if (!device) return null;
 
   const config = DEVICE_TYPE_CONFIG[device.type] || { emoji: '📱', label: device.type, color: '#94A3B8' };
-  const isOn = device.power_state === 'on';
+  const isConnected = isDeviceConnected(device);
+  const isOn = isConnected && device.power_state === 'on';
   const meta = (device.metadata || {}) as any;
+
+  const handleToggleConnection = async () => {
+    const newConnectivity = isConnected ? 'disconnected' : 'connected';
+    const newStatus = isConnected ? 'offline' : 'online';
+    const newPower = isConnected ? 'off' : device.power_state;
+
+    useDeviceStore.getState().updateDevice(device.id, {
+      connectivity: newConnectivity,
+      status: newStatus,
+      power_state: newPower,
+    });
+
+    try {
+      await api.updateDevice(device.id, {
+        connectivity: newConnectivity,
+        status: newStatus,
+      });
+    } catch (err) {
+      console.error('Failed to sync connectivity update', err);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -117,41 +139,103 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
               width: '48px', height: '48px', borderRadius: '16px',
-              background: `${config.color}15`, border: `1px solid ${config.color}30`,
+              background: isConnected ? `${config.color}15` : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${isConnected ? `${config.color}30` : 'rgba(255,255,255,0.1)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '24px',
+              filter: !isConnected ? 'grayscale(0.6)' : 'none',
             }}>
               {config.emoji}
             </div>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', margin: 0 }}>{device.name}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                <span className={`status-dot ${device.status}`} style={{ width: '8px', height: '8px' }} />
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>{device.status === 'online' ? 'Online' : 'Offline'}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                <span className={`status-dot ${isConnected ? device.status : 'offline'}`} style={{ width: '8px', height: '8px' }} />
+                <span style={{ fontSize: '12px', color: isConnected ? '#94A3B8' : '#F87171', fontWeight: 500 }}>
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </span>
                 <span style={{ color: '#475569' }}>•</span>
                 <span style={{ fontSize: '12px', color: config.color }}>{config.label}</span>
               </div>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            style={{ 
-              background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer',
-              padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            <X size={20} />
-          </button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Connect/Disconnect action */}
+            <button
+              onClick={handleToggleConnection}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                background: isConnected ? 'rgba(239, 68, 68, 0.12)' : 'rgba(0, 229, 255, 0.15)',
+                border: `1px solid ${isConnected ? 'rgba(239, 68, 68, 0.3)' : 'rgba(0, 229, 255, 0.35)'}`,
+                color: isConnected ? '#F87171' : '#00E5FF',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s',
+              }}
+            >
+              {isConnected ? (
+                <>
+                  <WifiOff size={14} />
+                  Disconnect
+                </>
+              ) : (
+                <>
+                  <Wifi size={14} />
+                  Connect
+                </>
+              )}
+            </button>
+
+            <button 
+              onClick={onClose}
+              style={{ 
+                background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer',
+                padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
+          {/* Disconnected Notice Banner */}
+          {!isConnected && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '16px',
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '14px',
+            }}>
+              <WifiOff size={22} color="#F87171" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#FCA5A5' }}>
+                  Device Disconnected — Operations Disabled
+                </div>
+                <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px', lineHeight: 1.5 }}>
+                  This device is currently not connected to the network. <strong>Simulation is not required</strong> and all operations (power toggle, device control, and automated actions) are disabled until the device is reconnected.
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Main Power Control */}
           <div style={{ 
             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
             borderRadius: '16px', padding: '20px',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            opacity: isConnected ? 1 : 0.6,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ padding: '10px', background: isOn ? `${config.color}20` : 'rgba(255,255,255,0.05)', borderRadius: '12px', color: isOn ? config.color : '#64748B' }}>
@@ -162,7 +246,9 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   {device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Power Generation' : 'Device Power'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#94A3B8' }}>
-                  {device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state'}
+                  {!isConnected 
+                    ? 'Operations disabled while disconnected' 
+                    : (device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state')}
                 </div>
               </div>
             </div>
@@ -170,12 +256,10 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
           </div>
 
           {/* Specific Controls */}
-          {isOn && (
-            <div>
-              <h3 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#64748B', marginBottom: '16px' }}>Device Controls</h3>
-              <DeviceControls device={device} color={config.color} />
-            </div>
-          )}
+          <div>
+            <h3 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#64748B', marginBottom: '16px' }}>Device Controls</h3>
+            <DeviceControls device={device} color={config.color} />
+          </div>
 
           {/* Telemetry / Status */}
           <div>
@@ -185,20 +269,40 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <Activity size={14} color="#3B82F6" />
-                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>Efficiency</span>
+                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>Simulation Status</span>
                 </div>
-                <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>{device.efficiency_percent || 90}%</div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 600, 
+                  color: isConnected ? '#00FF9D' : '#94A3B8',
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isConnected ? '#00FF9D' : '#64748B' }} />
+                  {isConnected ? 'Active' : 'Not Required'}
+                </div>
               </div>
 
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Radio size={14} color="#10B981" />
-                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>Connection</span>
+                  <Radio size={14} color={isConnected ? "#10B981" : "#EF4444"} />
+                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>Connectivity</span>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>{device.connectivity || 'wifi'}</div>
+                <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>
+                  {isConnected ? (device.connectivity || 'connected') : 'disconnected'}
+                </div>
               </div>
 
-              {device.type === 'energy_evse' && (
+              {isConnected && (
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <Activity size={14} color="#3B82F6" />
+                    <span style={{ fontSize: '12px', color: '#94A3B8' }}>Efficiency</span>
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>{device.efficiency_percent || 90}%</div>
+                </div>
+              )}
+
+              {device.type === 'energy_evse' && isConnected && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -221,7 +325,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 </>
               )}
 
-              {(device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv') && (
+              {(device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv') && isConnected && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', gridColumn: '1 / -1' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -343,3 +447,4 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     </AnimatePresence>
   );
 }
+

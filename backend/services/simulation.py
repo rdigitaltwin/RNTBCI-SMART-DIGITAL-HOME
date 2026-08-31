@@ -691,9 +691,17 @@ class SimulationEngine:
                     try:
                         device_type = device.type if isinstance(device.type, DeviceType) else DeviceType(device.type)
                         power_state = device.power_state if isinstance(device.power_state, PowerState) else PowerState(device.power_state)
+                        connectivity = device.connectivity if isinstance(device.connectivity, ConnectivityStatus) else (ConnectivityStatus(device.connectivity) if device.connectivity else ConnectivityStatus.CONNECTED)
+                        dev_status = device.status if isinstance(device.status, DeviceStatus) else (DeviceStatus(device.status) if device.status else DeviceStatus.ONLINE)
                     except ValueError as e:
                         # Skip device on Enum mapping error to prevent simulation crash
                         logger.error(f"Enum mismatch skipping device {device.id} ({device.name}): {e}")
+                        continue
+
+                    # If device is disconnected or offline, simulation is NOT required
+                    if connectivity == ConnectivityStatus.DISCONNECTED or dev_status == DeviceStatus.OFFLINE:
+                        device.energy_usage_kw = 0.0
+                        device.last_updated = now
                         continue
                         
                     device_id = str(device.id)

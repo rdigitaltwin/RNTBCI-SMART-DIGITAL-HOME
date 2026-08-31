@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { WifiOff } from 'lucide-react';
 import { type Device } from '@/store';
 import api from '@/services/api';
+import { isDeviceConnected } from '../constants';
 
 interface DeviceControlsProps {
   device: Device;
@@ -9,9 +11,11 @@ interface DeviceControlsProps {
 
 export default function DeviceControls({ device, color }: DeviceControlsProps) {
   const [loading, setLoading] = useState(false);
+  const isConnected = isDeviceConnected(device);
   const meta = device.metadata || {};
 
   const handleControl = async (command: string, params: Record<string, unknown> = {}) => {
+    if (!isConnected) return;
     setLoading(true);
     try {
       await api.controlDevice(device.id, command, params);
@@ -21,6 +25,28 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
       setLoading(false);
     }
   };
+
+  if (!isConnected) {
+    return (
+      <div style={{
+        padding: '16px',
+        background: 'rgba(239, 68, 68, 0.08)',
+        border: '1px solid rgba(239, 68, 68, 0.25)',
+        borderRadius: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+      }}>
+        <WifiOff size={20} color="#F87171" style={{ flexShrink: 0 }} />
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#FCA5A5' }}>Device Disconnected</div>
+          <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+            Operations cannot be performed and simulation is not required while disconnected.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderACControls = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -77,7 +103,6 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
     </div>
   );
 
-
   const renderWashingMachineControls = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
        <button onClick={() => handleControl('start')} style={{ padding: '8px', background: '#10B98120', color: '#10B981', borderRadius: '8px', border: 'none' }}>Start</button>
@@ -101,3 +126,4 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
     </div>
   );
 }
+

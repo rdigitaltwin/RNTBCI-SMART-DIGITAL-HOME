@@ -18,3 +18,16 @@ export const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; 
   battery_storage: { emoji: '🔋', label: 'Battery Storage', color: '#34D399' },
   mcb: { emoji: '⚡', label: 'Main Breaker', color: '#EF4444' },
 };
+
+export function isDeviceConnected(device: { connectivity?: string; status?: string }): boolean {
+  if (device.connectivity) {
+    const conn = device.connectivity.toLowerCase();
+    if (conn === 'disconnected' || conn === 'offline') return false;
+  }
+  if (device.status) {
+    const st = device.status.toLowerCase();
+    if (st === 'offline') return false;
+  }
+  return true;
+}
+
