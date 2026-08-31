@@ -27,6 +27,7 @@ import { LOAD_LEVEL_COLORS } from '@/lib/homeCapacity';
 import FloorPlanHouse from '@/components/three/FloorPlanHouse';
 import AllEnergyDevices from '@/components/three/EnergyDeviceModel';
 import MCBAnimation from '@/components/three/MCBAnimation';
+import SolarPV from '@/components/three/SolarPV';
 
 // =============================================================================
 // CANVAS CLEANUP
@@ -91,6 +92,9 @@ export function EnergyDigitalTwinScene() {
 
       {/* MCB 3D Breaker */}
       <MCBAnimation position={[-1.3, 0.25, -3.2]} />
+
+      {/* Solar PV array — left exterior yard, clear of house and EVSE */}
+      <SolarPV position={[-3.5, 0, 2.8]} tiltAngle={30} panelCount={8} />
 
       {/* Contact shadows */}
       <ContactShadows
