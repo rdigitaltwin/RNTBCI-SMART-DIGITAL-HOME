@@ -260,6 +260,47 @@ class APIClient {
     return this.request(`/api/v1/device-power/history?${query}`);
   }
   
+  // Solar Panel
+  async identifySolar(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/Identify/triggereffect`, { method: 'POST', body: { name: 'TriggerEffect' } });
+  }
+
+  async getSolarUserLabel(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/UserLabel/labellist`);
+  }
+
+  async setSolarUserLabel(id: string, label: string, value: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/UserLabel/labellist`, { method: 'POST', body: { label, value } });
+  }
+
+  async getSolarVoltage(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalMeasurement/voltage`);
+  }
+
+  async getSolarCurrent(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalMeasurement/activecurrent`);
+  }
+
+  async getSolarPowerOutput(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalMeasurement/activepower`);
+  }
+
+  async getGridFrequency(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalMeasurement/frequency`);
+  }
+
+  async getPowerFactor(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalMeasurement/powerfactor`);
+  }
+
+  async getSolarSessionEnergy(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalEnergyMeasurement/cumulativeenergyexported`); // Assuming session uses same endpoint or fallback
+  }
+
+  async getSolarTotalEnergy(id: string) {
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalEnergyMeasurement/cumulativeenergyexported`);
+  }
+
   async changeDeviceMode(id: string, mode: string) {
     return this.request(`/api/v1/devices/${id}/mode`, { method: 'PATCH', body: { mode } });
   }

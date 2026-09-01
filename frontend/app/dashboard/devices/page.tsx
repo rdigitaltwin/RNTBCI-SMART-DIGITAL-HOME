@@ -17,7 +17,7 @@ import { useDeviceStore, type Device } from '@/store';
 
 import DeviceCard from './components/DeviceCard';
 import DevicePanel from './components/DevicePanel';
-import { DEVICE_TYPE_CONFIG } from './constants';
+import { DEVICE_TYPE_CONFIG, isDeviceConnected } from './constants';
 // =============================================================================
 // DEVICE ONBOARDING MODAL
 // =============================================================================
@@ -201,6 +201,10 @@ export default function DevicesPage() {
 
   useEffect(() => { fetchDevices(); }, []);
 
+  const connectedCount = devices.filter((d) => isDeviceConnected(d)).length;
+  const disconnectedCount = devices.length - connectedCount;
+  const activeCount = devices.filter((d) => isDeviceConnected(d) && d.power_state === 'on').length;
+
   const filteredDevices = useMemo(() => {
     let result = devices;
     if (search) {
@@ -208,12 +212,28 @@ export default function DevicesPage() {
       result = result.filter((d) => d.name.toLowerCase().includes(q) || d.type.includes(q));
     }
     if (typeFilter !== 'all') result = result.filter((d) => d.type === typeFilter);
-    if (statusFilter !== 'all') result = result.filter((d) => d.status === statusFilter);
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'connected') {
+        result = result.filter((d) => isDeviceConnected(d));
+      } else if (statusFilter === 'disconnected') {
+        result = result.filter((d) => !isDeviceConnected(d));
+      } else {
+        result = result.filter((d) => d.status === statusFilter);
+      }
+    }
     return result;
   }, [devices, search, typeFilter, statusFilter]);
 
   const types = ['all', ...Object.keys(DEVICE_TYPE_CONFIG)];
-  const statuses = ['all', 'online', 'offline', 'warning', 'faulty'];
+  const statusOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'connected', label: 'Connected (Sim Active)' },
+    { value: 'disconnected', label: 'Disconnected (Sim Not Req.)' },
+    { value: 'online', label: 'Online' },
+    { value: 'offline', label: 'Offline' },
+    { value: 'warning', label: 'Warning' },
+    { value: 'faulty', label: 'Faulty' },
+  ];
 
   // Use only actual filtered devices
   const displayDevices = filteredDevices;
@@ -225,7 +245,7 @@ export default function DevicesPage() {
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#F8FAFC' }}>Device Inventory</h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
-            {filteredDevices.length || displayDevices.length} devices • {displayDevices.filter((d) => d.power_state === 'on').length} active
+            {devices.length} devices • <span style={{ color: '#00FF9D' }}>{connectedCount} connected</span> • <span style={{ color: '#94A3B8' }}>{disconnectedCount} disconnected (Simulation not req.)</span> • {activeCount} active
           </p>
         </div>
 
@@ -284,7 +304,7 @@ export default function DevicesPage() {
           ))}
         </select>
 
-        {/* Status filter */}
+        {/* Status & Connectivity filter */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -295,9 +315,9 @@ export default function DevicesPage() {
             fontFamily: "'Inter', sans-serif",
           }}
         >
-          {statuses.map((s) => (
-            <option key={s} value={s} style={{ background: '#0B1120' }}>
-              {s === 'all' ? 'All Status' : s.charAt(0).toUpperCase() + s.slice(1)}
+          {statusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value} style={{ background: '#0B1120' }}>
+              {opt.label}
             </option>
           ))}
         </select>
@@ -326,3 +346,4 @@ export default function DevicesPage() {
     </div>
   );
 }
+

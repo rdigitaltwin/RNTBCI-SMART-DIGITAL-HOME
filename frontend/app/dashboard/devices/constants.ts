@@ -14,8 +14,20 @@ export const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; 
   water_heater: { emoji: '🔥', label: 'Water Heater', color: '#F97316' },
   camera: { emoji: '📷', label: 'Camera', color: '#EF4444' },
   energy_evse: { emoji: '🚗⚡', label: 'EV Charger', color: '#10B981' },
-  solar_panel: { emoji: '☀️', label: 'Solar Panel', color: '#FCD34D' },
   solar_pv: { emoji: '☀️', label: 'Solar Panel', color: '#FCD34D' },
   battery_storage: { emoji: '🔋', label: 'Battery Storage', color: '#34D399' },
   mcb: { emoji: '⚡', label: 'Main Breaker', color: '#EF4444' },
 };
+
+export function isDeviceConnected(device: { connectivity?: string; status?: string }): boolean {
+  if (device.connectivity) {
+    const conn = device.connectivity.toLowerCase();
+    if (conn === 'disconnected' || conn === 'offline') return false;
+  }
+  if (device.status) {
+    const st = device.status.toLowerCase();
+    if (st === 'offline') return false;
+  }
+  return true;
+}
+

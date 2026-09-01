@@ -45,6 +45,7 @@ class EnergyManager:
         self._peak_today_kw: float = 0.0
         self._total_cost_today: float = 0.0
         self._optimization_active: bool = False
+        self._analyze_error_logged: bool = False
         self._predictions: dict[str, float] = {}
 
     @property
@@ -147,11 +148,18 @@ class EnergyManager:
 
                 # Publish to real-time
                 await redis_client.publish("system:hems", analysis)
+                
+                # Reset error flag upon successful run
+                if self._analyze_error_logged:
+                    logger.info("HEMS analysis recovered and is operating normally.")
+                    self._analyze_error_logged = False
 
                 return analysis
 
             except Exception as e:
-                logger.error("HEMS analysis error: %s", str(e))
+                if not self._analyze_error_logged:
+                    logger.exception("HEMS analysis error. Suppressing further errors until recovery.")
+                    self._analyze_error_logged = True
                 return self.status
 
     async def _predict_consumption(self, db: AsyncSession) -> dict[str, float]:
@@ -234,8 +242,8 @@ class EnergyManager:
                             device.power_state = PowerState.STANDBY
                             device.last_updated = datetime.now(timezone.utc)
                             applied += 1
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Failed to apply optimization recommendation for device {rec.get('device_id')}: {e}")
                 await db.commit()
 
             analysis["optimizations_applied"] = applied

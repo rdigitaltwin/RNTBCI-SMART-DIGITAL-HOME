@@ -217,7 +217,7 @@ export default function HomePowerDashboard() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
-                  tickFormatter={(value) => `${value} kW`}
+                  tickFormatter={(value) => typeof value === 'number' && isFinite(value) && value !== 0 ? `${value} kW` : ''}
                   dx={-10}
                 />
                 <Tooltip 

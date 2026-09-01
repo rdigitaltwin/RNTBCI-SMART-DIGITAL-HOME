@@ -74,7 +74,7 @@ const DEVICE_COLORS: Record<string, string> = {
   washing_machine: '#06B6D4',
   water_heater: '#F97316',
   energy_evse: '#10B981',
-  solar_panel: '#FCD34D',
+  solar_pv: '#FCD34D',
 };
 
 // =============================================================================
@@ -502,7 +502,7 @@ function EnergyDeviceModelComponent({ device, isSelected, onClick }: EnergyDevic
       case 'air_conditioner': return <AirConditionerModel isOn={isOn} />;
       case 'washing_machine': return <WashingMachineModel isOn={isOn} />;
       case 'water_heater': return <WaterHeaterModel isOn={isOn} />;
-      case 'solar_panel': return <SolarPanelModel isOn={isOn} />;
+      case 'solar_pv': return <SolarPanelModel isOn={isOn} />;
       default:
         return (
           <mesh>

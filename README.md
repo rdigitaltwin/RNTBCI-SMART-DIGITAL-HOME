@@ -8,7 +8,7 @@
 
 <p align="center">
   <strong>Enterprise-Grade Smart Home Digital Twin Platform</strong><br/>
-  Real-time 3D visualization · Intelligent simulation · Energy management · Immersive automation
+  Real-time 3D visualization · Intelligent simulation · Energy management · Immersive automation.
 </p>
 ---
 

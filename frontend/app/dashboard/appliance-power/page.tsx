@@ -23,6 +23,7 @@ export default function AppliancePowerDashboard() {
   const [activeDevices, setActiveDevices] = useState<Set<string>>(new Set());
   const [hoveredDevice, setHoveredDevice] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'absolute' | 'pct'>('absolute');
   
   const fetchData = useCallback(async () => {
     try {
@@ -98,6 +99,32 @@ export default function AppliancePowerDashboard() {
     });
   };
 
+  // In % Change mode, normalise each device's values to ((v - mean) / mean * 100)
+  const chartData = useMemo(() => {
+    if (viewMode === 'absolute' || data.length === 0) return data;
+
+    // Compute per-device mean across all time buckets
+    const means: Record<string, number> = {};
+    Array.from(activeDevices).forEach((device) => {
+      const vals = data.map((d) => d[device] as number).filter((v) => v != null && isFinite(v));
+      means[device] = vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+    });
+
+    return data.map((row) => {
+      const newRow: any = { timestamp: row.timestamp, timeFormatted: row.timeFormatted };
+      Array.from(activeDevices).forEach((device) => {
+        const mean = means[device];
+        const val = row[device] as number;
+        if (mean > 0 && val != null && isFinite(val)) {
+          newRow[device] = Number(((val - mean) / mean * 100).toFixed(2));
+        } else {
+          newRow[device] = null;
+        }
+      });
+      return newRow;
+    });
+  }, [data, viewMode, activeDevices]);
+
   const filteredDevices = useMemo(() => {
     return allDevices.filter(d => d.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [allDevices, searchQuery]);
@@ -144,6 +171,26 @@ export default function AppliancePowerDashboard() {
               onFocus={(e) => e.target.style.borderColor = '#00E5FF'}
               onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
             />
+          </div>
+
+          {/* View mode toggle */}
+          <div style={{ display: 'flex', background: 'rgba(11, 17, 32, 0.5)', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {(['absolute', 'pct'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                style={{
+                  padding: '5px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', fontWeight: 600,
+                  background: viewMode === mode ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
+                  color: viewMode === mode ? '#00E5FF' : '#64748B',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {mode === 'absolute' ? 'Absolute kW' : '% Change'}
+              </button>
+            ))}
           </div>
 
           <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
@@ -237,7 +284,7 @@ export default function AppliancePowerDashboard() {
           <div style={{ position: 'relative', height: '400px', width: '100%' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
               <ResponsiveContainer width="99%" height="100%">
-              <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis 
                   dataKey="timeFormatted" 
@@ -252,8 +299,11 @@ export default function AppliancePowerDashboard() {
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
-                  domain={[0, (dataMax: number) => Math.max(dataMax * 1.1, 0.1)]}
-                  tickFormatter={(value) => `${Number(value).toFixed(2)} kW`}
+                  domain={viewMode === 'pct' ? ['auto', 'auto'] : [0, (dataMax: number) => Math.max(dataMax * 1.1, 0.1)]}
+                  tickFormatter={viewMode === 'pct'
+                    ? (value) => typeof value === 'number' && isFinite(value) ? `${value.toFixed(1)}%` : ''
+                    : (value) => typeof value === 'number' && isFinite(value) ? `${Number(value).toFixed(2)} kW` : ''
+                  }
                   dx={-10}
                 />
                 <Tooltip 
@@ -264,7 +314,12 @@ export default function AppliancePowerDashboard() {
                   }}
                   itemStyle={{ fontWeight: 600, padding: '2px 0' }}
                   labelStyle={{ color: '#94A3B8', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}
-                  formatter={(value: any, name: any) => [`${(Number(value) || 0).toFixed(3)} kW`, String(name)]}
+                  formatter={(value: any, name: any) => [
+                    viewMode === 'pct'
+                      ? `${(Number(value) || 0).toFixed(2)}%`
+                      : `${(Number(value) || 0).toFixed(3)} kW`,
+                    String(name)
+                  ]}
                 />
                 
                 {Array.from(activeDevices).map((device) => {

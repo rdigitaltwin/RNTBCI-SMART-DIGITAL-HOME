@@ -388,6 +388,14 @@ async def control_device(
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
+    conn = device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity
+    dev_st = device.status.value if hasattr(device.status, 'value') else device.status
+    if conn == "disconnected" or dev_st == "offline":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot operate disconnected device. Simulation and controls are inactive.",
+        )
+
     # Apply control command
     new_metadata = dict(device.extra_data or {})
     new_metadata.update(data.parameters)
@@ -472,9 +480,18 @@ async def toggle_power(
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
+    conn = device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity
+    dev_st = device.status.value if hasattr(device.status, 'value') else device.status
+    if conn == "disconnected" or dev_st == "offline":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot operate disconnected device. Simulation and power toggles are inactive.",
+        )
+
     old_state = device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state
     device.power_state = PowerState(data.power_state)
     device.last_updated = datetime.now(timezone.utc)
+
 
     # Delegate power management to simulation engine state machine
     device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
@@ -1084,7 +1101,7 @@ def _find_device_file(identifier: str) -> Optional[str]:
                     data = json.load(f)
                     if data.get("deviceType", {}).get("device_id") == identifier:
                         return filepath
-            except Exception:
+            except (IOError, ValueError, json.JSONDecodeError):
                 continue
                 
     return None
@@ -1105,7 +1122,8 @@ async def matter_get_device(
     try:
         with open(file_path, "r") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load device file: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -1123,7 +1141,7 @@ async def matter_post_command_path(
     """Matter Protocol POST endpoint for commands specified in URL (e.g. /cluster/OnOff/On)."""
     try:
         payload = await request.json()
-    except Exception:
+    except (ValueError, json.JSONDecodeError):
         payload = {}
         
     # Try to extract actual command name
@@ -1156,7 +1174,7 @@ async def matter_post_command_body(
     """Matter Protocol POST endpoint for commands specified in body (e.g. {"command": "On"})."""
     try:
         payload = await request.json()
-    except Exception:
+    except (ValueError, json.JSONDecodeError):
         raise HTTPException(status_code=400, detail="Invalid JSON body")
         
     command = payload.get("command")
@@ -1183,7 +1201,7 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
             if json_name:
                 device_name = json_name
             device_id = data.get("deviceType", {}).get("device_id", "")
-    except Exception:
+    except (IOError, ValueError, json.JSONDecodeError):
         pass
         
     # Also update Postgres DB and fire websockets if it's a known state command
@@ -1293,8 +1311,8 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
     # Now log it to JSON with the generated response as the payload
     try:
         DeviceLogger.log_communication(device_id, device_name, action, response_data, source="matter_api")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"DeviceLogger failed to log communication: {e}")
         
     return response_data
 
@@ -1526,8 +1544,20 @@ async def disable_evse_charging(
     if payload.command != "Disable":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'Disable'.")
 
-    result = await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
-    if result is None:
+    device_uuid = uuid.UUID(device_id)
+    result = await db.execute(select(Device).where(Device.id == device_uuid))
+    device = result.scalar_one_or_none()
+    if device:
+        device.power_state = PowerState.OFF
+        device.last_updated = datetime.now(timezone.utc)
+        device.energy_usage_kw = 0.0
+        device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+        tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+        tracker.set_power_off()
+        await db.commit()
+
+    update_result = await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
+    if update_result is None:
         raise HTTPException(status_code=404, detail="Device not found")
     return {
         "status": "success",
@@ -1556,8 +1586,19 @@ async def enable_evse_charging(
     if payload.command != "EnableCharging":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'EnableCharging'.")
 
-    result = await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
-    if result is None:
+    device_uuid = uuid.UUID(device_id)
+    result = await db.execute(select(Device).where(Device.id == device_uuid))
+    device = result.scalar_one_or_none()
+    if device:
+        device.power_state = PowerState.ON
+        device.last_updated = datetime.now(timezone.utc)
+        device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+        tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+        tracker.set_power_on()
+        await db.commit()
+
+    update_result = await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
+    if update_result is None:
         raise HTTPException(status_code=404, detail="Device not found")
     return {
         "status": "success",
