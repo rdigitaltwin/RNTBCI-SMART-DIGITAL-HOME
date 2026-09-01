@@ -162,17 +162,12 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 <Power size={20} />
               </div>
               <div>
-<<<<<<< Updated upstream
-                <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>Device Power</div>
-                <div style={{ fontSize: '12px', color: '#94A3B8' }}>Toggle power state</div>
-=======
                 <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>
                   {liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv' ? 'Power Generation' : 'Device Power'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#94A3B8' }}>
                   {liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state'}
                 </div>
->>>>>>> Stashed changes
               </div>
             </div>
             <DeviceToggle device={liveDevice} color={config.color} />
@@ -207,8 +202,6 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>{liveDevice.connectivity || 'wifi'}</div>
               </div>
 
-<<<<<<< Updated upstream
-=======
               {liveDevice.type === 'energy_evse' && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -304,8 +297,6 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   </div>
                 </>
               )}
-
->>>>>>> Stashed changes
             </div>
           </div>
 
