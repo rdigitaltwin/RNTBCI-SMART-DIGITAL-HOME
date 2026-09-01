@@ -26,8 +26,8 @@ import { formatPower } from '@/lib/applianceDatabase';
 // =============================================================================
 
 const SOLAR_PV_DEFAULTS = {
-  position:   [-3.5, 0, 2.8] as [number, number, number],
-  tiltAngle:  30,   // degrees from horizontal
+  position:   [0.2, 0.85, -0.3] as [number, number, number],
+  tiltAngle:  25,   // degrees from horizontal
   panelCount: 8,    // total panels in array
 };
 

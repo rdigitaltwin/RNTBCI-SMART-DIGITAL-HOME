@@ -513,8 +513,8 @@ function EnergyDeviceModelComponent({ device, isSelected, onClick }: EnergyDevic
     }
   };
 
-  // Don't render EV charger here — it's rendered in FloorPlanHouse ExteriorArea
-  if (device.type === 'energy_evse') return null;
+  // Don't render EV charger or solar PV here — they are rendered as standalone components in the scene
+  if (device.type === 'energy_evse' || device.type === 'solar_pv') return null;
 
   return (
     <group ref={groupRef} position={pos} onClick={(e) => { e.stopPropagation(); onClick(); }}>

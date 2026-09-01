@@ -693,7 +693,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     // Current load = sum of all ON device consumption (excluding generation devices)
     const rawLoad = devices
-      .filter((d) => d.type !== 'solar_panel' && d.type !== 'energy_solar')
+      .filter((d) => d.type !== 'solar_panel' && d.type !== 'energy_solar' && d.type !== 'solar_pv')
       .reduce((sum, d) => sum + d.currentConsumption, 0);
 
     const solarGenerationKw = useSimulationStore.getState().metrics.solar_generation_kw || 0;
@@ -971,7 +971,12 @@ useDeviceStore.subscribe((state, prevState) => {
   if (isSyncing) return;
   
   const energyState = useEnergyStore.getState();
-  if (energyState.deviceOrder.length === 0) return; // not initialized
+  if (energyState.deviceOrder.length === 0 || Object.keys(energyState.devices).length !== state.devices.length) {
+    if (state.devices.length > 0) {
+      energyState.initializeDevices();
+    }
+    if (energyState.deviceOrder.length === 0) return;
+  }
   
   isSyncing = true;
   

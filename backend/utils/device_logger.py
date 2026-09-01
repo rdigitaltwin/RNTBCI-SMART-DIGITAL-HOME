@@ -24,6 +24,8 @@ class DeviceLogger:
         "Lock":        "doorlock",
         "Heater":      "heatpump",
         "Switch":      "switch",
+        "Solar":       "solar",
+        "PV":          "solar",
     }
 
     @classmethod
@@ -564,6 +566,59 @@ class DeviceLogger:
 
     # ── Dispatcher ───────────────────────────────────────────────────────
 
+    @staticmethod
+    def _schema_solar(device_name: str, device_id: str) -> dict:
+        """SolarPV – Matter 0x0017 (Electrical Measurement / Energy)."""
+        return {
+            "deviceType": {
+                "id": "0x0017",
+                "name": "SolarPV",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "classification": {"class": "simple", "scope": "endpoint"},
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "SolarPV",
+                    "clusters": [
+                        {
+                            "clusterId": "0x0003",
+                            "name": "Identify",
+                            "side": "server",
+                            "mandatory": True,
+                            "commands": [{"commandId": "0x0040", "name": "TriggerEffect"}]
+                        },
+                        {
+                            "clusterId": "0x0000",
+                            "name": "UserLabel",
+                            "side": "server",
+                            "attributes": [{"name": "LabelList", "value": [{"label": "Name", "value": "SolarArray01"}]}]
+                        },
+                        {
+                            "clusterId": "0x0b04",
+                            "name": "ElectricalMeasurement",
+                            "side": "server",
+                            "attributes": [
+                                {"name": "Voltage", "value": 230000},
+                                {"name": "ActiveCurrent", "value": 20400},
+                                {"name": "ActivePower", "value": 4690000},
+                                {"name": "Frequency", "value": 50000},
+                                {"name": "PowerFactor", "value": 98}
+                            ]
+                        },
+                        {
+                            "clusterId": "0x0090",
+                            "name": "ElectricalEnergyMeasurement",
+                            "side": "server",
+                            "attributes": [
+                                {"name": "CumulativeEnergyExported", "value": 15200000}
+                            ]
+                        }
+                    ]
+                }]
+            }
+        }
+
     _SCHEMA_BUILDER_MAP: dict[str, str] = {
         "evse":       "_schema_evse",
         "light":      "_schema_light",
@@ -572,6 +627,7 @@ class DeviceLogger:
         "doorlock":   "_schema_doorlock",
         "heatpump":   "_schema_heatpump",
         "switch":     "_schema_switch",
+        "solar":      "_schema_solar",
     }
 
     @classmethod
