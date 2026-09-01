@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Server, Radio, Power, Download } from 'lucide-react';
-import { type Device } from '@/store';
+import { X, Activity, Server, Radio, Power, Download, Zap, Gauge } from 'lucide-react';
+import { useDeviceStore, type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG } from '../constants';
 import DeviceControls from './DeviceControls';
 import DeviceToggle from './DeviceToggle';
+import api from '@/services/api';
 
 interface DevicePanelProps {
   device: Device | null;
@@ -13,6 +14,10 @@ interface DevicePanelProps {
 
 export default function DevicePanel({ device, onClose }: DevicePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Subscribe to live device in Zustand store for 0ms real-time sync
+  const storeDevice = useDeviceStore((s) => s.devices.find((d) => d.id === device?.id));
+  const liveDevice = storeDevice || device;
 
   // Close on Escape key
   useEffect(() => {
@@ -23,11 +28,46 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  if (!device) return null;
+  useEffect(() => {
+    if (liveDevice?.type === 'energy_solar' || liveDevice?.type === 'solar_panel' || liveDevice?.type === 'solar_pv') {
+      const fetchSolar = async () => {
+        try {
+          const [voltage, current, power, freq, pf, label] = (await Promise.all([
+            api.getSolarVoltage(liveDevice.id).catch(() => ({})),
+            api.getSolarCurrent(liveDevice.id).catch(() => ({})),
+            api.getSolarPowerOutput(liveDevice.id).catch(() => ({})),
+            api.getGridFrequency(liveDevice.id).catch(() => ({})),
+            api.getPowerFactor(liveDevice.id).catch(() => ({})),
+            api.getSolarUserLabel(liveDevice.id).catch(() => ({}))
+          ])) as any[];
+          
+          const currentDevice = useDeviceStore.getState().devices.find(d => d.id === liveDevice.id);
+          const currentMeta = (currentDevice?.metadata || {}) as any;
 
-  const config = DEVICE_TYPE_CONFIG[device.type] || { emoji: '📱', label: device.type, color: '#94A3B8' };
-  const isOn = device.power_state === 'on';
-  const meta = device.metadata || {};
+          useDeviceStore.getState().updateDevice(liveDevice.id, {
+            metadata: {
+              ...currentMeta,
+              Voltage: voltage.Voltage || currentMeta?.Voltage,
+              ActiveCurrent: current.ActiveCurrent || currentMeta?.ActiveCurrent,
+              ActivePower: power.ActivePower || currentMeta?.ActivePower,
+              Frequency: freq.Frequency || currentMeta?.Frequency,
+              PowerFactor: pf.Voltage || pf.PowerFactor || currentMeta?.PowerFactor,
+              LabelList: label.LabelList || currentMeta?.LabelList
+            }
+          });
+        } catch (err) {
+          console.error("Failed to fetch solar telemetry", err);
+        }
+      };
+      fetchSolar();
+    }
+  }, [liveDevice?.id, liveDevice?.type]);
+
+  if (!liveDevice) return null;
+
+  const config = DEVICE_TYPE_CONFIG[liveDevice.type] || { emoji: '📱', label: liveDevice.type, color: '#94A3B8' };
+  const isOn = liveDevice.power_state === 'on';
+  const meta = (liveDevice.metadata || {}) as any;
 
   return (
     <AnimatePresence>
@@ -88,10 +128,10 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               {config.emoji}
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', margin: 0 }}>{device.name}</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', margin: 0 }}>{liveDevice.name}</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                <span className={`status-dot ${device.status}`} style={{ width: '8px', height: '8px' }} />
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>{device.status === 'online' ? 'Online' : 'Offline'}</span>
+                <span className={`status-dot ${liveDevice.status}`} style={{ width: '8px', height: '8px' }} />
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>{liveDevice.status === 'online' ? 'Online' : 'Offline'}</span>
                 <span style={{ color: '#475569' }}>•</span>
                 <span style={{ fontSize: '12px', color: config.color }}>{config.label}</span>
               </div>
@@ -122,18 +162,27 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 <Power size={20} />
               </div>
               <div>
+<<<<<<< Updated upstream
                 <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>Device Power</div>
                 <div style={{ fontSize: '12px', color: '#94A3B8' }}>Toggle power state</div>
+=======
+                <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>
+                  {liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv' ? 'Power Generation' : 'Device Power'}
+                </div>
+                <div style={{ fontSize: '12px', color: '#94A3B8' }}>
+                  {liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state'}
+                </div>
+>>>>>>> Stashed changes
               </div>
             </div>
-            <DeviceToggle device={device} color={config.color} />
+            <DeviceToggle device={liveDevice} color={config.color} />
           </div>
 
           {/* Specific Controls */}
           {isOn && (
             <div>
               <h3 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#64748B', marginBottom: '16px' }}>Device Controls</h3>
-              <DeviceControls device={device} color={config.color} />
+              <DeviceControls device={liveDevice} color={config.color} />
             </div>
           )}
 
@@ -147,7 +196,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   <Activity size={14} color="#3B82F6" />
                   <span style={{ fontSize: '12px', color: '#94A3B8' }}>Efficiency</span>
                 </div>
-                <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>{device.efficiency_percent || 90}%</div>
+                <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>{liveDevice.efficiency_percent || 90}%</div>
               </div>
 
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -155,9 +204,108 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   <Radio size={14} color="#10B981" />
                   <span style={{ fontSize: '12px', color: '#94A3B8' }}>Connection</span>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>{device.connectivity || 'wifi'}</div>
+                <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>{liveDevice.connectivity || 'wifi'}</div>
               </div>
 
+<<<<<<< Updated upstream
+=======
+              {liveDevice.type === 'energy_evse' && (
+                <>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Zap size={14} color="#F59E0B" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Voltage</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.Voltage != null ? (meta.Voltage / 1000).toFixed(1) + ' V' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Gauge size={14} color="#3B82F6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Current</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.ActiveCurrent != null ? (meta.ActiveCurrent / 1000).toFixed(1) + ' A' : '—'}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {(liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv') && (
+                <>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', gridColumn: '1 / -1' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>Panel Identification</div>
+                        <div style={{ fontSize: '14px', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          Label: {meta.LabelList?.[0]?.value || 'Unknown'}
+                          <button 
+                            onClick={() => {
+                              const newLabel = window.prompt("Enter new label value:", meta.LabelList?.[0]?.value || "");
+                              if (newLabel) {
+                                api.setSolarUserLabel(liveDevice.id, meta.LabelList?.[0]?.label || "name", newLabel);
+                              }
+                            }}
+                            style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', padding: 0 }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => api.identifySolar(liveDevice.id)}
+                        style={{
+                          background: `${config.color}20`, border: `1px solid ${config.color}40`,
+                          color: config.color, padding: '8px 16px', borderRadius: '8px',
+                          cursor: 'pointer', fontSize: '12px', fontWeight: 500
+                        }}
+                      >
+                        Trigger Identify
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Zap size={14} color="#F59E0B" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Voltage</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.Voltage != null ? (meta.Voltage / 1000).toFixed(1) + ' V' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Gauge size={14} color="#3B82F6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Current</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.ActiveCurrent != null ? (meta.ActiveCurrent / 1000).toFixed(1) + ' A' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Activity size={14} color="#10B981" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Frequency</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.Frequency != null ? (meta.Frequency / 1000).toFixed(1) + ' Hz' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Activity size={14} color="#8B5CF6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Power Factor</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.PowerFactor != null ? (meta.PowerFactor / 10000).toFixed(2) : '—'}
+                    </div>
+                  </div>
+                </>
+              )}
+
+>>>>>>> Stashed changes
             </div>
           </div>
 
@@ -177,10 +325,10 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
 
             <button
               onClick={() => {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(device, null, 2));
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(liveDevice, null, 2));
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", `device_${device.name.replace(/ /g, '_')}_logs.json`);
+                downloadAnchorNode.setAttribute("download", `device_${liveDevice.name.replace(/ /g, '_')}_logs.json`);
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
