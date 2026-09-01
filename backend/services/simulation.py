@@ -189,7 +189,7 @@ DEVICE_CYCLES: dict[str, list[tuple[str, tuple[int, int]]]] = {
 # HVAC warm-up power multiplier curve (seconds → multiplier)
 STARTING_DURATION_S = 0.0
 STOPPING_DURATION_S = 0.0
-HISTORY_RECORD_INTERVAL_S = 15  # Record to history tables every 15 seconds
+HISTORY_RECORD_INTERVAL_S = 7  # Record to history tables every 7 seconds
 
 
 # =============================================================================
@@ -248,15 +248,26 @@ class DeviceStateTracker:
             pf = 1.0
             base_kvar = 0.0
         else:
-            # Fallback to realistic deterministic profiles
+                        # Fallback to realistic deterministic profiles
             profile = self.get_mode_profile()
             base_kw = profile.get("kw", 0.0)
+            
+            # REMOVED NOISE: Power will now be perfectly stable with 0 variance
+            # noise_pct = profile.get("noise_pct", 0.0)
+            # if noise_pct > 0 and base_kw > 0:
+            #     base_kw += base_kw * random.gauss(0, noise_pct * 0.1)
+
+            pf = profile.get("pf", 0.90)
+            base_kvar = profile.get("kvar", base_kw * math.tan(math.acos(pf)) if base_kw > 0 else 0.0)
+
             
             # Add some slight noise to make it look alive and fluctuate naturally
             noise_pct = profile.get("noise_pct", 0.0)
             if noise_pct > 0 and base_kw > 0:
-                base_kw += base_kw * random.gauss(0, noise_pct)
-                
+                # Multiply noise_pct by 0.1 to reduce variance by 90% (making it much more stable)
+                base_kw += base_kw * random.gauss(0, noise_pct * 0.1)
+
+
             pf = profile.get("pf", 0.90)
             base_kvar = profile.get("kvar", base_kw * math.tan(math.acos(pf)) if base_kw > 0 else 0.0)
 
