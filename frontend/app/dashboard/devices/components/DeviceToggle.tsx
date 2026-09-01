@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Zap } from 'lucide-react';
+import { Zap, WifiOff } from 'lucide-react';
 import api from '@/services/api';
 import { useDeviceStore, type Device } from '@/store';
 import { useEnergyStore } from '@/store/energyEngine';
+import { isDeviceConnected } from '../constants';
 
 interface DeviceToggleProps {
   device: Device;
@@ -11,11 +12,12 @@ interface DeviceToggleProps {
 
 export default function DeviceToggle({ device, color }: DeviceToggleProps) {
   const [toggling, setToggling] = useState(false);
-  const isOn = device.power_state === 'on';
+  const isConnected = isDeviceConnected(device);
+  const isOn = isConnected && device.power_state === 'on';
 
   const handlePowerToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (toggling) return;
+    if (!isConnected || toggling) return;
     setToggling(true);
     
     const newState = isOn ? 'off' : 'on';
@@ -56,11 +58,17 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       <Zap size={14} color={isOn ? color : '#64748B'} />
-      <span style={{
-        fontFamily: "'Orbitron', monospace", fontSize: '16px', fontWeight: 700,
-        color: isOn ? '#F8FAFC' : '#64748B',
-      }}>
+      <span 
+        title={!isConnected ? 'Device disconnected — Simulation not required' : undefined}
+        style={{
+          fontFamily: "'Orbitron', monospace", fontSize: '16px', fontWeight: 700,
+          color: isOn ? '#F8FAFC' : '#64748B',
+        }}
+      >
         {(() => {
+          if (!isConnected) {
+            return <>0<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>W</span></>;
+          }
           const powerW = (device.energy_usage_kw || 0) * 1000;
           if (powerW >= 1000) {
             return <>{(powerW / 1000).toFixed(2)}<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>kW</span></>;
@@ -72,18 +80,24 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
       {device.type !== 'energy_solar' && device.type !== 'solar_panel' && device.type !== 'solar_pv' && (
         <button 
           onClick={handlePowerToggle}
-          disabled={toggling}
+          disabled={!isConnected || toggling}
+          title={!isConnected ? 'Cannot operate: Device is disconnected' : (isOn ? 'Turn OFF' : 'Turn ON')}
           style={{
             width: '44px', height: '24px', borderRadius: '12px',
-            background: isOn ? `${color}40` : 'rgba(255,255,255,0.1)',
-            border: `1px solid ${isOn ? color : 'rgba(255,255,255,0.2)'}`,
-            position: 'relative', cursor: toggling ? 'wait' : 'pointer',
+            background: !isConnected 
+              ? 'rgba(255,255,255,0.04)' 
+              : (isOn ? `${color}40` : 'rgba(255,255,255,0.1)'),
+            border: `1px solid ${!isConnected ? 'rgba(255,255,255,0.08)' : (isOn ? color : 'rgba(255,255,255,0.2)')}`,
+            position: 'relative', 
+            cursor: !isConnected ? 'not-allowed' : (toggling ? 'wait' : 'pointer'),
+            opacity: !isConnected ? 0.45 : 1,
             marginLeft: '8px', transition: 'all 0.3s'
           }}
         >
           <div style={{
             width: '18px', height: '18px', borderRadius: '50%',
-            background: isOn ? '#FFF' : '#94A3B8', position: 'absolute', top: '2px',
+            background: !isConnected ? '#475569' : (isOn ? '#FFF' : '#94A3B8'), 
+            position: 'absolute', top: '2px',
             left: isOn ? '22px' : '3px',
             transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
@@ -93,3 +107,4 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
     </div>
   );
 }
+

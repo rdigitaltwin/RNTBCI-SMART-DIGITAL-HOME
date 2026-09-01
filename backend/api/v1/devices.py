@@ -388,6 +388,14 @@ async def control_device(
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
+    conn = device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity
+    dev_st = device.status.value if hasattr(device.status, 'value') else device.status
+    if conn == "disconnected" or dev_st == "offline":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot operate disconnected device. Simulation and controls are inactive.",
+        )
+
     # Apply control command
     new_metadata = dict(device.extra_data or {})
     new_metadata.update(data.parameters)
@@ -472,9 +480,18 @@ async def toggle_power(
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
+    conn = device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity
+    dev_st = device.status.value if hasattr(device.status, 'value') else device.status
+    if conn == "disconnected" or dev_st == "offline":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot operate disconnected device. Simulation and power toggles are inactive.",
+        )
+
     old_state = device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state
     device.power_state = PowerState(data.power_state)
     device.last_updated = datetime.now(timezone.utc)
+
 
     # Delegate power management to simulation engine state machine
     device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
