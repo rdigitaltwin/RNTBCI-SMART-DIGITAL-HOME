@@ -183,6 +183,23 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
         </div>
       )}
 
+      {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && isConnected && (
+        <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(252, 211, 77, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(252, 211, 77, 0.15)' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Generation</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#FCD34D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn ? (device.metadata?.ActivePower != null ? (Math.abs(device.metadata.ActivePower as number) / 1000).toFixed(2) + ' kW' : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw).toFixed(2) + ' kW' : '4.69 kW')) : '0.00 kW'}
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Efficiency</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {device.metadata?.efficiency != null ? String(device.metadata.efficiency) + '%' : '22.5%'}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Efficiency bar / Simulation indicator */}
       <div style={{ marginTop: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>

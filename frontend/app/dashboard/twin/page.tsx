@@ -93,8 +93,8 @@ export function EnergyDigitalTwinScene() {
       {/* MCB 3D Breaker */}
       <MCBAnimation position={[-1.3, 0.25, -3.2]} />
 
-      {/* Solar PV array — left exterior yard, clear of house and EVSE */}
-      <SolarPV position={[-3.5, 0, 2.8]} tiltAngle={30} panelCount={8} />
+      {/* Solar PV array — on top of the house roof */}
+      <SolarPV position={[0.2, 0.85, -0.3]} tiltAngle={25} panelCount={8} />
 
       {/* Contact shadows */}
       <ContactShadows
