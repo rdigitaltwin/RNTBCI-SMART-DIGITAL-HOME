@@ -120,7 +120,7 @@ interface DeviceState {
 const INITIAL_DEMO_DEVICES: Device[] = [
   {
     id: 'solar_panel',
-    name: 'Solar Panel',
+    name: 'Solar Panel Array',
     type: 'solar_pv',
     room_id: 'garage',
     room_name: 'Garage / Exterior',
@@ -129,7 +129,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     connectivity: 'connected',
     energy_usage_kw: -4.69,
     efficiency_percent: 95,
-    metadata: { efficiency: 95, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000 },
+    metadata: { efficiency: 22.5, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000 },
     position_x: 0.2, position_y: 0.85, position_z: -0.3,
     turned_on_at: new Date().toISOString(),
     total_energy_kwh: 15.2,

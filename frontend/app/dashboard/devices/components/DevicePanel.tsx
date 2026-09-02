@@ -15,32 +15,36 @@ interface DevicePanelProps {
 export default function DevicePanel({ device, onClose }: DevicePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Subscribe to live device in Zustand store for 0ms real-time sync
+  const storeDevice = useDeviceStore((s) => s.devices.find((d) => d.id === device?.id));
+  const liveDevice = storeDevice || device;
+
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   useEffect(() => {
-    if (device && isDeviceConnected(device) && (device?.type === 'energy_solar' || device?.type === 'solar_panel' || device?.type === 'solar_pv')) {
+    if (liveDevice && isDeviceConnected(liveDevice) && (liveDevice?.type === 'energy_solar' || liveDevice?.type === 'solar_panel' || liveDevice?.type === 'solar_pv')) {
       const fetchSolar = async () => {
         try {
           const [voltage, current, power, freq, pf, label] = (await Promise.all([
-            api.getSolarVoltage(device.id).catch(() => ({})),
-            api.getSolarCurrent(device.id).catch(() => ({})),
-            api.getSolarPowerOutput(device.id).catch(() => ({})),
-            api.getGridFrequency(device.id).catch(() => ({})),
-            api.getPowerFactor(device.id).catch(() => ({})),
-            api.getSolarUserLabel(device.id).catch(() => ({}))
+            api.getSolarVoltage(liveDevice.id).catch(() => ({})),
+            api.getSolarCurrent(liveDevice.id).catch(() => ({})),
+            api.getSolarPowerOutput(liveDevice.id).catch(() => ({})),
+            api.getGridFrequency(liveDevice.id).catch(() => ({})),
+            api.getPowerFactor(liveDevice.id).catch(() => ({})),
+            api.getSolarUserLabel(liveDevice.id).catch(() => ({}))
           ])) as any[];
           
-          const currentDevice = useDeviceStore.getState().devices.find(d => d.id === device.id);
+          const currentDevice = useDeviceStore.getState().devices.find(d => d.id === liveDevice.id);
           const currentMeta = (currentDevice?.metadata || {}) as any;
 
-          useDeviceStore.getState().updateDevice(device.id, {
+          useDeviceStore.getState().updateDevice(liveDevice.id, {
             metadata: {
               ...currentMeta,
               Voltage: voltage.Voltage || currentMeta?.Voltage,
@@ -57,28 +61,28 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
       };
       fetchSolar();
     }
-  }, [device?.id, device?.type, device?.status, device?.connectivity]);
+  }, [liveDevice?.id, liveDevice?.type, liveDevice?.status, liveDevice?.connectivity]);
 
-  if (!device) return null;
+  if (!liveDevice) return null;
 
-  const config = DEVICE_TYPE_CONFIG[device.type] || { emoji: '📱', label: device.type, color: '#94A3B8' };
-  const isConnected = isDeviceConnected(device);
-  const isOn = isConnected && device.power_state === 'on';
-  const meta = (device.metadata || {}) as any;
+  const config = DEVICE_TYPE_CONFIG[liveDevice.type] || { emoji: '📱', label: liveDevice.type, color: '#94A3B8' };
+  const isConnected = isDeviceConnected(liveDevice);
+  const isOn = isConnected && liveDevice.power_state === 'on';
+  const meta = (liveDevice.metadata || {}) as any;
 
   const handleToggleConnection = async () => {
     const newConnectivity = isConnected ? 'disconnected' : 'connected';
     const newStatus = isConnected ? 'offline' : 'online';
-    const newPower = isConnected ? 'off' : device.power_state;
+    const newPower = isConnected ? 'off' : liveDevice.power_state;
 
-    useDeviceStore.getState().updateDevice(device.id, {
+    useDeviceStore.getState().updateDevice(liveDevice.id, {
       connectivity: newConnectivity,
       status: newStatus,
       power_state: newPower,
     });
 
     try {
-      await api.updateDevice(device.id, {
+      await api.updateDevice(liveDevice.id, {
         connectivity: newConnectivity,
         status: newStatus,
       });
@@ -148,9 +152,9 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               {config.emoji}
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', margin: 0 }}>{device.name}</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', margin: 0 }}>{liveDevice.name}</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
-                <span className={`status-dot ${isConnected ? device.status : 'offline'}`} style={{ width: '8px', height: '8px' }} />
+                <span className={`status-dot ${isConnected ? liveDevice.status : 'offline'}`} style={{ width: '8px', height: '8px' }} />
                 <span style={{ fontSize: '12px', color: isConnected ? '#94A3B8' : '#F87171', fontWeight: 500 }}>
                   {isConnected ? 'Connected' : 'Disconnected'}
                 </span>
@@ -243,22 +247,22 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               </div>
               <div>
                 <div style={{ fontSize: '14px', color: '#F8FAFC', fontWeight: 500 }}>
-                  {device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Power Generation' : 'Device Power'}
+                  {liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv' ? 'Power Generation' : 'Device Power'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#94A3B8' }}>
                   {!isConnected 
                     ? 'Operations disabled while disconnected' 
-                    : (device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state')}
+                    : (liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv' ? 'Real-time solar array output' : 'Toggle power state')}
                 </div>
               </div>
             </div>
-            <DeviceToggle device={device} color={config.color} />
+            <DeviceToggle device={liveDevice} color={config.color} />
           </div>
 
           {/* Specific Controls */}
           <div>
             <h3 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#64748B', marginBottom: '16px' }}>Device Controls</h3>
-            <DeviceControls device={device} color={config.color} />
+            <DeviceControls device={liveDevice} color={config.color} />
           </div>
 
           {/* Telemetry / Status */}
@@ -288,7 +292,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   <span style={{ fontSize: '12px', color: '#94A3B8' }}>Connectivity</span>
                 </div>
                 <div style={{ fontSize: '14px', fontWeight: 500, color: '#F8FAFC', textTransform: 'capitalize' }}>
-                  {isConnected ? (device.connectivity || 'connected') : 'disconnected'}
+                  {isConnected ? (liveDevice.connectivity || 'connected') : 'disconnected'}
                 </div>
               </div>
 
@@ -298,11 +302,11 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                     <Activity size={14} color="#3B82F6" />
                     <span style={{ fontSize: '12px', color: '#94A3B8' }}>Efficiency</span>
                   </div>
-                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>{device.efficiency_percent || 90}%</div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>{liveDevice.efficiency_percent || 90}%</div>
                 </div>
               )}
 
-              {device.type === 'energy_evse' && isConnected && (
+              {liveDevice.type === 'energy_evse' && isConnected && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -325,7 +329,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 </>
               )}
 
-              {(device.type === 'energy_solar' || device.type === 'solar_panel' || device.type === 'solar_pv') && isConnected && (
+              {(liveDevice.type === 'energy_solar' || liveDevice.type === 'solar_panel' || liveDevice.type === 'solar_pv') && isConnected && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', gridColumn: '1 / -1' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -337,7 +341,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                             onClick={() => {
                               const newLabel = window.prompt("Enter new label value:", meta.LabelList?.[0]?.value || "");
                               if (newLabel) {
-                                api.setSolarUserLabel(device.id, meta.LabelList?.[0]?.label || "name", newLabel);
+                                api.setSolarUserLabel(liveDevice.id, meta.LabelList?.[0]?.label || "name", newLabel);
                               }
                             }}
                             style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', padding: 0 }}
@@ -347,7 +351,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                         </div>
                       </div>
                       <button 
-                        onClick={() => api.identifySolar(device.id)}
+                        onClick={() => api.identifySolar(liveDevice.id)}
                         style={{
                           background: `${config.color}20`, border: `1px solid ${config.color}40`,
                           color: config.color, padding: '8px 16px', borderRadius: '8px',
@@ -397,7 +401,6 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   </div>
                 </>
               )}
-
             </div>
           </div>
 
@@ -417,10 +420,10 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
 
             <button
               onClick={() => {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(device, null, 2));
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(liveDevice, null, 2));
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", `device_${device.name.replace(/ /g, '_')}_logs.json`);
+                downloadAnchorNode.setAttribute("download", `device_${liveDevice.name.replace(/ /g, '_')}_logs.json`);
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
@@ -447,4 +450,3 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     </AnimatePresence>
   );
 }
-

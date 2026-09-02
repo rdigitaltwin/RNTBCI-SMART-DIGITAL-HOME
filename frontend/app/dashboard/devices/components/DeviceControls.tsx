@@ -167,6 +167,31 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
     </div>
   );
 
+  const renderSolarPVControls = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <button
+          onClick={() => handleControl('turn_on')}
+          style={{ padding: '12px', borderRadius: '8px', background: '#FCD34D20', color: '#FCD34D', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+        >☀️ Enable Generation</button>
+        <button
+          onClick={() => handleControl('turn_off')}
+          style={{ padding: '12px', borderRadius: '8px', background: '#EF444420', color: '#EF4444', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+        >⏹ Disable</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '4px' }}>Peak Capacity</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#FCD34D' }}>5.0 kW</div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '4px' }}>Efficiency</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>{String(meta.efficiency || 22.5)}%</div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s', pointerEvents: loading ? 'none' : 'auto' }}>
       {device.type === 'hvac' && renderACControls()}
@@ -174,9 +199,10 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
       {device.type === 'door_lock' && renderDoorLockControls()}
       {device.type === 'washing_machine' && renderWashingMachineControls()}
       {device.type === 'energy_evse' && renderEVChargerControls()}
+      {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && renderSolarPVControls()}
 
       {/* Fallback for others if needed */}
-      {!['hvac', 'smart_light', 'door_lock', 'washing_machine','energy_evse'
+      {!['hvac', 'smart_light', 'door_lock', 'washing_machine', 'energy_evse', 'solar_pv', 'solar_panel', 'energy_solar'
       ].includes(device.type) && (
         <div style={{ fontSize: '13px', color: '#94A3B8', textAlign: 'center', padding: '16px' }}>
           Specific controls for {device.type} are not available.

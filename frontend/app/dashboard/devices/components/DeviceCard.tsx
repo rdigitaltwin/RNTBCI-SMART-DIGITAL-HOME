@@ -183,27 +183,41 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
         </div>
       )}
 
-      {/* Solar PV stats: output + peak power */}
-      {device.type === 'solar_pv' && isConnected && (
-        <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(252, 211, 77, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(252, 211, 77, 0.12)' }}>
+      {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && isConnected && (
+        <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(252, 211, 77, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(252, 211, 77, 0.15)' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Output</div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Generation</div>
             <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#FCD34D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn ? `${Math.abs(device.energy_usage_kw || 4.69).toFixed(2)} kW` : '0.00 kW'}
+              {isOn ? (device.metadata?.ActivePower != null ? (Math.abs(device.metadata.ActivePower as number) / 1000).toFixed(2) + ' kW' : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw).toFixed(2) + ' kW' : '4.69 kW')) : '0.00 kW'}
             </div>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Peak</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#94A3B8', fontFamily: "'JetBrains Mono', monospace" }}>
-              {`${(device.metadata?.peak_power as number || 5.0).toFixed(1)} kW`}
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Efficiency</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {device.metadata?.efficiency != null ? String(device.metadata.efficiency) + '%' : '22.5%'}
             </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Status</div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: isOn ? '#00FF9D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.5px' }}>
-              {isOn ? 'GENERATING' : 'OFFLINE'}
-            </div>
-          </div>
+        </div>
+      )}
+
+      {/* Efficiency bar / Simulation indicator */}
+      <div style={{ marginTop: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{ fontSize: '10px', color: '#64748B' }}>
+            {isConnected ? 'Efficiency' : 'Simulation'}
+          </span>
+          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", color: isConnected ? '#94A3B8' : '#64748B' }}>
+            {isConnected ? `${device.efficiency_percent || 90}%` : 'Not Required'}
+          </span>
+        </div>
+        <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{
+            width: isConnected ? `${device.efficiency_percent || 90}%` : '0%',
+            height: '100%',
+            borderRadius: '2px',
+            background: isConnected ? `linear-gradient(90deg, ${config.color}, ${config.color}80)` : '#475569',
+            transition: 'width 0.5s',
+          }} />
         </div>
       )}
 

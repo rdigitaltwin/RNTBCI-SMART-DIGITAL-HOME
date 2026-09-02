@@ -513,7 +513,7 @@ function EnergyDeviceModelComponent({ device, isSelected, onClick }: EnergyDevic
     }
   };
 
-  // Don't render EV charger or solar PV here — rendered as standalone components in the scene
+  // Don't render EV charger or solar PV here — they are rendered as standalone components in the scene
   if (device.type === 'energy_evse' || device.type === 'solar_pv') return null;
 
   return (
