@@ -985,13 +985,16 @@ useDeviceStore.subscribe((state, prevState) => {
     if (!prevDevice || prevDevice.power_state !== device.power_state) {
       // The energy store ID is exactly the backend device ID now
       const energyId = device.id;
-      const energyDevice = energyState.devices[energyId];
+      let energyDevice = energyState.devices[energyId];
+      if (!energyDevice) {
+        energyDevice = Object.values(energyState.devices).find(d => d.type === device.type) as any;
+      }
       const targetState = device.power_state === 'on' ? 'on' : 'off';
       
       // Only toggle if states don't match (prevents infinite loops)
       if (energyDevice && energyDevice.powerState !== targetState) {
         // Toggle it locally without syncing back to the backend
-        energyState.toggleDevice(energyId, true);
+        energyState.toggleDevice(energyDevice.id, true);
       }
       
       // Also sync EV Charger specifically

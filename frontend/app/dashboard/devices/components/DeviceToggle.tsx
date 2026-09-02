@@ -28,12 +28,14 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
     // Sync with local energy engine simulator so 3D model and Energy Command stay in sync
     const energyStore = useEnergyStore.getState();
     const energyDevice = Object.values(energyStore.devices).find(e => {
-      const dName = device.name.toLowerCase();
-      const eName = e.name.toLowerCase();
-      if (dName === eName || dName.includes(eName) || eName.includes(dName)) return true;
+      if (!e) return false;
+      const dName = (device.name || '').toLowerCase();
+      const eName = (e.name || '').toLowerCase();
+      if (dName && eName && (dName === eName || dName.includes(eName) || eName.includes(dName))) return true;
       if (e.id === 'living_light_1' && dName.includes('living room main light')) return true;
       if (e.id === 'air_conditioner' && dName.includes('living room ac')) return true;
       if (e.id === 'bedroom_light' && dName.includes('master bedroom light')) return true;
+      if (e.type === 'solar_pv' && (device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar')) return true;
       return false;
     });
     
@@ -66,10 +68,12 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
         }}
       >
         {(() => {
-          if (!isConnected) {
+          if (!isConnected || !isOn) {
             return <>0<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>W</span></>;
           }
-          const powerW = (device.energy_usage_kw || 0) * 1000;
+          const defaultSolarWatts = 4690;
+          const usageKw = device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : (defaultSolarWatts / 1000);
+          const powerW = usageKw * 1000;
           if (powerW >= 1000) {
             return <>{(powerW / 1000).toFixed(2)}<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>kW</span></>;
           } else {
@@ -77,11 +81,10 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
           }
         })()}
       </span>
-      {device.type !== 'energy_solar' && device.type !== 'solar_panel' && device.type !== 'solar_pv' && (
-        <button 
-          onClick={handlePowerToggle}
-          disabled={!isConnected || toggling}
-          title={!isConnected ? 'Cannot operate: Device is disconnected' : (isOn ? 'Turn OFF' : 'Turn ON')}
+      <button 
+        onClick={handlePowerToggle}
+        disabled={!isConnected || toggling}
+        title={!isConnected ? 'Cannot operate: Device is disconnected' : (isOn ? 'Turn OFF' : 'Turn ON')}
           style={{
             width: '44px', height: '24px', borderRadius: '12px',
             background: !isConnected 
@@ -103,7 +106,6 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
             boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }} />
         </button>
-      )}
     </div>
   );
 }
