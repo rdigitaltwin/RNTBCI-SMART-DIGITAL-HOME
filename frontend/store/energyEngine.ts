@@ -693,7 +693,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     // Current load = sum of all ON device consumption (excluding generation devices)
     const rawLoad = devices
-      .filter((d) => d.type !== 'solar_panel' && d.type !== 'energy_solar')
+      .filter((d) => d.type !== 'solar_panel' && d.type !== 'energy_solar' && d.type !== 'solar_pv')
       .reduce((sum, d) => sum + d.currentConsumption, 0);
 
     const solarGenerationKw = useSimulationStore.getState().metrics.solar_generation_kw || 0;
@@ -971,7 +971,12 @@ useDeviceStore.subscribe((state, prevState) => {
   if (isSyncing) return;
   
   const energyState = useEnergyStore.getState();
-  if (energyState.deviceOrder.length === 0) return; // not initialized
+  if (energyState.deviceOrder.length === 0 || Object.keys(energyState.devices).length !== state.devices.length) {
+    if (state.devices.length > 0) {
+      energyState.initializeDevices();
+    }
+    if (energyState.deviceOrder.length === 0) return;
+  }
   
   isSyncing = true;
   
@@ -980,13 +985,16 @@ useDeviceStore.subscribe((state, prevState) => {
     if (!prevDevice || prevDevice.power_state !== device.power_state) {
       // The energy store ID is exactly the backend device ID now
       const energyId = device.id;
-      const energyDevice = energyState.devices[energyId];
+      let energyDevice = energyState.devices[energyId];
+      if (!energyDevice) {
+        energyDevice = Object.values(energyState.devices).find(d => d.type === device.type) as any;
+      }
       const targetState = device.power_state === 'on' ? 'on' : 'off';
       
       // Only toggle if states don't match (prevents infinite loops)
       if (energyDevice && energyDevice.powerState !== targetState) {
         // Toggle it locally without syncing back to the backend
-        energyState.toggleDevice(energyId, true);
+        energyState.toggleDevice(energyDevice.id, true);
       }
       
       // Also sync EV Charger specifically

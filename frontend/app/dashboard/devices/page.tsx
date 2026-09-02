@@ -209,7 +209,7 @@ export default function DevicesPage() {
     let result = devices;
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter((d) => d.name.toLowerCase().includes(q) || d.type.includes(q));
+      result = result.filter((d) => (d.name || '').toLowerCase().includes(q) || (d.type || '').includes(q));
     }
     if (typeFilter !== 'all') result = result.filter((d) => d.type === typeFilter);
     if (statusFilter !== 'all') {
