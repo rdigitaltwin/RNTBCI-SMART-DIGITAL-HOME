@@ -2,11 +2,9 @@ import asyncio
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from database.connection import engine
-from utils.seed import seed_database
-from models.models import Base
+from backend.database.connection import engine
+from backend.utils.seed import seed_database
+from backend.models.models import Base
 
 async def run():
     async with engine.begin() as conn:

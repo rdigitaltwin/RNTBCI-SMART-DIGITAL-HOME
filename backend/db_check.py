@@ -2,9 +2,7 @@ import asyncio
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from database.connection import engine
+from backend.database.connection import engine
 from sqlalchemy import text
 
 async def check():

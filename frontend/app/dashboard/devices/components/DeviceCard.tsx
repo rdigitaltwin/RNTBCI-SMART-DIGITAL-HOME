@@ -201,27 +201,6 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
       )}
 
       {/* Efficiency bar / Simulation indicator */}
-      <div style={{ marginTop: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span style={{ fontSize: '10px', color: '#64748B' }}>
-            {isConnected ? 'Efficiency' : 'Simulation'}
-          </span>
-          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", color: isConnected ? '#94A3B8' : '#64748B' }}>
-            {isConnected ? `${device.efficiency_percent || 90}%` : 'Not Required'}
-          </span>
-        </div>
-        <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{
-            width: isConnected ? `${device.efficiency_percent || 90}%` : '0%',
-            height: '100%',
-            borderRadius: '2px',
-            background: isConnected ? `linear-gradient(90deg, ${config.color}, ${config.color}80)` : '#475569',
-            transition: 'width 0.5s',
-          }} />
-        </div>
-      )}
-
-      {/* Efficiency bar / Simulation indicator */}
       {(() => {
         const effValue = device.type === 'solar_pv'
           ? ((device.metadata?.efficiency as number) ?? device.efficiency_percent ?? 95)
