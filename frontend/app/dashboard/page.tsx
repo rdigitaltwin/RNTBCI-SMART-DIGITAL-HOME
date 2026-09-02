@@ -26,24 +26,24 @@ import { StatCard } from '@/components/ui/DashboardCards';
 // =============================================================================
 
 function EnergyChart() {
-  const devices = useDeviceStore((s) => s.devices);
-  const metrics = useSimulationStore((s) => s.metrics);
+  const metricsRef = useRef<Record<string, number>>({});
+  metricsRef.current = useSimulationStore((s) => s.metrics);
   const [data, setData] = useState<Array<{ time: string; power: number }>>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const totalPower = (metrics?.total_power_w || 0) / 1000;
+      const totalPower = (metricsRef.current?.total_power_w || 0) / 1000;
       setData((prev) => {
         const newPoint = {
           time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          power: parseFloat(totalPower.toFixed(2)),
+          power: parseFloat(totalPower.toFixed(3)),
         };
         const newData = [...prev, newPoint];
         return newData.length > 30 ? newData.slice(newData.length - 30) : newData;
       });
     }, 2000);
     return () => clearInterval(interval);
-  }, [metrics]);
+  }, []); // stable — reads latest metrics via ref every tick
 
   return (
     <div className="glass-card" style={{ padding: '20px', height: '100%' }}>
@@ -69,7 +69,7 @@ function EnergyChart() {
             </linearGradient>
           </defs>
           <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#64748B' }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 10, fill: '#64748B' }} axisLine={false} tickLine={false} domain={[0, 'auto']} />
+          <YAxis tick={{ fontSize: 10, fill: '#64748B' }} axisLine={false} tickLine={false} domain={[0, (dataMax: number) => Math.max(dataMax * 1.2, 0.5)]} />
           <Tooltip
             contentStyle={{
               background: 'rgba(11, 17, 32, 0.95)', border: '1px solid rgba(0, 229, 255, 0.2)',
