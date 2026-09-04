@@ -301,6 +301,23 @@ class APIClient {
     return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/ElectricalEnergyMeasurement/cumulativeenergyexported`);
   }
 
+  // EV Charger
+  async getEVCharge(id: string) {
+    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/stateofcharge`);
+  }
+
+  async startEVCharge(id: string) {
+    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/enable`, { method: 'POST', body: { command: 'EnableCharging' } });
+  }
+
+  async stopEVCharge(id: string) {
+    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/disable`, { method: 'POST', body: { command: 'Disable' } });
+  }
+
+  async getEVBatteryValue(id: string) {
+    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/voltage`);
+  }
+
   async changeDeviceMode(id: string, mode: string) {
     return this.request(`/api/v1/devices/${id}/mode`, { method: 'PATCH', body: { mode } });
   }

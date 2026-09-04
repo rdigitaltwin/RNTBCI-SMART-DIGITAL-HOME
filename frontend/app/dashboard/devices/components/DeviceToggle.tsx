@@ -45,9 +45,18 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
     }
 
     try {
-      const status = newState.toUpperCase();
-      const updatedDevice = await api.toggleState(device.id, status) as Partial<Device>;
-      useDeviceStore.getState().updateDevice(device.id, updatedDevice);
+      if (device.type === 'energy_evse') {
+        if (newState === 'on') {
+          await api.startEVCharge(device.id);
+        } else {
+          await api.stopEVCharge(device.id);
+        }
+        useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+      } else {
+        const status = newState.toUpperCase();
+        const updatedDevice = await api.toggleState(device.id, status) as Partial<Device>;
+        useDeviceStore.getState().updateDevice(device.id, updatedDevice);
+      }
     } catch (err) { 
       // Revert if API fails
       console.error('Failed to toggle device state', err);

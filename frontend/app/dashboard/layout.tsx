@@ -410,9 +410,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         if (devicesRes.status === 'fulfilled') {
           const data = devicesRes.value as { devices?: unknown[] } | unknown[];
-          useDeviceStore.getState().setDevices(
-            (Array.isArray(data) ? data : (data as { devices?: unknown[] }).devices || []) as import('@/store').Device[]
-          );
+          const apiDevices = (Array.isArray(data) ? data : (data as { devices?: unknown[] }).devices || []) as import('@/store').Device[];
+          
+          const currentStore = useDeviceStore.getState().devices;
+          const mergedDevices = [...apiDevices];
+          
+          ['energy_evse', 'solar_pv'].forEach(type => {
+            if (!mergedDevices.some(d => d.type === type)) {
+              const demoDevice = currentStore.find(d => d.type === type);
+              if (demoDevice) mergedDevices.push(demoDevice);
+            }
+          });
+          
+          useDeviceStore.getState().setDevices(mergedDevices);
         }
         if (roomsRes.status === 'fulfilled') {
           useDeviceStore.getState().setRooms(roomsRes.value as import('@/store').Room[]);
