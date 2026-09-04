@@ -192,10 +192,28 @@ export default function DevicesPage() {
     try {
       const res = await api.getDevices();
       const data = res as { devices?: Device[] } | Device[];
-      useDeviceStore.getState().setDevices(
-        (Array.isArray(data) ? data : data.devices || []) as Device[]
-      );
-    } catch { /* API not connected */ }
+      const apiDevices = (Array.isArray(data) ? data : data.devices || []) as Device[];
+      
+      if (apiDevices.length > 0) {
+        const currentDevices = useDeviceStore.getState().devices;
+        const mergedDevices = [...apiDevices];
+        
+        // Ensure Solar and EV devices are always present for the demo
+        ['energy_evse', 'solar_pv'].forEach(type => {
+          if (!mergedDevices.some(d => d.type === type)) {
+            const demoDevice = currentDevices.find(d => d.type === type);
+            if (demoDevice) {
+              mergedDevices.push(demoDevice);
+            }
+          }
+        });
+        
+        useDeviceStore.getState().setDevices(mergedDevices);
+      }
+      // If API returns 0 devices or fails, keep the current demo devices
+    } catch { 
+      /* API not connected, keep existing demo devices */ 
+    }
     setLoading(false);
   };
 

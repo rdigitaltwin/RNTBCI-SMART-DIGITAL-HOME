@@ -91,6 +91,7 @@ export interface EVChargerInfo {
   state: EVChargerState;
   power: number;                // W (current charging power)
   targetPower: number;          // W (configured power)
+  batteryCapacityWh: number;    // Wh (e.g. 60000 for 60 kWh)
   batteryLevel: number;         // 0–100%
   chargingStartedAt: number | null;
   estimatedCompletion: number | null;
@@ -250,6 +251,7 @@ const initialEVCharger: EVChargerInfo = {
   state: 'disconnected',
   power: 0,
   targetPower: 7400,
+  batteryCapacityWh: 60000,
   batteryLevel: 0,
   chargingStartedAt: null,
   estimatedCompletion: null,
@@ -321,6 +323,27 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     });
 
     set({ devices, deviceOrder });
+    
+    // Restore EV Charger state from localStorage
+    try {
+      if (typeof window !== 'undefined') {
+        const savedRaw = localStorage.getItem('evChargerState');
+        if (savedRaw) {
+          const savedState = JSON.parse(savedRaw);
+          // Calculate missed charging if it was actively charging
+          if (savedState.state === 'charging' && savedState.chargingStartedAt) {
+            // We use chargingStartedAt but since we only have start time and current level in localstorage,
+            // we can just resume from the saved batteryLevel. For a more robust sim, we'd calculate time delta.
+            set((s) => ({ evCharger: { ...s.evCharger, ...savedState } }));
+          } else {
+            set((s) => ({ evCharger: { ...s.evCharger, ...savedState } }));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to restore EV state from local storage', e);
+    }
+
     get()._recalculateMetrics();
     get()._addEvent('config_change', 'info', 'Energy engine initialized from backend devices');
   },
@@ -639,6 +662,12 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     get()._recalculateMetrics();
     get()._checkMCB();
+
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('evChargerState', JSON.stringify(get().evCharger));
+      }
+    } catch (e) { /* ignore */ }
   },
 
   setEVChargingPower: (power: number) => {
@@ -646,6 +675,11 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     set((s) => ({
       evCharger: { ...s.evCharger, targetPower: clamped },
     }));
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('evChargerState', JSON.stringify(get().evCharger));
+      }
+    } catch (e) { /* ignore */ }
 
     // If currently charging, update consumption
     if (get().evCharger.state === 'charging') {
@@ -671,6 +705,11 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     set((s) => ({
       evCharger: { ...s.evCharger, batteryLevel: Math.max(0, Math.min(100, level)) },
     }));
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('evChargerState', JSON.stringify(get().evCharger));
+      }
+    } catch (e) { /* ignore */ }
   },
 
   // ─── Alerts ────────────────────────────────────────────────────────
@@ -891,12 +930,24 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     // EV battery simulation
     if (state.evCharger.state === 'charging' && state.evCharger.batteryLevel < 100) {
-      const chargeRate = state.evCharger.power / 60000; // Simplified: faster for demo
-      const newLevel = Math.min(100, state.evCharger.batteryLevel + chargeRate);
+      // Physics: power is in Watts. Energy in Wh = power * time_in_hours.
+      // We tick once per second. Time in hours = 1 / 3600.
+      // Battery capacity = state.evCharger.batteryCapacityWh (e.g. 60,000 Wh).
+      // True rate per second: (power * 1/3600) / capacity * 100
+      // Demo speedup factor: x10 (so it charges in ~48 mins instead of 8 hours)
+      const chargeRatePerSecond = (state.evCharger.power / 3600) / state.evCharger.batteryCapacityWh * 100 * 10;
+      
+      const newLevel = Math.min(100, state.evCharger.batteryLevel + chargeRatePerSecond);
 
-      set((s) => ({
-        evCharger: { ...s.evCharger, batteryLevel: newLevel },
-      }));
+      set((s) => {
+        const nextEvCharger = { ...s.evCharger, batteryLevel: newLevel };
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('evChargerState', JSON.stringify(nextEvCharger));
+          }
+        } catch (e) { /* ignore */ }
+        return { evCharger: nextEvCharger };
+      });
 
       if (newLevel >= 100) {
         get().setEVChargerState('completed');
