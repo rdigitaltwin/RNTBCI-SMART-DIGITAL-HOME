@@ -84,6 +84,12 @@ export default function MCBAnimation({
 
   return (
     <group position={position}>
+      {/* Wall Mounting Plate */}
+      <mesh position={[0, 0, -0.055]}>
+        <boxGeometry args={[0.26, 0.42, 0.015]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.3} />
+      </mesh>
+
       {/* MCB Housing */}
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[0.2, 0.35, 0.1]} />
