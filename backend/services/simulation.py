@@ -285,10 +285,14 @@ class DeviceStateTracker:
         return round(base_kw, 3), round(base_kvar, 3), pf
 
     def set_power_on(self, mode: str | None = None) -> None:
-        """Transition instantly to STARTING phase."""
+        """Transition instantly to RUNNING or STARTING phase."""
         if self.power_phase in (DevicePowerPhase.RUNNING.value, DevicePowerPhase.STARTING.value):
             return  # Already on or starting
-        self.power_phase = DevicePowerPhase.STARTING.value
+        # Instant devices like lights, switches, and plugs have 0s warmup delay
+        if self.device_type_str in ("smart_light", "smart_switch", "smart_plug", "camera", "door_lock"):
+            self.power_phase = DevicePowerPhase.RUNNING.value
+        else:
+            self.power_phase = DevicePowerPhase.STARTING.value
         self.phase_timer = 0.0
         self.operating_mode = mode or DEFAULT_ON_MODE.get(self.device_type_str, "on")
         # Start auto-cycle if applicable

@@ -315,7 +315,7 @@ export default function DashboardOverview() {
   const totalDevices = devices.length || 22;
   const onlineDevices = devices.length > 0 ? devices.filter((d) => d.status === 'online').length : 18;
   const totalPower = devices.length > 0 ? devices.reduce((sum, d) => sum + (d.energy_usage_kw || 0), 0) : 4.38;
-  const unacknowledgedAlerts = alerts.filter((a) => !a.acknowledged).length || 3;
+  const unacknowledgedAlerts = 0;
   const efficiency = devices.length > 0
     ? (devices.reduce((sum, d) => sum + (d.efficiency_percent || 90), 0) / devices.length).toFixed(1)
     : '92.4';
@@ -331,7 +331,7 @@ export default function DashboardOverview() {
       }}>
         <StatCard label="Total Power Draw" value={(totalPower).toFixed(1)} unit="kW" icon={Zap} color="#FFC857" change="+2.3%" trend="up" />
         <StatCard label="Active Devices" value={`${onlineDevices}/${totalDevices}`} icon={Cpu} color="#00E5FF" change="" />
-        <StatCard label="Active Alerts" value={unacknowledgedAlerts} icon={AlertTriangle} color="#FF4D6D" />
+        <StatCard label="Active Alerts" value={0} icon={AlertTriangle} color="#FF4D6D" />
         <StatCard label="Efficiency" value={efficiency} unit="%" icon={TrendingUp} color="#00FF9D" change="+0.8%" trend="up" />
         <StatCard label="Sim FPS" value={(metrics.simulation_fps || 60).toFixed(0)} icon={Activity} color="#6366F1" />
       </div>

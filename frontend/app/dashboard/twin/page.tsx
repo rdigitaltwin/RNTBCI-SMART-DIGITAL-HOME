@@ -90,8 +90,8 @@ export function EnergyDigitalTwinScene() {
         onSelectDevice={(id) => setSelectedDeviceId(id)}
       />
 
-      {/* MCB 3D Breaker — Mounted on outside facing wall of house */}
-      <MCBAnimation position={[-1.18, 0.45, -0.4]} />
+      {/* MCB 3D Breaker — Fitted flush on outside-facing wall, facing user camera */}
+      <MCBAnimation position={[-1.15, 0.22, -0.2]} rotation={[0, -Math.PI / 2, 0]} />
 
       {/* Solar PV array — on top of the house roof */}
       <SolarPV position={[0.2, 0.85, -0.3]} tiltAngle={25} panelCount={8} />

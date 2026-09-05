@@ -238,6 +238,23 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     total_energy_kwh: 8.5,
     last_updated: new Date().toISOString(),
   },
+  {
+    id: 'bathroom_light',
+    name: 'Bathroom Light',
+    type: 'smart_light',
+    room_id: 'bathroom',
+    room_name: 'Bathroom',
+    status: 'online',
+    power_state: 'off',
+    connectivity: 'connected',
+    energy_usage_kw: 0.015,
+    efficiency_percent: 98,
+    metadata: { brightness: 100 },
+    position_x: 1.0, position_y: 0.48, position_z: 1.5,
+    turned_on_at: null,
+    total_energy_kwh: 0.8,
+    last_updated: new Date().toISOString(),
+  },
 ];
 
 export const useDeviceStore = create<DeviceState>()(
