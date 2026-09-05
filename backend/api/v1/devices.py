@@ -88,7 +88,7 @@ def _device_to_response(device: Device) -> DeviceResponse:
 
 
 def _device_type_value(device: Device) -> str:
-    return device.type.value if isinstance(device.type, DeviceType) else str(device.type)
+    return device.type.value if isinstance(device.type, DeviceType) else device.type
 
 
 def _halt_electrical_output(device: Device) -> None:
@@ -1511,10 +1511,10 @@ def _get_default_state(device_type: DeviceType) -> dict:
             "endpoint": 1,
         },
         DeviceType.EV_VEHICLE: {
-            "HVBATVoltage": 0,
-            "HVSoC": 0,
-            "AuxBatVoltage": 0,
-            "AvgSpeed": 0,
+            "HVBATVoltage": 400,
+            "HVSoC": 80,
+            "AuxBatVoltage": 12.6,
+            "AvgSpeed": 45,
             "endpoint": 1,
         },
     }
@@ -2209,7 +2209,7 @@ async def get_ev_vehicle_auxbatvoltage(
 ):
     device = await _ev_vehicle_device_or_404(device_id, db)
     state = device.extra_data or {}
-    return {"AuxBatVoltage": ev_vehicle_service.reading(state, "AuxBatVoltage"), "unit": "V"}
+    return {"AuxBatVoltage": ev_vehicle_service.reading(state, "AuxBatVoltage", default=12.6), "unit": "V"}
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/auxbatvoltage")

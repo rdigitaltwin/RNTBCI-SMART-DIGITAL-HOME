@@ -94,9 +94,9 @@ class EvVehicleService:
         return device
 
     @staticmethod
-    def reading(state: dict, key: str):
+    def reading(state: dict, key: str, default: float | int = 0):
         value = state.get(key)
-        return 0 if value is None else value
+        return default if value is None else value
 
 
 ev_vehicle_service = EvVehicleService()

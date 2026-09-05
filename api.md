@@ -28,57 +28,65 @@ curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/b0
 **Device ID:** `1ec2d468-1d91-4a34-9d55-5049b6e41ea0`
 **Cluster ID:** `0x0091` (Electrical Measurement)
 
-### Set Active Power (Generation in Watts)
-*Note: Provide the value in milli-watts or Watts depending on your backend multiplier (typically raw Watt value).*
-```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0091/setactivepower" \
+### Identify (Trigger Effect)
+
+curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/solar/endpoint/1/cluster/0x0003/triggereffect" \
      -H "Content-Type: application/json" \
-     -d '{"ActivePower": 5000}'
+     -d '{"name": "TriggerEffect"}'
+
+
+### Set User Label
+
+curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/solar/endpoint/1/cluster/0x0041/labellist" \
+     -H "Content-Type: application/json" \
+     -d '{"label": "Roof Panel", "value": "South"}'
+
+
+### Get Active Power (Real-time production)
+```bash
+curl -X GET "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/solar/endpoint/1/cluster/0x0091/activepower"
 ```
 
-### Set Voltage (V)
+### Get Cumulative Energy Exported
 ```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0091/setvoltage" \
-     -H "Content-Type: application/json" \
-     -d '{"Voltage": 240}'
+curl -X GET "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/solar/endpoint/1/cluster/0x0091/cumulativeenergyexported"
 ```
 
-### Set Active Current (A)
+### Get User Label
 ```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0091/setactivecurrent" \
-     -H "Content-Type: application/json" \
-     -d '{"ActiveCurrent": 20}'
+curl -X GET "https://rntbci-project-production.up.railway.app/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/solar/endpoint/1/cluster/0x0041/labellist"
 ```
 
 ---
 
 ## 3. EV Vehicle
+**Device ID:** `fb338bef-0060-4626-93a6-ef7df4ac3bcb`
 **Cluster Name:** `EvVehicleData`
 
 ### Set HV Battery Voltage (V)
 ```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/{device_id}/endpoint/1/cluster/EvVehicleData/hvbatvoltage" \
+curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/EvVehicleData/hvbatvoltage" \
      -H "Content-Type: application/json" \
      -d '{"value": 400}'
 ```
 
 ### Set HV State of Charge (SoC %)
 ```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/{device_id}/endpoint/1/cluster/EvVehicleData/hvsoc" \
+curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/EvVehicleData/hvsoc" \
      -H "Content-Type: application/json" \
      -d '{"value": 85}'
 ```
 
 ### Set Aux Battery Voltage (V)
 ```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/{device_id}/endpoint/1/cluster/EvVehicleData/auxbatvoltage" \
+curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/EvVehicleData/auxbatvoltage" \
      -H "Content-Type: application/json" \
      -d '{"value": 12.4}'
 ```
 
 ### Set Average Speed (km/h)
 ```bash
-curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/{device_id}/endpoint/1/cluster/EvVehicleData/avgspeed" \
+curl -X POST "https://rntbci-project-production.up.railway.app/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/EvVehicleData/avgspeed" \
      -H "Content-Type: application/json" \
      -d '{"value": 60}'
 ```
