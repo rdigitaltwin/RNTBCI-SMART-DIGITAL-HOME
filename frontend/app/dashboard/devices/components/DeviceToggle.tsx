@@ -48,10 +48,29 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
       if (device.type === 'energy_evse') {
         if (newState === 'on') {
           await api.startEVCharge(device.id);
+          useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
         } else {
           await api.stopEVCharge(device.id);
+          const currentMeta = useDeviceStore.getState().devices.find(d => d.id === device.id)?.metadata || {};
+          useDeviceStore.getState().updateDevice(device.id, {
+            power_state: 'off',
+            energy_usage_kw: 0,
+            metadata: { ...currentMeta, Voltage: 0, ActiveCurrent: 0 },
+          });
         }
-        useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+      } else if (device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') {
+        const status = newState.toUpperCase();
+        await api.toggleState(device.id, status);
+        if (newState === 'off') {
+          const currentMeta = useDeviceStore.getState().devices.find(d => d.id === device.id)?.metadata || {};
+          useDeviceStore.getState().updateDevice(device.id, {
+            power_state: 'off',
+            energy_usage_kw: 0,
+            metadata: { ...currentMeta, ActivePower: 0, Voltage: 0, ActiveCurrent: 0 },
+          });
+        } else {
+          useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
+        }
       } else {
         const status = newState.toUpperCase();
         const updatedDevice = await api.toggleState(device.id, status) as Partial<Device>;

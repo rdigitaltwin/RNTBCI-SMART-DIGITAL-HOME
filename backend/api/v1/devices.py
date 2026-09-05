@@ -2014,6 +2014,147 @@ async def set_solar_user_label(
 
 
 # =============================================================================
+# EV VEHICLE MATTER SUPPORT
+# =============================================================================
+
+# In-memory store for EV Vehicle state (used when device doesn't exist in DB)
+_ev_vehicle_state: dict = {
+    "HVBATVoltage": 400,
+    "HVSoC": 75,
+    "AuxBatVoltage": 12,
+    "AvgSpeed": 60,
+}
+
+
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvbatvoltage")
+@limiter.limit("60/minute")
+async def get_ev_vehicle_hvbatvoltage(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get EV Vehicle HV Battery Voltage."""
+    return {
+        "HVBATVoltage": _ev_vehicle_state.get("HVBATVoltage", 400),
+        "unit": "V"
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvbatvoltage")
+@limiter.limit("60/minute")
+async def set_ev_vehicle_hvbatvoltage(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EV Vehicle HV Battery Voltage."""
+    value = body.get("value")
+    if value is None:
+        raise HTTPException(status_code=400, detail="Missing 'value' in request body")
+    _ev_vehicle_state["HVBATVoltage"] = value
+    return {"value": value}
+
+
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvsoc")
+@limiter.limit("60/minute")
+async def get_ev_vehicle_hvsoc(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get EV Vehicle HV State of Charge."""
+    return {
+        "HVSoC": _ev_vehicle_state.get("HVSoC", 75),
+        "unit": "%"
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvsoc")
+@limiter.limit("60/minute")
+async def set_ev_vehicle_hvsoc(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EV Vehicle HV State of Charge."""
+    value = body.get("value")
+    if value is None:
+        raise HTTPException(status_code=400, detail="Missing 'value' in request body")
+    _ev_vehicle_state["HVSoC"] = value
+    return {"value": value}
+
+
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/auxbatvoltage")
+@limiter.limit("60/minute")
+async def get_ev_vehicle_auxbatvoltage(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get EV Vehicle Auxiliary Battery Voltage."""
+    return {
+        "AuxBatVoltage": _ev_vehicle_state.get("AuxBatVoltage", 12),
+        "unit": "V"
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/auxbatvoltage")
+@limiter.limit("60/minute")
+async def set_ev_vehicle_auxbatvoltage(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EV Vehicle Auxiliary Battery Voltage."""
+    value = body.get("value")
+    if value is None:
+        raise HTTPException(status_code=400, detail="Missing 'value' in request body")
+    _ev_vehicle_state["AuxBatVoltage"] = value
+    return {"value": value}
+
+
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/avgspeed")
+@limiter.limit("60/minute")
+async def get_ev_vehicle_avgspeed(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get EV Vehicle Average Speed."""
+    return {
+        "AvgSpeed": _ev_vehicle_state.get("AvgSpeed", 60),
+        "unit": "km/h"
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/avgspeed")
+@limiter.limit("60/minute")
+async def set_ev_vehicle_avgspeed(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EV Vehicle Average Speed."""
+    value = body.get("value")
+    if value is None:
+        raise HTTPException(status_code=400, detail="Missing 'value' in request body")
+    _ev_vehicle_state["AvgSpeed"] = value
+    return {"value": value}
+
+
+# =============================================================================
 # MCB SYNCHRONIZATION
 # =============================================================================
 

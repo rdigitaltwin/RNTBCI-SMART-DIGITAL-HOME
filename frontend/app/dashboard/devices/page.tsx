@@ -198,8 +198,8 @@ export default function DevicesPage() {
         const currentDevices = useDeviceStore.getState().devices;
         const mergedDevices = [...apiDevices];
         
-        // Ensure Solar and EV devices are always present for the demo
-        ['energy_evse', 'solar_pv'].forEach(type => {
+        // Ensure Solar, EV Charger, and EV Vehicle devices are always present for the demo
+        ['energy_evse', 'solar_pv', 'ev_vehicle'].forEach(type => {
           if (!mergedDevices.some(d => d.type === type)) {
             const demoDevice = currentDevices.find(d => d.type === type);
             if (demoDevice) {
@@ -245,8 +245,8 @@ export default function DevicesPage() {
   const types = ['all', ...Object.keys(DEVICE_TYPE_CONFIG)];
   const statusOptions = [
     { value: 'all', label: 'All Status' },
-    { value: 'connected', label: 'Connected (Sim Active)' },
-    { value: 'disconnected', label: 'Disconnected (Sim Not Req.)' },
+    { value: 'connected', label: 'Connected (Dev Active)' },
+    { value: 'disconnected', label: 'Disconnected (Dev Inactive)' },
     { value: 'online', label: 'Online' },
     { value: 'offline', label: 'Offline' },
     { value: 'warning', label: 'Warning' },
@@ -263,7 +263,7 @@ export default function DevicesPage() {
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#F8FAFC' }}>Device Inventory</h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
-            {devices.length} devices • <span style={{ color: '#00FF9D' }}>{connectedCount} connected</span> • <span style={{ color: '#94A3B8' }}>{disconnectedCount} disconnected (Simulation not req.)</span> • {activeCount} active
+            {devices.length} devices • <span style={{ color: '#00FF9D' }}>{connectedCount} connected</span> • <span style={{ color: '#94A3B8' }}>{disconnectedCount} disconnected (dev inactive)</span> • {activeCount} active
           </p>
         </div>
 

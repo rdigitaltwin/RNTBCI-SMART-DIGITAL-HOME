@@ -14,6 +14,7 @@ export const DEVICE_TYPE_CONFIG: Record<string, { emoji: string; label: string; 
   water_heater: { emoji: '🔥', label: 'Water Heater', color: '#F97316' },
   camera: { emoji: '📷', label: 'Camera', color: '#EF4444' },
   energy_evse: { emoji: '🚗⚡', label: 'EV Charger', color: '#10B981' },
+  ev_vehicle: { emoji: '🚘', label: 'EV Vehicle', color: '#6366F1' },
   solar_pv: { emoji: '☀️', label: 'Solar Panel', color: '#FCD34D' },
   battery_storage: { emoji: '🔋', label: 'Battery Storage', color: '#34D399' },
   mcb: { emoji: '⚡', label: 'Main Breaker', color: '#EF4444' },

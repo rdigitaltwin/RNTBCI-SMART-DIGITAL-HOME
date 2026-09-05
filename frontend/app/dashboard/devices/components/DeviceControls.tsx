@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { WifiOff } from 'lucide-react';
-import { type Device } from '@/store';
+import { type Device, useDeviceStore, useEventStore } from '@/store';
 import api from '@/services/api';
 import { isDeviceConnected } from '../constants';
 
@@ -42,8 +42,8 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
         <WifiOff size={20} color="#F87171" style={{ flexShrink: 0 }} />
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#FCA5A5' }}>Device Disconnected</div>
-          <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
-            Operations cannot be performed and simulation is not required while disconnected.
+           <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+            Operations cannot be performed while device is inactive (disconnected).
           </div>
         </div>
       </div>
@@ -182,13 +182,87 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '4px' }}>Peak Capacity</div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: '#FCD34D' }}>5.0 kW</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#FCD34D' }}>{meta.peak_power != null ? String(meta.peak_power) + ' kW' : '5.0 kW'}</div>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '4px' }}>Efficiency</div>
           <div style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>{String(meta.efficiency || 22.5)}%</div>
         </div>
       </div>
+    </div>
+  );
+
+  const evVehicleEndpoint = (device.metadata?.endpoint as number) ?? 1;
+
+  const handleEVVehicleUpdate = async (
+    field: string,
+    label: string,
+    apiGet: (id: string, endpoint: number) => Promise<unknown>,
+    apiSet: (id: string, endpoint: number, value: number) => Promise<unknown>,
+    metaKey: string,
+    unit: string,
+  ) => {
+    const currentVal = (meta[metaKey] as number) ?? 0;
+    const newValStr = window.prompt(`Enter new ${label} (${unit}):`, String(currentVal));
+    if (newValStr === null) return;
+    const newVal = parseFloat(newValStr);
+    if (isNaN(newVal)) return;
+
+    setLoading(true);
+    try {
+      await apiSet(device.id, evVehicleEndpoint, newVal);
+      const currentMeta = useDeviceStore.getState().devices.find(d => d.id === device.id)?.metadata || {};
+      useDeviceStore.getState().updateDevice(device.id, {
+        metadata: { ...currentMeta, [metaKey]: newVal },
+      });
+      // Log event
+      useEventStore.getState().addEvent({
+        id: crypto.randomUUID(),
+        device_id: device.id,
+        device_name: device.name,
+        event_type: 'value_update',
+        severity: 'info',
+        message: `${device.name}: ${label} updated to ${newVal} ${unit}`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error(`Failed to update ${label}:`, e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderEVVehicleControls = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {[
+        { label: 'HV Battery Voltage', metaKey: 'HVBATVoltage', unit: 'V', apiGet: api.getEVVehicleHVBatVoltage.bind(api), apiSet: api.setEVVehicleHVBatVoltage.bind(api) },
+        { label: 'HV State of Charge', metaKey: 'HVSoC', unit: '%', apiGet: api.getEVVehicleHVSoC.bind(api), apiSet: api.setEVVehicleHVSoC.bind(api) },
+        { label: 'Auxiliary Battery Voltage', metaKey: 'AuxBatVoltage', unit: 'V', apiGet: api.getEVVehicleAuxBatVoltage.bind(api), apiSet: api.setEVVehicleAuxBatVoltage.bind(api) },
+        { label: 'Average Speed', metaKey: 'AvgSpeed', unit: 'km/h', apiGet: api.getEVVehicleAvgSpeed.bind(api), apiSet: api.setEVVehicleAvgSpeed.bind(api) },
+      ].map(({ label, metaKey, unit, apiGet, apiSet }) => (
+        <div key={metaKey} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div>
+            <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '4px' }}>{label}</div>
+            <div style={{ fontSize: '16px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace" }}>
+              {isOn ? `${meta[metaKey] ?? 0} ${unit}` : `0 ${unit}`}
+            </div>
+          </div>
+          <button
+            onClick={() => handleEVVehicleUpdate(metaKey, label, apiGet, apiSet, metaKey, unit)}
+            disabled={!isOn}
+            style={{
+              padding: '6px 14px', borderRadius: '8px',
+              background: isOn ? `${color}20` : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${isOn ? `${color}40` : 'rgba(255,255,255,0.08)'}`,
+              color: isOn ? color : '#64748B',
+              cursor: isOn ? 'pointer' : 'not-allowed',
+              fontSize: '12px', fontWeight: 600,
+            }}
+          >
+            Update
+          </button>
+        </div>
+      ))}
     </div>
   );
 
@@ -200,9 +274,10 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
       {device.type === 'washing_machine' && renderWashingMachineControls()}
       {device.type === 'energy_evse' && renderEVChargerControls()}
       {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && renderSolarPVControls()}
+      {device.type === 'ev_vehicle' && renderEVVehicleControls()}
 
       {/* Fallback for others if needed */}
-      {!['hvac', 'smart_light', 'door_lock', 'washing_machine', 'energy_evse', 'solar_pv', 'solar_panel', 'energy_solar'
+      {!['hvac', 'smart_light', 'door_lock', 'washing_machine', 'energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'
       ].includes(device.type) && (
         <div style={{ fontSize: '13px', color: '#94A3B8', textAlign: 'center', padding: '16px' }}>
           Specific controls for {device.type} are not available.

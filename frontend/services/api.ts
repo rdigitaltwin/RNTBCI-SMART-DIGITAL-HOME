@@ -321,6 +321,39 @@ class APIClient {
   async changeDeviceMode(id: string, mode: string) {
     return this.request(`/api/v1/devices/${id}/mode`, { method: 'PATCH', body: { mode } });
   }
+
+  // EV Vehicle
+  async getEVVehicleHVBatVoltage(id: string, endpoint: number = 1) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/hvbatvoltage`);
+  }
+
+  async setEVVehicleHVBatVoltage(id: string, endpoint: number = 1, value: number) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/hvbatvoltage`, { method: 'POST', body: { value } });
+  }
+
+  async getEVVehicleHVSoC(id: string, endpoint: number = 1) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/hvsoc`);
+  }
+
+  async setEVVehicleHVSoC(id: string, endpoint: number = 1, value: number) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/hvsoc`, { method: 'POST', body: { value } });
+  }
+
+  async getEVVehicleAuxBatVoltage(id: string, endpoint: number = 1) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/auxbatvoltage`);
+  }
+
+  async setEVVehicleAuxBatVoltage(id: string, endpoint: number = 1, value: number) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/auxbatvoltage`, { method: 'POST', body: { value } });
+  }
+
+  async getEVVehicleAvgSpeed(id: string, endpoint: number = 1) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/avgspeed`);
+  }
+
+  async setEVVehicleAvgSpeed(id: string, endpoint: number = 1, value: number) {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/avgspeed`, { method: 'POST', body: { value } });
+  }
 }
 
 export const api = new APIClient(API_BASE);

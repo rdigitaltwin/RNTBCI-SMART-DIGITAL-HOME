@@ -79,10 +79,10 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-          {/* Simulation Status Badge */}
+          {/* Device Status Badge */}
           {isConnected ? (
             <div 
-              title="Device is connected — simulation and operations active"
+              title="Physical device is connected and active"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 padding: '2px 8px', borderRadius: '10px',
@@ -91,11 +91,11 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
               }}
             >
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00FF9D', boxShadow: '0 0 6px #00FF9D' }} />
-              SIM ACTIVE
+              DEV ACTIVE
             </div>
           ) : (
             <div 
-              title="Device is not connected — simulation is not required"
+              title="Physical device is not connected"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 padding: '2px 8px', borderRadius: '10px',
@@ -104,7 +104,7 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
               }}
             >
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#64748B' }} />
-              SIM NOT REQ
+              DEV INACTIVE
             </div>
           )}
 
@@ -162,7 +162,7 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
           color: '#94A3B8',
         }}>
           <WifiOff size={12} color="#64748B" style={{ flexShrink: 0 }} />
-          <span>Simulation not required (Disconnected)</span>
+          <span>Device Inactive (Disconnected)</span>
         </div>
       )}
 
@@ -184,23 +184,59 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
       )}
 
       {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && isConnected && (
-        <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(252, 211, 77, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(252, 211, 77, 0.15)' }}>
+        <div style={{ marginTop: '12px', display: 'flex', gap: '8px', background: 'rgba(252, 211, 77, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(252, 211, 77, 0.15)' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Generation</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#FCD34D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn ? (device.metadata?.ActivePower != null ? (Math.abs(device.metadata.ActivePower as number) / 1000).toFixed(2) + ' kW' : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw).toFixed(2) + ' kW' : '4.69 kW')) : '0.00 kW'}
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn && device.metadata?.ActiveCurrent != null ? ((device.metadata.ActiveCurrent as number) / 1000).toFixed(1) + ' A' : '0.0 A'}
             </div>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Efficiency</div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
             <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {device.metadata?.efficiency != null ? String(device.metadata.efficiency) + '%' : '22.5%'}
+              {isOn && device.metadata?.Voltage != null ? ((device.metadata.Voltage as number) / 1000).toFixed(1) + ' V' : '0.0 V'}
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Generation</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#FCD34D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn ? (device.metadata?.ActivePower != null ? (Math.abs(device.metadata.ActivePower as number) / 1000000).toFixed(2) + ' kW' : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw).toFixed(2) + ' kW' : '0.00 kW')) : '0.00 kW'}
             </div>
           </div>
         </div>
       )}
 
-      {/* Efficiency bar / Simulation indicator */}
+      {/* EV Vehicle Metrics */}
+      {device.type === 'ev_vehicle' && isConnected && (
+        <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'rgba(99, 102, 241, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+          <div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>HV Battery</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn && device.metadata?.HVBATVoltage != null ? String(device.metadata.HVBATVoltage) + ' V' : '0 V'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>HV SoC</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#6366F1' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn && device.metadata?.HVSoC != null ? String(device.metadata.HVSoC) + ' %' : '0 %'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Aux Battery</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn && device.metadata?.AuxBatVoltage != null ? String(device.metadata.AuxBatVoltage) + ' V' : '0 V'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Avg Speed</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {isOn && device.metadata?.AvgSpeed != null ? String(device.metadata.AvgSpeed) + ' km/h' : '0 km/h'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Efficiency bar / Device status indicator */}
       {(() => {
         const effValue = device.type === 'solar_pv'
           ? ((device.metadata?.efficiency as number) ?? device.efficiency_percent ?? 95)
@@ -209,10 +245,10 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
           <div style={{ marginTop: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span style={{ fontSize: '10px', color: '#64748B' }}>
-                {isConnected ? 'Efficiency' : 'Simulation'}
+                {isConnected ? 'Efficiency' : 'Device'}
               </span>
               <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", color: isConnected ? '#94A3B8' : '#64748B' }}>
-                {isConnected ? `${effValue}%` : 'Not Required'}
+                {isConnected ? `${effValue}%` : 'Inactive'}
               </span>
             </div>
             <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>

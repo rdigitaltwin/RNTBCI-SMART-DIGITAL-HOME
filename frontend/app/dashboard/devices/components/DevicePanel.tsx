@@ -63,6 +63,39 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     }
   }, [liveDevice?.id, liveDevice?.type, liveDevice?.status, liveDevice?.connectivity]);
 
+  // Fetch EV Vehicle telemetry when panel opens
+  useEffect(() => {
+    if (liveDevice && isDeviceConnected(liveDevice) && liveDevice?.type === 'ev_vehicle') {
+      const evEndpoint = (liveDevice.metadata?.endpoint as number) ?? 1;
+      const fetchEVVehicle = async () => {
+        try {
+          const [hvBat, hvSoc, auxBat, avgSpd] = (await Promise.all([
+            api.getEVVehicleHVBatVoltage(liveDevice.id, evEndpoint).catch(() => ({})),
+            api.getEVVehicleHVSoC(liveDevice.id, evEndpoint).catch(() => ({})),
+            api.getEVVehicleAuxBatVoltage(liveDevice.id, evEndpoint).catch(() => ({})),
+            api.getEVVehicleAvgSpeed(liveDevice.id, evEndpoint).catch(() => ({})),
+          ])) as any[];
+
+          const currentDevice = useDeviceStore.getState().devices.find(d => d.id === liveDevice.id);
+          const currentMeta = (currentDevice?.metadata || {}) as any;
+
+          useDeviceStore.getState().updateDevice(liveDevice.id, {
+            metadata: {
+              ...currentMeta,
+              HVBATVoltage: hvBat.HVBATVoltage ?? currentMeta?.HVBATVoltage,
+              HVSoC: hvSoc.HVSoC ?? currentMeta?.HVSoC,
+              AuxBatVoltage: auxBat.AuxBatVoltage ?? currentMeta?.AuxBatVoltage,
+              AvgSpeed: avgSpd.AvgSpeed ?? currentMeta?.AvgSpeed,
+            }
+          });
+        } catch (err) {
+          console.error("Failed to fetch EV Vehicle telemetry", err);
+        }
+      };
+      fetchEVVehicle();
+    }
+  }, [liveDevice?.id, liveDevice?.type, liveDevice?.status, liveDevice?.connectivity]);
+
   if (!liveDevice) return null;
 
   const config = DEVICE_TYPE_CONFIG[liveDevice.type] || { emoji: '📱', label: liveDevice.type, color: '#94A3B8' };
@@ -228,7 +261,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   Device Disconnected — Operations Disabled
                 </div>
                 <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px', lineHeight: 1.5 }}>
-                  This device is currently not connected to the network. <strong>Simulation is not required</strong> and all operations (power toggle, device control, and automated actions) are disabled until the device is reconnected.
+                This device is currently not connected to the network. <strong>Device is inactive</strong> and all operations (power toggle, device control, and automated actions) are disabled until the device is reconnected.
                 </div>
               </div>
             </div>
@@ -273,7 +306,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <Activity size={14} color="#3B82F6" />
-                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>Simulation Status</span>
+                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>Device Status</span>
                 </div>
                 <div style={{ 
                   fontSize: '14px', 
@@ -282,7 +315,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                   display: 'flex', alignItems: 'center', gap: '6px'
                 }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isConnected ? '#00FF9D' : '#64748B' }} />
-                  {isConnected ? 'Active' : 'Not Required'}
+                  {isConnected ? 'Active' : 'Inactive'}
                 </div>
               </div>
 
@@ -397,6 +430,47 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
                       {meta.PowerFactor != null ? (meta.PowerFactor / 10000).toFixed(2) : '—'}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {liveDevice.type === 'ev_vehicle' && isConnected && (
+                <>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Zap size={14} color="#6366F1" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>HV Battery Voltage</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.HVBATVoltage != null ? meta.HVBATVoltage + ' V' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Gauge size={14} color="#10B981" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>HV State of Charge</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#6366F1', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.HVSoC != null ? meta.HVSoC + ' %' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Zap size={14} color="#F59E0B" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Aux Battery Voltage</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.AuxBatVoltage != null ? meta.AuxBatVoltage + ' V' : '—'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <Activity size={14} color="#3B82F6" />
+                      <span style={{ fontSize: '12px', color: '#94A3B8' }}>Average Speed</span>
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {meta.AvgSpeed != null ? meta.AvgSpeed + ' km/h' : '—'}
                     </div>
                   </div>
                 </>
