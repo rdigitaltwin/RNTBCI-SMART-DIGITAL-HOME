@@ -30,6 +30,7 @@ export interface Device {
   status: string;
   power_state: string;
   connectivity: string;
+  execution_mode?: string;
   energy_usage_kw: number;
   efficiency_percent: number;
   metadata: Record<string, unknown>;
@@ -128,6 +129,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'on',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: -4.69,
     efficiency_percent: 95,
     metadata: { efficiency: 22.5, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000 },
@@ -145,6 +147,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'off',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 0.0,
     efficiency_percent: 92,
     metadata: { Voltage: 0, ActiveCurrent: 0 },
@@ -162,6 +165,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'on',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 0,
     efficiency_percent: 95,
     metadata: { HVBATVoltage: 0, HVSoC: 0, AuxBatVoltage: 0, AvgSpeed: 0, endpoint: 1 },
@@ -179,6 +183,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'on',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 0.0,
     efficiency_percent: 100,
     metadata: { rated_current: 100, voltage: 230 },
@@ -196,6 +201,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'on',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 2.5,
     efficiency_percent: 88,
     metadata: { target_temperature: 21, mode: 'cooling' },
@@ -213,6 +219,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'on',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 0.015,
     efficiency_percent: 98,
     metadata: { brightness: 80 },
@@ -230,6 +237,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'off',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 0.0,
     efficiency_percent: 90,
     metadata: {},

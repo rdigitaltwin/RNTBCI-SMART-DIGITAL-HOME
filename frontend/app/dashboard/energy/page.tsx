@@ -114,7 +114,8 @@ export default function EnergyPage() {
       const batCharge = metrics.battery_charge_kw || 0;
       const batDischarge = metrics.battery_discharge_kw || 0;
       const evDischarge = metrics.ev_discharge_kw || 0;
-      const load = gridImport + solar + batDischarge + evDischarge - gridExport - batCharge;
+      // Net load from grid perspective — solar reduces grid draw, not adds to it
+      const load = Math.max(0, gridImport - gridExport);
 
       setLiveMap(prev => {
         const newData = {

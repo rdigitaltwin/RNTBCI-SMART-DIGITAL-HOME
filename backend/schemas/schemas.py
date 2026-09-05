@@ -181,6 +181,7 @@ class DeviceResponse(BaseModel):
     status: str
     power_state: str
     connectivity: str
+    execution_mode: str = "simulation"
     energy_usage_kw: float
     total_energy_kwh: float
     efficiency_percent: float

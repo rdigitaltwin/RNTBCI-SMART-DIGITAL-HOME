@@ -425,7 +425,7 @@ class SimulationEngine:
 
         # Device priority for load shedding (lower number = shed first)
         self._SHED_PRIORITY: dict[str, int] = {
-            "energy_evse": 1,       # EV charger is first to shed
+            "energy_evse": 90,      # EV charger sheds late — it is the intended high-power load
             "dishwasher": 2,
             "washing_machine": 3,
             "water_heater": 4,
@@ -512,14 +512,14 @@ class SimulationEngine:
                 if config.battery_capacity_kwh > 0:
                     self._battery_capacity_kwh = config.battery_capacity_kwh
             else:
-                # Default fallback — medium family home
+                # Default fallback — medium family home with EV charging capability
                 self._house_config = {
-                    "max_load_kw": 8.0,
+                    "max_load_kw": 15.0,
                     "overload_trip_enabled": True,
                     "overload_tolerance_pct": 10.0,
                     "supply_voltage_v": 230.0,
-                    "contracted_power_kva": 9.2,
-                    "main_breaker_a": 40.0,
+                    "contracted_power_kva": 15.0,
+                    "main_breaker_a": 63.0,
                     "has_solar_pv": False,
                     "solar_capacity_kwp": 0.0,
                     "has_battery": False,
@@ -533,7 +533,7 @@ class SimulationEngine:
                         self._house_config["main_breaker_a"])
         except Exception as e:
             logger.warning("Could not load HouseConfig: %s. Using defaults.", e)
-            self._house_config = {"max_load_kw": 8.0, "overload_trip_enabled": True,
+            self._house_config = {"max_load_kw": 15.0, "overload_trip_enabled": True,
                                   "overload_tolerance_pct": 10.0}
             self._house_config_loaded = True
         return self._house_config
@@ -645,6 +645,11 @@ class SimulationEngine:
         self._playback_end = None
         logger.info("Replay stopped, returning to live mode")
 
+    def invalidate_house_config_cache(self) -> None:
+        """Force house config to reload from DB on next tick (e.g. after seed)."""
+        self._house_config_loaded = False
+        self._house_config = None
+
     async def _engine_loop(self) -> None:
         """Main simulation loop - targets 1-second intervals."""
         import time
@@ -751,6 +756,11 @@ class SimulationEngine:
                             tracker.operating_mode = "active"
 
                     tracker = self._trackers[device_id]
+
+                    # Skip simulation for physical devices — their telemetry comes from hardware
+                    device_exec_mode = getattr(device, 'execution_mode', 'simulation') or 'simulation'
+                    if device_exec_mode == 'device':
+                        continue
 
                     # Sync power state from DB → tracker if out of sync
                     if power_state == PowerState.OFF and tracker.power_phase not in (
