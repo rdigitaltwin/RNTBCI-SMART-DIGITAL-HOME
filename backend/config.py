@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     app_name: str = "RNTBCI Smart Home Digital Twin"
     app_version: str = "1.0.0"
     debug: bool = False
+    debug_sql: bool = False
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:password@localhost:5432/rntbci"

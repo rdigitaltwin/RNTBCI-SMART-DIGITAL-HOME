@@ -132,6 +132,9 @@ class DeviceCreateRequest(BaseModel):
     position_x: float = 0.0
     position_y: float = 0.0
     position_z: float = 0.0
+    status: str | None = None
+    power_state: str | None = None
+    connectivity: str | None = None
 
 
 class DeviceUpdateRequest(BaseModel):
@@ -143,6 +146,9 @@ class DeviceUpdateRequest(BaseModel):
     position_x: float | None = None
     position_y: float | None = None
     position_z: float | None = None
+    status: str | None = None
+    power_state: str | None = None
+    connectivity: str | None = None
 
 
 class DeviceControlRequest(BaseModel):

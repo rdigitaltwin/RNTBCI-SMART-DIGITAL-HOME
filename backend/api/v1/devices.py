@@ -20,6 +20,7 @@ from backend.auth.dependencies import get_current_user, require_admin, require_u
 from backend.database import get_db
 from backend.models import (
     AuditLog,
+    ConnectivityStatus,
     Device,
     DeviceEvent,
     DeviceState,
@@ -34,6 +35,7 @@ from backend.models import (
 from backend.redis.client import redis_client
 from backend.services.evse_service import evse_service
 from backend.services.solar_service import solar_service
+from backend.services.ev_vehicle_service import ev_vehicle_service
 from backend.schemas import (
     DeviceControlRequest,
     DeviceCreateRequest,
@@ -83,6 +85,34 @@ def _device_to_response(device: Device) -> DeviceResponse:
         last_updated=device.last_updated,
         created_at=device.created_at,
     )
+
+
+def _device_type_value(device: Device) -> str:
+    return device.type.value if isinstance(device.type, DeviceType) else str(device.type)
+
+
+def _halt_electrical_output(device: Device) -> None:
+    """Stop generation/charging telemetry when a device is switched off."""
+    device.energy_usage_kw = 0.0
+    metadata = dict(device.extra_data or {})
+    metadata["Voltage"] = 0
+    metadata["ActiveCurrent"] = 0
+    metadata["ActivePower"] = 0
+    if _device_type_value(device) == DeviceType.SOLAR_PV.value:
+        metadata["current_generation"] = 0
+    device.extra_data = metadata
+
+
+def _parse_optional_enum(enum_cls, value, field_name: str):
+    if value is None:
+        return None
+    try:
+        return enum_cls(value)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid {field_name}: {value}",
+        )
 
 
 @router.get("", response_model=DeviceListResponse)
@@ -166,8 +196,23 @@ async def create_device(
         position_y=data.position_y,
         position_z=data.position_z,
     )
+    if (parsed := _parse_optional_enum(DeviceStatus, data.status, "status")) is not None:
+        device.status = parsed
+    if (parsed := _parse_optional_enum(PowerState, data.power_state, "power_state")) is not None:
+        device.power_state = parsed
+    if (parsed := _parse_optional_enum(ConnectivityStatus, data.connectivity, "connectivity")) is not None:
+        device.connectivity = parsed
     db.add(device)
-    await db.flush()
+    try:
+        await db.flush()
+    except Exception:
+        logger.exception(
+            "Failed to persist new device name=%s type=%s room_id=%s",
+            data.name,
+            data.type,
+            data.room_id,
+        )
+        raise
 
     # Create initial state
     initial_state = _get_default_state(device_type)
@@ -277,6 +322,12 @@ async def update_device(
         device.position_y = data.position_y
     if data.position_z is not None:
         device.position_z = data.position_z
+    if (parsed := _parse_optional_enum(DeviceStatus, data.status, "status")) is not None:
+        device.status = parsed
+    if (parsed := _parse_optional_enum(PowerState, data.power_state, "power_state")) is not None:
+        device.power_state = parsed
+    if (parsed := _parse_optional_enum(ConnectivityStatus, data.connectivity, "connectivity")) is not None:
+        device.connectivity = parsed
 
     await db.commit()
 
@@ -501,7 +552,7 @@ async def toggle_power(
         # Power stays 0 until simulation engine transitions to RUNNING after ~30s
     elif data.power_state == "off":
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
-        device.energy_usage_kw = 0.0
+        _halt_electrical_output(device)
     elif data.power_state == "standby":
         tracker.set_power_off()
         device.energy_usage_kw = max(device.energy_usage_kw * 0.05, 0.001)
@@ -580,7 +631,7 @@ async def toggle_state(
         # Power will remain 0 for ~30s, then simulation engine will calculate real values
     else:
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
-        device.energy_usage_kw = 0.0
+        _halt_electrical_output(device)
 
     # Log event
     event = DeviceEvent(
@@ -1447,6 +1498,25 @@ def _get_default_state(device_type: DeviceType) -> dict:
             "motion_detection": True,
             "night_vision": True,
         },
+        DeviceType.ENERGY_EVSE: {
+            "Voltage": 0,
+            "ActiveCurrent": 0,
+            "ActivePower": 0,
+            "endpoint": 1,
+        },
+        DeviceType.SOLAR_PV: {
+            "Voltage": 0,
+            "ActiveCurrent": 0,
+            "ActivePower": 0,
+            "endpoint": 1,
+        },
+        DeviceType.EV_VEHICLE: {
+            "HVBATVoltage": 0,
+            "HVSoC": 0,
+            "AuxBatVoltage": 0,
+            "AvgSpeed": 0,
+            "endpoint": 1,
+        },
     }
     return defaults.get(device_type, {})
 
@@ -1550,7 +1620,7 @@ async def disable_evse_charging(
     if device:
         device.power_state = PowerState.OFF
         device.last_updated = datetime.now(timezone.utc)
-        device.energy_usage_kw = 0.0
+        _halt_electrical_output(device)
         device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
         tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
         tracker.set_power_off()
@@ -1836,6 +1906,29 @@ async def set_evse_active_current(
 # =============================================================================
 
 
+async def _get_solar_device_or_404(device_id: str, db: AsyncSession) -> Device:
+    try:
+        device_uuid = uuid.UUID(device_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid device_id format")
+    result = await db.execute(select(Device).where(Device.id == device_uuid))
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    return device
+
+
+def _solar_is_off(device: Device) -> bool:
+    power = device.power_state.value if hasattr(device.power_state, "value") else device.power_state
+    return str(power).lower() == PowerState.OFF.value
+
+
+def _solar_measurement(device: Device, key: str):
+    if _solar_is_off(device):
+        return 0
+    return (device.extra_data or {}).get(key, 0)
+
+
 @router.get("/{device_id}/solar/endpoint/{endpoint}")
 @limiter.limit("60/minute")
 async def get_solar_device_details(
@@ -1845,21 +1938,14 @@ async def get_solar_device_details(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Solar device details matching the Matter JSON spec."""
-    try:
-        device_uuid = uuid.UUID(device_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid device_id format")
-
-    result = await db.execute(select(Device).where(Device.id == device_uuid))
-    device = result.scalar_one_or_none()
-    if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+    device = await _get_solar_device_or_404(device_id, db)
 
     # Load the exact Matter JSON template for Solar
     solar_data = await solar_service.get_solar_device("Solar_Panel")
     if not solar_data:
         raise HTTPException(status_code=404, detail="Solar Specification data not found")
 
+    solar_data["live_state"] = device.extra_data or {}
     return solar_data
 
 
@@ -1873,9 +1959,13 @@ async def get_solar_active_power(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Solar power output."""
+    device = await _get_solar_device_or_404(device_id, db)
+    active_power = _solar_measurement(device, "ActivePower")
+    if not active_power and not _solar_is_off(device) and device.energy_usage_kw:
+        active_power = int(abs(device.energy_usage_kw) * 1_000_000)
     return {
-        "ActivePower": 8000000,
-        "displayValue": "8 kW"
+        "ActivePower": active_power,
+        "displayValue": f"{abs(active_power) / 1_000_000:.2f} kW",
     }
 
 
@@ -1889,9 +1979,11 @@ async def get_solar_cumulative_energy(
     db: AsyncSession = Depends(get_db),
 ):
     """Get total Energy generated."""
+    device = await _get_solar_device_or_404(device_id, db)
+    energy_mwh = int((device.total_energy_kwh or 0) * 1_000_000)
     return {
-        "Energy": 245000000,
-        "displayValue": "245 kWh"
+        "Energy": energy_mwh,
+        "displayValue": f"{device.total_energy_kwh or 0:.2f} kWh",
     }
 
 
@@ -1905,9 +1997,11 @@ async def get_solar_voltage(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Solar Voltage."""
+    device = await _get_solar_device_or_404(device_id, db)
+    voltage = _solar_measurement(device, "Voltage")
     return {
-        "Voltage": 380000,
-        "displayValue": "380 V"
+        "Voltage": voltage,
+        "displayValue": f"{voltage / 1000:.1f} V",
     }
 
 
@@ -1921,9 +2015,11 @@ async def get_solar_active_current(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Solar current."""
+    device = await _get_solar_device_or_404(device_id, db)
+    current = _solar_measurement(device, "ActiveCurrent")
     return {
-        "ActiveCurrent": 21000,
-        "displayValue": "21 A"
+        "ActiveCurrent": current,
+        "displayValue": f"{current / 1000:.1f} A",
     }
 
 
@@ -1937,9 +2033,11 @@ async def get_solar_frequency(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Grid frequency."""
+    device = await _get_solar_device_or_404(device_id, db)
+    frequency = _solar_measurement(device, "Frequency")
     return {
-        "Frequency": 50000,
-        "displayValue": "50 Hz"
+        "Frequency": frequency,
+        "displayValue": f"{frequency / 1000:.1f} Hz" if frequency else "0 Hz",
     }
 
 
@@ -1953,8 +2051,10 @@ async def get_solar_power_factor(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Power Factor."""
+    device = await _get_solar_device_or_404(device_id, db)
+    pf = (device.extra_data or {}).get("PowerFactor", 0 if _solar_is_off(device) else None)
     return {
-        "Voltage": 400000
+        "PowerFactor": pf if pf is not None else 0,
     }
 
 
@@ -1986,10 +2086,12 @@ async def get_solar_user_label(
     db: AsyncSession = Depends(get_db),
 ):
     """Get User Label."""
-    return {
-        "label": "RoofTop",
-        "value": "SolarArray01"
-    }
+    device = await _get_solar_device_or_404(device_id, db)
+    labels = (device.extra_data or {}).get("LabelList") or []
+    if labels:
+        first = labels[0]
+        return {"label": first.get("label", ""), "value": first.get("value", "")}
+    return {"label": "", "value": ""}
 
 
 @router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/labellist")
@@ -2017,13 +2119,12 @@ async def set_solar_user_label(
 # EV VEHICLE MATTER SUPPORT
 # =============================================================================
 
-# In-memory store for EV Vehicle state (used when device doesn't exist in DB)
-_ev_vehicle_state: dict = {
-    "HVBATVoltage": 400,
-    "HVSoC": 75,
-    "AuxBatVoltage": 12,
-    "AvgSpeed": 60,
-}
+
+async def _ev_vehicle_device_or_404(device_id: str, db: AsyncSession) -> Device:
+    device = await ev_vehicle_service.get_device(device_id, db)
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    return device
 
 
 @router.get("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvbatvoltage")
@@ -2034,11 +2135,9 @@ async def get_ev_vehicle_hvbatvoltage(
     endpoint: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get EV Vehicle HV Battery Voltage."""
-    return {
-        "HVBATVoltage": _ev_vehicle_state.get("HVBATVoltage", 400),
-        "unit": "V"
-    }
+    device = await _ev_vehicle_device_or_404(device_id, db)
+    state = device.extra_data or {}
+    return {"HVBATVoltage": ev_vehicle_service.reading(state, "HVBATVoltage"), "unit": "V"}
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvbatvoltage")
@@ -2050,11 +2149,17 @@ async def set_ev_vehicle_hvbatvoltage(
     body: dict,
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EV Vehicle HV Battery Voltage."""
     value = body.get("value")
     if value is None:
         raise HTTPException(status_code=400, detail="Missing 'value' in request body")
-    _ev_vehicle_state["HVBATVoltage"] = value
+    device = await ev_vehicle_service.update_ev_vehicle_state(
+        device_id,
+        {"HVBATVoltage": value, "endpoint": endpoint},
+        db,
+        event_message=f"HV Battery Voltage updated to {value} V",
+    )
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
     return {"value": value}
 
 
@@ -2066,11 +2171,9 @@ async def get_ev_vehicle_hvsoc(
     endpoint: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get EV Vehicle HV State of Charge."""
-    return {
-        "HVSoC": _ev_vehicle_state.get("HVSoC", 75),
-        "unit": "%"
-    }
+    device = await _ev_vehicle_device_or_404(device_id, db)
+    state = device.extra_data or {}
+    return {"HVSoC": ev_vehicle_service.reading(state, "HVSoC"), "unit": "%"}
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/hvsoc")
@@ -2082,11 +2185,17 @@ async def set_ev_vehicle_hvsoc(
     body: dict,
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EV Vehicle HV State of Charge."""
     value = body.get("value")
     if value is None:
         raise HTTPException(status_code=400, detail="Missing 'value' in request body")
-    _ev_vehicle_state["HVSoC"] = value
+    device = await ev_vehicle_service.update_ev_vehicle_state(
+        device_id,
+        {"HVSoC": value, "endpoint": endpoint},
+        db,
+        event_message=f"HV State of Charge updated to {value} %",
+    )
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
     return {"value": value}
 
 
@@ -2098,11 +2207,9 @@ async def get_ev_vehicle_auxbatvoltage(
     endpoint: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get EV Vehicle Auxiliary Battery Voltage."""
-    return {
-        "AuxBatVoltage": _ev_vehicle_state.get("AuxBatVoltage", 12),
-        "unit": "V"
-    }
+    device = await _ev_vehicle_device_or_404(device_id, db)
+    state = device.extra_data or {}
+    return {"AuxBatVoltage": ev_vehicle_service.reading(state, "AuxBatVoltage"), "unit": "V"}
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/auxbatvoltage")
@@ -2114,11 +2221,17 @@ async def set_ev_vehicle_auxbatvoltage(
     body: dict,
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EV Vehicle Auxiliary Battery Voltage."""
     value = body.get("value")
     if value is None:
         raise HTTPException(status_code=400, detail="Missing 'value' in request body")
-    _ev_vehicle_state["AuxBatVoltage"] = value
+    device = await ev_vehicle_service.update_ev_vehicle_state(
+        device_id,
+        {"AuxBatVoltage": value, "endpoint": endpoint},
+        db,
+        event_message=f"Auxiliary Battery Voltage updated to {value} V",
+    )
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
     return {"value": value}
 
 
@@ -2130,11 +2243,9 @@ async def get_ev_vehicle_avgspeed(
     endpoint: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get EV Vehicle Average Speed."""
-    return {
-        "AvgSpeed": _ev_vehicle_state.get("AvgSpeed", 60),
-        "unit": "km/h"
-    }
+    device = await _ev_vehicle_device_or_404(device_id, db)
+    state = device.extra_data or {}
+    return {"AvgSpeed": ev_vehicle_service.reading(state, "AvgSpeed"), "unit": "km/h"}
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/avgspeed")
@@ -2146,11 +2257,17 @@ async def set_ev_vehicle_avgspeed(
     body: dict,
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EV Vehicle Average Speed."""
     value = body.get("value")
     if value is None:
         raise HTTPException(status_code=400, detail="Missing 'value' in request body")
-    _ev_vehicle_state["AvgSpeed"] = value
+    device = await ev_vehicle_service.update_ev_vehicle_state(
+        device_id,
+        {"AvgSpeed": value, "endpoint": endpoint},
+        db,
+        event_message=f"Average Speed updated to {value} km/h",
+    )
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
     return {"value": value}
 
 

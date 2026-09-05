@@ -10,7 +10,7 @@ settings = get_settings()
 
 engine = create_async_engine(
     settings.database_url,
-    echo=settings.debug,
+    echo=settings.debug_sql,
     pool_size=settings.db_pool_size,
     max_overflow=settings.db_max_overflow,
     pool_pre_ping=True,
@@ -65,19 +65,35 @@ async def init_db() -> bool:
             if "total_power_consumption_kw" not in columns:
                 sync_conn.execute(text("DROP TABLE device_power_history CASCADE"))
 
-        # Add ev_vehicle to PostgreSQL devicetype ENUM if it exists
-        if sync_conn.engine.dialect.name == "postgresql":
-            try:
-                sync_conn.execute(text("ALTER TYPE devicetype ADD VALUE IF NOT EXISTS 'ev_vehicle'"))
-            except Exception:
-                pass
-
-
     max_retries = 5
     base_delay = 2
 
+    async def ensure_postgres_device_type_enum() -> None:
+        """Add new DeviceType labels to the existing Postgres enum.
+
+        create_all does not ALTER existing enum types. SQLAlchemy persists
+        DeviceType by member *name* (EV_VEHICLE), not the value (ev_vehicle).
+        ADD VALUE must run in AUTOCOMMIT so later inserts can use the label.
+        """
+        from sqlalchemy import text as sa_text
+
+        if "postgresql" not in settings.database_url:
+            return
+        # Name (SQLAlchemy default) and value (in case an earlier hotfix added it).
+        labels = ("EV_VEHICLE", "ev_vehicle")
+        async with engine.connect() as conn:
+            await conn.execution_options(isolation_level="AUTOCOMMIT")
+            for label in labels:
+                try:
+                    await conn.execute(
+                        sa_text(f"ALTER TYPE devicetype ADD VALUE IF NOT EXISTS '{label}'")
+                    )
+                except Exception as exc:
+                    logger.warning("Could not add enum label %s: %s", label, exc)
+
     for attempt in range(1, max_retries + 1):
         try:
+            await ensure_postgres_device_type_enum()
             async with engine.begin() as conn:
                 await conn.run_sync(check_and_drop_legacy)
                 await conn.run_sync(Base.metadata.create_all)

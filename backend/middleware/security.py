@@ -5,6 +5,7 @@ Implements rate limiting, security headers, and CORS configuration.
 
 import logging
 import time
+import traceback
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,7 +49,14 @@ def setup_middleware(app: FastAPI) -> None:
             logger.info(f"{request.method} {request.url.path} - Status: {response.status_code} - {process_time:.4f}s")
         except Exception as e:
             process_time = time.time() - start_time
-            logger.error(f"{request.method} {request.url.path} - 500 - {process_time:.4f}s - Error: {e}")
+            logger.error(
+                "%s %s - 500 - %.4fs - Error: %s\n%s",
+                request.method,
+                request.url.path,
+                process_time,
+                e,
+                traceback.format_exc(),
+            )
             raise
 
         # Content Security Policy

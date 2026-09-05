@@ -33,6 +33,10 @@ DEVICE_PRIORITY = {
     DeviceType.CAMERA: 8,
     DeviceType.DOOR_LOCK: 10,
     DeviceType.SMART_SWITCH: 5,
+    DeviceType.ENERGY_EVSE: 1,
+    DeviceType.SOLAR_PV: 99,
+    DeviceType.EV_VEHICLE: 99,
+    DeviceType.MCB: 99,
 }
 
 class EnergyManager:

@@ -130,6 +130,10 @@ DEVICE_MODE_PROFILES: dict[str, dict[str, dict[str, float]]] = {
         "trickle": {"kw": 0.5, "kvar": 0.05, "pf": 0.99, "noise_pct": 0.08},
         "standby": {"kw": 0.005, "kvar": 0.002, "pf": 0.90, "noise_pct": 0.10},
     },
+    "ev_vehicle": {
+        "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+        "on": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
+    },
     # --- NEW: Solar PV (generation = negative load) ---
     "solar_pv": {
         "off": {"kw": 0.0, "kvar": 0.0, "pf": 1.0, "noise_pct": 0.0},
@@ -160,6 +164,7 @@ DEFAULT_ON_MODE: dict[str, str] = {
     "water_heater": "heating",
     "camera": "recording",
     "energy_evse": "charging",
+    "ev_vehicle": "on",
     "solar_pv": "generating",
     "battery_storage": "idle",
 }
@@ -432,6 +437,8 @@ class SimulationEngine:
             "door_lock": 99,
             "solar_pv": 99,         # Never shed generation
             "battery_storage": 99,
+            "ev_vehicle": 99,
+            "mcb": 99,
         }
 
         # Historical playback
@@ -788,6 +795,18 @@ class SimulationEngine:
                         
 
                     metadata = dict(device.extra_data or {})
+
+                    if device_type in (DeviceType.SOLAR_PV, DeviceType.ENERGY_EVSE):
+                        metadata = self._sync_electrical_cluster(
+                            metadata, kw, power_state, house_cfg.get("supply_voltage_v")
+                        )
+                        if device_type == DeviceType.SOLAR_PV:
+                            metadata["current_generation"] = (
+                                round(abs(kw), 4) if power_state == PowerState.ON else 0.0
+                            )
+                        device.extra_data = metadata
+                    elif device_type == DeviceType.EV_VEHICLE and power_state != PowerState.ON:
+                        kw, kvar = 0.0, 0.0
 
                     # Always update live power reading every tick so the
                     # dashboard reflects current values immediately (fixes
@@ -1234,6 +1253,31 @@ class SimulationEngine:
                 metadata["wash_mode"] = "normal"
 
 
+        return metadata
+
+    def _sync_electrical_cluster(
+        self, metadata: dict, kw: float, power_state: PowerState, supply_voltage_v: float | None,
+    ) -> dict:
+        """Keep Voltage (mV), ActiveCurrent (mA), ActivePower (mW) in sync with live kW.
+
+        When the device is off, all three fields are zeroed so toggle-off actually
+        stops generation/charging in the API and UI.
+        """
+        if power_state != PowerState.ON or abs(kw) < 1e-9:
+            metadata["Voltage"] = 0
+            metadata["ActiveCurrent"] = 0
+            metadata["ActivePower"] = 0
+            return metadata
+
+        voltage_mv = metadata.get("Voltage") or 0
+        if not voltage_mv:
+            nominal_v = supply_voltage_v if supply_voltage_v else 0
+            voltage_mv = int(nominal_v * 1000) if nominal_v else 0
+        voltage_v = voltage_mv / 1000.0 if voltage_mv else 0
+        current_a = (abs(kw) * 1000.0 / voltage_v) if voltage_v else 0.0
+        metadata["Voltage"] = int(voltage_mv)
+        metadata["ActiveCurrent"] = int(current_a * 1000)
+        metadata["ActivePower"] = int(abs(kw) * 1_000_000)
         return metadata
 
     async def _generate_event(

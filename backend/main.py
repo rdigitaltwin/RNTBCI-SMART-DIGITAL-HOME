@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import logging
+import traceback
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -26,8 +27,12 @@ root_logger = logging.getLogger()
 settings = get_settings()
 root_logger.setLevel(logging.DEBUG if settings.debug else logging.INFO)
 
-# Suppress verbose SQLAlchemy logs in production
-if not settings.debug:
+# SQL echo is gated by DEBUG_SQL (settings.debug_sql). Always keep the
+# engine logger quiet unless that flag is on — the sim loop would otherwise
+# flood production with SELECT/UPDATE every second.
+if settings.debug_sql:
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+else:
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
 
@@ -96,6 +101,21 @@ app = FastAPI(
     docs_url="/docs" if settings.debug else None,
     redoc_url="/redoc" if settings.debug else None,
 )
+
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Log full tracebacks for unexpected 500s so they are diagnosable in prod."""
+    logger.error(
+        "Unhandled exception on %s %s:\n%s",
+        request.method,
+        request.url.path,
+        traceback.format_exc(),
+    )
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # Setup middleware (CORS, security headers, rate limiting)
 setup_middleware(app)
