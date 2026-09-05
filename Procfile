@@ -1,1 +1,1 @@
-web: python run.py
+web: python fix_db.py && python run.py
