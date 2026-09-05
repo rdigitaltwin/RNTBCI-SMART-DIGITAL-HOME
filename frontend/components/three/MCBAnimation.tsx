@@ -34,11 +34,13 @@ const MCB_COLORS: Record<MCBState, string> = {
 
 interface MCBAnimationProps {
   position?: [number, number, number];
+  rotation?: [number, number, number];
   visible?: boolean;
 }
 
 export default function MCBAnimation({
   position = [-3.5, 0.5, -3.5],
+  rotation = [0, 0, 0],
   visible = true,
 }: MCBAnimationProps) {
   const mcb = useEnergyStore((s) => s.mcb);
@@ -83,7 +85,7 @@ export default function MCBAnimation({
   const loadColor = LOAD_LEVEL_COLORS[metrics.loadLevel];
 
   return (
-    <group position={position}>
+    <group position={position} rotation={rotation}>
       {/* Wall Mounting Plate */}
       <mesh position={[0, 0, -0.055]}>
         <boxGeometry args={[0.26, 0.42, 0.015]} />

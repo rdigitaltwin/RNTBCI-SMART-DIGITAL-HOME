@@ -230,7 +230,7 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"power_level": 100, "timer_seconds": 0, "mode": "standby"}, 7.0, 1.0, 0.5),
 
         # Master Bedroom
-        ("Bedroom Light", DeviceType.SMART_LIGHT, "master_bedroom", PowerState.OFF, 0.0,
+        ("Bedroom Light", DeviceType.SMART_LIGHT, "master_bedroom", PowerState.OFF, 0.015,
          {"brightness": 50, "rgb": {"r": 255, "g": 200, "b": 150}, "color_temperature": 3000}, 2.0, 2.8, 7.0),
         ("Bedroom AC", DeviceType.HVAC, "master_bedroom", PowerState.OFF, 1.8,
          {"temperature": 21.0, "target_temperature": 21, "mode": "cooling", "fan_speed": "low"}, 0.5, 2.5, 5.5),
@@ -238,7 +238,7 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
          {"lock_state": "locked", "auto_lock": True, "auto_lock_delay": 30}, 0.0, 1.0, 5.5),
 
         # Bathroom
-        ("Bathroom Light", DeviceType.SMART_LIGHT, "bathroom", PowerState.OFF, 0.0,
+        ("Bathroom Light", DeviceType.SMART_LIGHT, "bathroom", PowerState.OFF, 0.015,
          {"brightness": 100, "rgb": {"r": 255, "g": 255, "b": 255}, "color_temperature": 5000}, 6.5, 2.8, 6.5),
         ("Water Heater", DeviceType.WATER_HEATER, "bathroom", PowerState.OFF, 1.2,
          {"temperature": 48, "target_temperature": 50}, 7.5, 0.5, 5.5),
