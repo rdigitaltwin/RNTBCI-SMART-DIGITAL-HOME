@@ -1,5 +1,6 @@
 """RNTBCI Smart Home Digital Twin - Database Connection & Session Management."""
 
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -29,7 +30,7 @@ class Base(DeclarativeBase):
     pass
 
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency: yield a database session per request."""
     async with async_session_factory() as session:
         try:
@@ -63,6 +64,14 @@ async def init_db() -> bool:
             columns = [col['name'] for col in inspector.get_columns("device_power_history")]
             if "total_power_consumption_kw" not in columns:
                 sync_conn.execute(text("DROP TABLE device_power_history CASCADE"))
+
+        # Add ev_vehicle to PostgreSQL devicetype ENUM if it exists
+        if sync_conn.engine.dialect.name == "postgresql":
+            try:
+                sync_conn.execute(text("ALTER TYPE devicetype ADD VALUE IF NOT EXISTS 'ev_vehicle'"))
+            except Exception:
+                pass
+
 
     max_retries = 5
     base_delay = 2
