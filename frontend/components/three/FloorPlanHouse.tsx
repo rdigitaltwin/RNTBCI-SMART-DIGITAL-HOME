@@ -332,17 +332,17 @@ function ExteriorArea() {
         </Html>
       </group>
 
-      {/* Electric Vehicle (simplified) */}
+      {/* Electric Vehicle */}
       <group position={[0.5, 0, 0]}>
-        {/* Car body */}
+        {/* Car body - Metallic Red */}
         <mesh position={[0, 0.12, 0]}>
           <boxGeometry args={[0.6, 0.12, 0.3]} />
-          <meshStandardMaterial color="#1a3a2a" metalness={0.6} roughness={0.3} />
+          <meshStandardMaterial color="#DC2626" metalness={0.7} roughness={0.2} />
         </mesh>
         {/* Cabin */}
         <mesh position={[0, 0.22, 0]}>
           <boxGeometry args={[0.35, 0.1, 0.25]} />
-          <meshStandardMaterial color="#1a3a4a" metalness={0.5} roughness={0.2} transparent opacity={0.7} />
+          <meshStandardMaterial color="#1f2937" metalness={0.6} roughness={0.2} transparent opacity={0.75} />
         </mesh>
         {/* Wheels */}
         {[
@@ -361,6 +361,27 @@ function ExteriorArea() {
             <meshStandardMaterial color={isCharging ? '#00FF9D' : '#555'} />
           </mesh>
         )}
+
+        {/* Minute Vehicle Charging Status Badge */}
+        <Html position={[0, 0.38, 0]} center distanceFactor={6}>
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '9px',
+            fontWeight: 600,
+            color: isCharging ? '#00FF9D' : '#94A3B8',
+            background: isCharging ? 'rgba(5, 20, 15, 0.9)' : 'rgba(15, 23, 42, 0.85)',
+            padding: '2px 7px',
+            borderRadius: '4px',
+            border: `1px solid ${isCharging ? 'rgba(0, 255, 157, 0.5)' : 'rgba(148, 163, 184, 0.2)'}`,
+            boxShadow: isCharging ? '0 0 10px rgba(0, 255, 157, 0.3)' : 'none',
+            whiteSpace: 'nowrap',
+            letterSpacing: '0.5px',
+            pointerEvents: 'none',
+            transition: 'all 0.3s ease',
+          }}>
+            {isCharging ? `⚡ CHARGING • ${evCharger.batteryLevel.toFixed(0)}%` : 'IDLE'}
+          </div>
+        </Html>
       </group>
     </group>
   );

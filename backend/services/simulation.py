@@ -662,11 +662,21 @@ class SimulationEngine:
                 else:
                     await self._live_tick()
 
-                loop_duration = time.monotonic() - loop_start
-                self._simulation_fps = 1.0 / max(loop_duration, 0.001)
+                now = time.monotonic()
+                if self._last_tick_time > 0:
+                    cycle_duration = now - self._last_tick_time
+                    instant_fps = 1.0 / max(cycle_duration, 0.001)
+                    if self._simulation_fps == 0:
+                        self._simulation_fps = instant_fps
+                    else:
+                        self._simulation_fps = (0.2 * instant_fps) + (0.8 * self._simulation_fps)
+                else:
+                    self._simulation_fps = 60.0
+                self._last_tick_time = now
+
                 self._metrics["simulation_fps"] = round(self._simulation_fps, 1)
 
-                # Sleep to maintain interval, adjusted for speed
+                loop_duration = now - loop_start
                 sleep_time = max(0.05, (1.0 / self._speed) - loop_duration)
                 await asyncio.sleep(sleep_time)
 

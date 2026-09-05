@@ -110,8 +110,8 @@ export default function MetricsPage() {
         ...prev.slice(-59),
         {
           time: now,
-          fps: (metrics.simulation_fps || 55) + (Math.random() - 0.5) * 10,
-          power: (metrics.total_power_w || 3000) + (Math.random() - 0.5) * 500,
+          fps: metrics.simulation_fps || 60,
+          power: metrics.total_power_w || 0,
         },
       ]);
     }, 1000);
