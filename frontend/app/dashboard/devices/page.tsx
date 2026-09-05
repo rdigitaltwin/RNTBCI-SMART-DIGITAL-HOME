@@ -245,8 +245,8 @@ export default function DevicesPage() {
   const types = ['all', ...Object.keys(DEVICE_TYPE_CONFIG)];
   const statusOptions = [
     { value: 'all', label: 'All Status' },
-    { value: 'connected', label: 'Connected (Dev Active)' },
-    { value: 'disconnected', label: 'Disconnected (Dev Inactive)' },
+    { value: 'connected', label: 'Connected (Active)' },
+    { value: 'disconnected', label: 'Disconnected (Inactive)' },
     { value: 'online', label: 'Online' },
     { value: 'offline', label: 'Offline' },
     { value: 'warning', label: 'Warning' },
@@ -263,7 +263,7 @@ export default function DevicesPage() {
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#F8FAFC' }}>Device Inventory</h2>
           <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
-            {devices.length} devices • <span style={{ color: '#00FF9D' }}>{connectedCount} connected</span> • <span style={{ color: '#94A3B8' }}>{disconnectedCount} disconnected (dev inactive)</span> • {activeCount} active
+            {devices.length} devices • <span style={{ color: '#00FF9D' }}>{connectedCount} connected</span> • <span style={{ color: '#94A3B8' }}>{disconnectedCount} disconnected (inactive)</span> • {activeCount} active
           </p>
         </div>
 

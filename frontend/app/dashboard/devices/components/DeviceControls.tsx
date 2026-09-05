@@ -43,7 +43,12 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#FCA5A5' }}>Device Disconnected</div>
            <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
-            Operations cannot be performed while device is inactive (disconnected).
+            {(() => {
+              const isPhysical = device.metadata?.is_physical === true || device.metadata?.source === 'mqtt' || device.metadata?.source === 'matter';
+              return isPhysical 
+                ? 'Operations cannot be performed while physical device is inactive (disconnected).'
+                : 'Operations cannot be performed while device is disconnected (simulation not required).';
+            })()}
           </div>
         </div>
       </div>

@@ -82,7 +82,10 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
           {/* Device Status Badge */}
           {isConnected ? (
             <div 
-              title="Physical device is connected and active"
+              title={(() => {
+                const isPhysical = device.metadata?.is_physical === true || device.metadata?.source === 'mqtt' || device.metadata?.source === 'matter';
+                return isPhysical ? "Physical device is connected and active" : "Device is connected — simulation and operations active";
+              })()}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 padding: '2px 8px', borderRadius: '10px',
@@ -91,11 +94,17 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
               }}
             >
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00FF9D', boxShadow: '0 0 6px #00FF9D' }} />
-              DEV ACTIVE
+              {(() => {
+                const isPhysical = device.metadata?.is_physical === true || device.metadata?.source === 'mqtt' || device.metadata?.source === 'matter';
+                return isPhysical ? 'DEV ACTIVE' : 'SIM ACTIVE';
+              })()}
             </div>
           ) : (
             <div 
-              title="Physical device is not connected"
+              title={(() => {
+                const isPhysical = device.metadata?.is_physical === true || device.metadata?.source === 'mqtt' || device.metadata?.source === 'matter';
+                return isPhysical ? "Physical device is not connected" : "Device is not connected — simulation is not required";
+              })()}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
                 padding: '2px 8px', borderRadius: '10px',
@@ -104,7 +113,10 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
               }}
             >
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#64748B' }} />
-              DEV INACTIVE
+              {(() => {
+                const isPhysical = device.metadata?.is_physical === true || device.metadata?.source === 'mqtt' || device.metadata?.source === 'matter';
+                return isPhysical ? 'DEV INACTIVE' : 'SIM NOT REQ';
+              })()}
             </div>
           )}
 

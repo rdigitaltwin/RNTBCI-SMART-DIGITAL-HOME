@@ -258,10 +258,16 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               <WifiOff size={22} color="#F87171" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#FCA5A5' }}>
-                  Device Disconnected — Operations Disabled
+                  {(() => {
+                    const isPhysical = liveDevice.metadata?.is_physical === true || liveDevice.metadata?.source === 'mqtt' || liveDevice.metadata?.source === 'matter';
+                    return isPhysical ? 'Device Disconnected — Operations Disabled' : 'Device Disconnected — Simulation Disabled';
+                  })()}
                 </div>
                 <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px', lineHeight: 1.5 }}>
-                This device is currently not connected to the network. <strong>Device is inactive</strong> and all operations (power toggle, device control, and automated actions) are disabled until the device is reconnected.
+                This device is currently not connected to the network. <strong>{(() => {
+                    const isPhysical = liveDevice.metadata?.is_physical === true || liveDevice.metadata?.source === 'mqtt' || liveDevice.metadata?.source === 'matter';
+                    return isPhysical ? 'Device is inactive' : 'Simulation is not required';
+                  })()}</strong> and all operations (power toggle, device control, and automated actions) are disabled until the device is reconnected.
                 </div>
               </div>
             </div>

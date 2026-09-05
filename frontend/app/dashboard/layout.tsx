@@ -415,7 +415,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           const currentStore = useDeviceStore.getState().devices;
           const mergedDevices = [...apiDevices];
           
-          ['energy_evse', 'solar_pv'].forEach(type => {
+          ['energy_evse', 'solar_pv', 'ev_vehicle'].forEach(type => {
             if (!mergedDevices.some(d => d.type === type)) {
               const demoDevice = currentStore.find(d => d.type === type);
               if (demoDevice) mergedDevices.push(demoDevice);
