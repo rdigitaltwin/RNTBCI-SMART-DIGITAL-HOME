@@ -74,6 +74,7 @@ def _device_to_response(device: Device) -> DeviceResponse:
         status=device.status.value if isinstance(device.status, DeviceStatus) else device.status,
         power_state=device.power_state.value if isinstance(device.power_state, PowerState) else device.power_state,
         connectivity=device.connectivity.value if hasattr(device.connectivity, 'value') else device.connectivity,
+        execution_mode=device.execution_mode if device.execution_mode else "simulation",
         energy_usage_kw=device.energy_usage_kw,
         total_energy_kwh=device.total_energy_kwh,
         efficiency_percent=device.efficiency_percent,

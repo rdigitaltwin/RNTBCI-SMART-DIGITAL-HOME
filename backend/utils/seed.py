@@ -34,8 +34,11 @@ from backend.models import (
     EnergyHistory,
     EventSeverity,
     HomePowerHistory,
+    HomeCategory,
+    HouseConfig,
     Notification,
     Permission,
+    PhaseType,
     PowerState,
     Role,
     RoleName,
@@ -58,6 +61,10 @@ async def seed_database(force: bool = False) -> None:
                 return
 
         logger.info("=== Seeding RNTBCI Database ===")
+
+        # 0. House electrical config
+        await _seed_house_config(db)
+        logger.info("Seeded house config")
 
         # 1. Roles
         roles = await _seed_roles(db)
@@ -611,6 +618,33 @@ async def _seed_notifications(db: AsyncSession, users: list[User]) -> None:
             ))
 
     db.add_all(notifications)
+    await db.flush()
+
+
+async def _seed_house_config(db: AsyncSession) -> None:
+    """Seed HouseConfig singleton — medium family home with EV charging capability."""
+    from backend.models import HouseConfig, HomeCategory, PhaseType
+    existing = await db.execute(select(HouseConfig).limit(1))
+    if existing.scalar_one_or_none():
+        return  # Already seeded
+    config = HouseConfig(
+        name="RNTBCI Demo Home",
+        category=HomeCategory.MEDIUM_FAMILY,
+        phase_type=PhaseType.SINGLE_PHASE,
+        supply_voltage_v=230.0,
+        contracted_power_kva=15.0,
+        main_breaker_a=63.0,
+        max_load_kw=15.0,
+        overload_trip_enabled=True,
+        overload_tolerance_pct=10.0,
+        has_solar_pv=True,
+        solar_capacity_kwp=5.0,
+        has_battery=True,
+        battery_capacity_kwh=13.5,
+        battery_max_charge_kw=5.0,
+        battery_max_discharge_kw=5.0,
+    )
+    db.add(config)
     await db.flush()
 
 

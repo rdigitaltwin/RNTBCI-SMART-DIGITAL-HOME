@@ -387,6 +387,10 @@ class Device(Base):
         DateTime(timezone=True), nullable=True
     )
     extra_data: Mapped[dict] = mapped_column("metadata", JSON_TYPE, default=dict)
+    execution_mode: Mapped[str] = mapped_column(
+        String(20), default="simulation", nullable=False,
+        comment="Who generates authoritative state: 'simulation' or 'device'"
+    )
     position_x: Mapped[float] = mapped_column(Float, default=0.0)
     position_y: Mapped[float] = mapped_column(Float, default=0.0)
     position_z: Mapped[float] = mapped_column(Float, default=0.0)
