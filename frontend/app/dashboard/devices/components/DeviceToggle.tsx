@@ -76,10 +76,15 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
         const updatedDevice = await api.toggleState(device.id, status) as Partial<Device>;
         useDeviceStore.getState().updateDevice(device.id, updatedDevice);
       }
-    } catch (err) { 
-      // Revert if API fails
-      console.error('Failed to toggle device state', err);
-      useDeviceStore.getState().updateDevice(device.id, { power_state: isOn ? 'on' : 'off' });
+    } catch (err: any) { 
+      // Do not revert for simulated demo devices that are not in the backend database
+      if (err?.response?.status === 404 && ['energy_evse', 'solar_pv', 'ev_vehicle'].includes(device.type)) {
+        console.warn(`Simulated device ${device.id} not found in backend, keeping optimistic state.`);
+      } else {
+        // Revert if API fails
+        console.error('Failed to toggle device state', err);
+        useDeviceStore.getState().updateDevice(device.id, { power_state: isOn ? 'on' : 'off' });
+      }
     } finally {
       setToggling(false);
     }

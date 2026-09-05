@@ -5,6 +5,7 @@
  */
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 // =============================================================================
 // TYPES
@@ -239,27 +240,32 @@ const INITIAL_DEMO_DEVICES: Device[] = [
   },
 ];
 
-export const useDeviceStore = create<DeviceState>((set) => ({
-  devices: INITIAL_DEMO_DEVICES,
-  rooms: [],
-  selectedDevice: null,
-  setDevices: (devices) => set({ devices }),
-  setRooms: (rooms) => set({ rooms }),
-  selectDevice: (device) => set({ selectedDevice: device }),
-  updateDevice: (id, updates) =>
-    set((state) => ({
-      devices: state.devices.map((d) => (d.id === id ? { ...d, ...updates } : d)),
-      selectedDevice: state.selectedDevice?.id === id
-        ? { ...state.selectedDevice, ...updates }
-        : state.selectedDevice,
-    })),
-  addDevice: (device) => set((state) => ({ devices: [...state.devices, device] })),
-  removeDevice: (id) =>
-    set((state) => ({
-      devices: state.devices.filter((d) => d.id !== id),
-      selectedDevice: state.selectedDevice?.id === id ? null : state.selectedDevice,
-    })),
-}));
+export const useDeviceStore = create<DeviceState>()(
+  persist(
+    (set) => ({
+      devices: INITIAL_DEMO_DEVICES,
+      rooms: [],
+      selectedDevice: null,
+      setDevices: (devices) => set({ devices }),
+      setRooms: (rooms) => set({ rooms }),
+      selectDevice: (device) => set({ selectedDevice: device }),
+      updateDevice: (id, updates) =>
+        set((state) => ({
+          devices: state.devices.map((d) => (d.id === id ? { ...d, ...updates } : d)),
+          selectedDevice: state.selectedDevice?.id === id
+            ? { ...state.selectedDevice, ...updates }
+            : state.selectedDevice,
+        })),
+      addDevice: (device) => set((state) => ({ devices: [...state.devices, device] })),
+      removeDevice: (id) =>
+        set((state) => ({
+          devices: state.devices.filter((d) => d.id !== id),
+          selectedDevice: state.selectedDevice?.id === id ? null : state.selectedDevice,
+        })),
+    }),
+    { name: 'rntbci-device-store' }
+  )
+);
 
 // =============================================================================
 // UI STORE
