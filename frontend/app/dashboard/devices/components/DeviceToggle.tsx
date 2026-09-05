@@ -78,7 +78,8 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
       }
     } catch (err: any) { 
       // Do not revert for simulated demo devices that are not in the backend database
-      if (err?.response?.status === 404 && ['energy_evse', 'solar_pv', 'ev_vehicle'].includes(device.type)) {
+      const is404 = err?.message?.includes('404') || err?.status === 404;
+      if (is404 && ['energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'].includes(device.type)) {
         console.warn(`Simulated device ${device.id} not found in backend, keeping optimistic state.`);
       } else {
         // Revert if API fails
