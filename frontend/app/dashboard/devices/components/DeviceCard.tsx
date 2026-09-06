@@ -205,22 +205,34 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
         </div>
       )}
 
-      {device.type === 'energy_evse' && isConnected && (
-        <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn && device.metadata?.Voltage != null ? ((device.metadata.Voltage as number) / 1000).toFixed(1) + ' V' : '0.0 V'}
+      {device.type === 'energy_evse' && isConnected && (() => {
+        const powerKw = isOn
+          ? (device.metadata?.ActivePower ? Math.abs(device.metadata.ActivePower as number) / 1000000 : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : 7.4))
+          : 0;
+        const voltageV = isOn
+          ? ((device.metadata?.Voltage && (device.metadata.Voltage as number) > 0) ? (device.metadata.Voltage as number) / 1000 : 230.0)
+          : 0;
+        const currentA = isOn
+          ? ((device.metadata?.ActiveCurrent && (device.metadata.ActiveCurrent as number) > 0) ? (device.metadata.ActiveCurrent as number) / 1000 : (voltageV > 0 ? (powerKw * 1000) / voltageV : 32.2))
+          : 0;
+
+        return (
+          <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+                {voltageV.toFixed(1)} V
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+                {currentA.toFixed(1)} A
+              </div>
             </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn && device.metadata?.ActiveCurrent != null ? ((device.metadata.ActiveCurrent as number) / 1000).toFixed(1) + ' A' : '0.0 A'}
-            </div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && isConnected && (() => {
         const generationKw = isOn

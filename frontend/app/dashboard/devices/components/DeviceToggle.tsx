@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Zap, WifiOff } from 'lucide-react';
 import api from '@/services/api';
-import { useDeviceStore, type Device } from '@/store';
-import { useEnergyStore } from '@/store/energyEngine';
+import { useDeviceStore, toggleDeviceState, type Device } from '@/store';
 import { isDeviceConnected } from '../constants';
 
 interface DeviceToggleProps {
@@ -19,75 +18,8 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
     e.stopPropagation();
     if (!isConnected || toggling) return;
     setToggling(true);
-    
-    const newState = isOn ? 'off' : 'on';
-    
-    // Optimistic UI update
-    useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
-    
-    // Sync with local energy engine simulator so 3D model and Energy Command stay in sync
-    const energyStore = useEnergyStore.getState();
-    const energyDevice = Object.values(energyStore.devices).find(e => {
-      if (!e) return false;
-      const dName = (device.name || '').toLowerCase();
-      const eName = (e.name || '').toLowerCase();
-      if (dName && eName && (dName === eName || dName.includes(eName) || eName.includes(dName))) return true;
-      if (e.id === 'living_light_1' && dName.includes('living room main light')) return true;
-      if (e.id === 'air_conditioner' && dName.includes('living room ac')) return true;
-      if (e.id === 'bedroom_light' && dName.includes('master bedroom light')) return true;
-      if (e.type === 'solar_pv' && (device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar')) return true;
-      return false;
-    });
-    
-    if (energyDevice && energyDevice.powerState !== newState) {
-      // Pass skipBackendSync=true to avoid double API calls
-      energyStore.toggleDevice(energyDevice.id, true);
-    }
-
     try {
-      if (device.type === 'energy_evse') {
-        const status = newState.toUpperCase();
-        if (newState === 'on') {
-          await api.startEVCharge(device.id).catch(() => {});
-          await api.togglePower(device.id, newState).catch(() => {});
-          useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
-        } else {
-          await api.stopEVCharge(device.id).catch(() => {});
-          await api.togglePower(device.id, newState).catch(() => {});
-          const currentMeta = useDeviceStore.getState().devices.find(d => d.id === device.id)?.metadata || {};
-          useDeviceStore.getState().updateDevice(device.id, {
-            power_state: 'off',
-            energy_usage_kw: 0,
-            metadata: { ...currentMeta, Voltage: 0, ActiveCurrent: 0 },
-          });
-        }
-      } else if (device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') {
-        const status = newState.toUpperCase();
-        await api.toggleState(device.id, status);
-        if (newState === 'off') {
-          const currentMeta = useDeviceStore.getState().devices.find(d => d.id === device.id)?.metadata || {};
-          useDeviceStore.getState().updateDevice(device.id, {
-            power_state: 'off',
-            energy_usage_kw: 0,
-            metadata: { ...currentMeta, ActivePower: 0, Voltage: 0, ActiveCurrent: 0 },
-          });
-        } else {
-          useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
-        }
-      } else {
-        const status = newState.toUpperCase();
-        const updatedDevice = await api.toggleState(device.id, status) as Partial<Device>;
-        useDeviceStore.getState().updateDevice(device.id, updatedDevice);
-      }
-    } catch (err: any) { 
-      // Do not revert for simulated demo / energy devices that are not in the backend database
-      if (['energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'].includes(device.type)) {
-        console.warn(`Simulated device ${device.id} request ended, maintaining optimistic state.`);
-      } else {
-        // Revert if API fails
-        console.error('Failed to toggle device state', err);
-        useDeviceStore.getState().updateDevice(device.id, { power_state: isOn ? 'on' : 'off' });
-      }
+      await toggleDeviceState(device);
     } finally {
       setToggling(false);
     }

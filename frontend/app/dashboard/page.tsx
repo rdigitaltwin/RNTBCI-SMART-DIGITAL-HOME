@@ -16,7 +16,7 @@ import {
 import { AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '@/services/api';
-import { useDeviceStore, useSimulationStore, useEventStore, type Device } from '@/store';
+import { useDeviceStore, useSimulationStore, useEventStore, toggleDeviceState, type Device } from '@/store';
 import { useEnergyStore } from '@/store/energyEngine';
 
 import { StatCard } from '@/components/ui/DashboardCards';
@@ -214,21 +214,10 @@ function QuickDeviceList() {
   const devices = useDeviceStore((s) => s.devices);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const handleToggle = async (device: any) => {
+  const handleToggle = async (device: Device) => {
     if (togglingId === device.id) return;
     setTogglingId(device.id);
-    const newState = device.power_state === 'on' ? 'off' : 'on';
-    
-    // Optimistic UI update
-    useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
-    
-    try {
-      const updatedDevice = await api.togglePower(device.id, newState) as Partial<Device>;
-      useDeviceStore.getState().updateDevice(device.id, updatedDevice);
-    } catch { 
-      // Revert if API fails
-      useDeviceStore.getState().updateDevice(device.id, { power_state: device.power_state });
-    }
+    await toggleDeviceState(device);
     setTogglingId(null);
   };
 
