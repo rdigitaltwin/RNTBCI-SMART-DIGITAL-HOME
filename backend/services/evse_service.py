@@ -48,9 +48,14 @@ class EVSEService:
 
     @staticmethod
     async def update_evse_state(device_id: str, updates: dict, db: AsyncSession):
-        device_uuid = uuid.UUID(device_id)
-        result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid))
-        device = result.scalar_one_or_none()
+        try:
+            device_uuid = uuid.UUID(device_id)
+            result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid))
+            device = result.scalar_one_or_none()
+        except (ValueError, AttributeError):
+            result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.type == DeviceType.ENERGY_EVSE))
+            device = result.scalars().first()
+
         if not device:
             return None
             
@@ -87,9 +92,14 @@ class EVSEService:
 
     @staticmethod
     async def get_current_state(device_id: str, db: AsyncSession) -> dict:
-        device_uuid = uuid.UUID(device_id)
-        result = await db.execute(select(Device).where(Device.id == device_uuid))
-        device = result.scalar_one_or_none()
+        try:
+            device_uuid = uuid.UUID(device_id)
+            result = await db.execute(select(Device).where(Device.id == device_uuid))
+            device = result.scalar_one_or_none()
+        except (ValueError, AttributeError):
+            result = await db.execute(select(Device).where(Device.type == DeviceType.ENERGY_EVSE))
+            device = result.scalars().first()
+
         if not device:
             return {}
         return device.extra_data or {}

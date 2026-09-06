@@ -256,7 +256,7 @@ async def _seed_devices(db: AsyncSession, rooms: dict[str, Room]) -> list[Device
         ("EV Charger", DeviceType.ENERGY_EVSE, "garage", PowerState.OFF, 0.0,
          {"matter_device_type": "0x050C", "state": "NotPluggedIn", "supply_state": "Disabled", "fault_state": "NoError", "Voltage": 0, "ActiveCurrent": 0, "ActivePower": 0, "endpoint": 1}, -4.0, 0.5, 2.0),
         ("Solar Panel", DeviceType.SOLAR_PV, "garage", PowerState.ON, -4.69,
-         {"efficiency": 22.5, "peak_power": 5.0, "current_generation": 4.69, "sunlight_intensity": 95, "Voltage": 0, "ActiveCurrent": 0, "ActivePower": 0, "endpoint": 1}, -3.0, 4.0, 0.0),
+         {"efficiency": 22.5, "peak_power": 5.0, "current_generation": 4.69, "sunlight_intensity": 95, "Voltage": 230000, "ActiveCurrent": 20391, "ActivePower": 4690000, "endpoint": 1}, -3.0, 4.0, 0.0),
         ("EV Vehicle", DeviceType.EV_VEHICLE, "garage", PowerState.OFF, 0.0,
          {"HVBATVoltage": 400, "HVSoC": 80, "AuxBatVoltage": 12.6, "AvgSpeed": 45, "endpoint": 1}, -0.6, 0.2, 4.5),
         ("Home Battery", DeviceType.BATTERY_STORAGE, "garage", PowerState.ON, 0.0,

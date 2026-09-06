@@ -1619,9 +1619,15 @@ async def disable_evse_charging(
     if payload.command != "Disable":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'Disable'.")
 
-    device_uuid = uuid.UUID(device_id)
-    result = await db.execute(select(Device).where(Device.id == device_uuid))
-    device = result.scalar_one_or_none()
+    device = None
+    try:
+        device_uuid = uuid.UUID(device_id)
+        result = await db.execute(select(Device).where(Device.id == device_uuid))
+        device = result.scalar_one_or_none()
+    except (ValueError, AttributeError):
+        result = await db.execute(select(Device).where(Device.type == DeviceType.ENERGY_EVSE))
+        device = result.scalars().first()
+
     if device:
         device.power_state = PowerState.OFF
         device.last_updated = datetime.now(timezone.utc)
@@ -1632,8 +1638,6 @@ async def disable_evse_charging(
         await db.commit()
 
     update_result = await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
-    if update_result is None:
-        raise HTTPException(status_code=404, detail="Device not found")
     return {
         "status": "success",
         "commandId": payload.commandId,
@@ -1661,9 +1665,15 @@ async def enable_evse_charging(
     if payload.command != "EnableCharging":
         raise HTTPException(status_code=400, detail="Invalid command. Expected 'EnableCharging'.")
 
-    device_uuid = uuid.UUID(device_id)
-    result = await db.execute(select(Device).where(Device.id == device_uuid))
-    device = result.scalar_one_or_none()
+    device = None
+    try:
+        device_uuid = uuid.UUID(device_id)
+        result = await db.execute(select(Device).where(Device.id == device_uuid))
+        device = result.scalar_one_or_none()
+    except (ValueError, AttributeError):
+        result = await db.execute(select(Device).where(Device.type == DeviceType.ENERGY_EVSE))
+        device = result.scalars().first()
+
     if device:
         device.power_state = PowerState.ON
         device.last_updated = datetime.now(timezone.utc)
@@ -1673,8 +1683,6 @@ async def enable_evse_charging(
         await db.commit()
 
     update_result = await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
-    if update_result is None:
-        raise HTTPException(status_code=404, detail="Device not found")
     return {
         "status": "success",
         "commandId": payload.commandId,

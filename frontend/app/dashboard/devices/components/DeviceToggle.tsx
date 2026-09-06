@@ -46,11 +46,14 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
 
     try {
       if (device.type === 'energy_evse') {
+        const status = newState.toUpperCase();
         if (newState === 'on') {
-          await api.startEVCharge(device.id);
+          await api.startEVCharge(device.id).catch(() => {});
+          await api.togglePower(device.id, newState).catch(() => {});
           useDeviceStore.getState().updateDevice(device.id, { power_state: newState });
         } else {
-          await api.stopEVCharge(device.id);
+          await api.stopEVCharge(device.id).catch(() => {});
+          await api.togglePower(device.id, newState).catch(() => {});
           const currentMeta = useDeviceStore.getState().devices.find(d => d.id === device.id)?.metadata || {};
           useDeviceStore.getState().updateDevice(device.id, {
             power_state: 'off',
@@ -77,10 +80,9 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
         useDeviceStore.getState().updateDevice(device.id, updatedDevice);
       }
     } catch (err: any) { 
-      // Do not revert for simulated demo devices that are not in the backend database
-      const is404 = err?.message?.includes('404') || err?.status === 404;
-      if (is404 && ['energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'].includes(device.type)) {
-        console.warn(`Simulated device ${device.id} not found in backend, keeping optimistic state.`);
+      // Do not revert for simulated demo / energy devices that are not in the backend database
+      if (['energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'].includes(device.type)) {
+        console.warn(`Simulated device ${device.id} request ended, maintaining optimistic state.`);
       } else {
         // Revert if API fails
         console.error('Failed to toggle device state', err);

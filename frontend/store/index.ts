@@ -132,7 +132,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     execution_mode: 'simulation',
     energy_usage_kw: -4.69,
     efficiency_percent: 95,
-    metadata: { efficiency: 22.5, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000 },
+    metadata: { efficiency: 22.5, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000, ActiveCurrent: 20391 },
     position_x: 0.2, position_y: 0.85, position_z: -0.3,
     turned_on_at: new Date().toISOString(),
     total_energy_kwh: 15.2,
