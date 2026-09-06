@@ -550,9 +550,25 @@ async def toggle_power(
     tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
     if data.power_state == "on":
         tracker.set_power_on()
-        if device_type_str in ("smart_light", "smart_switch", "smart_plug"):
+        dev_type_val = device_type_str.lower() if isinstance(device_type_str, str) else device_type_str
+        if dev_type_val in ("smart_light", "smart_switch", "smart_plug"):
             rated_power = float((device.extra_data or {}).get("rated_power", 0))
             device.energy_usage_kw = rated_power if rated_power > 0 else 0.015
+        elif dev_type_val in ("solar_pv", "solar_panel", "energy_solar"):
+            device.energy_usage_kw = -4.69
+            metadata = dict(device.extra_data or {})
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = 4690000
+            metadata["ActiveCurrent"] = 20391
+            metadata["current_generation"] = 4.69
+            device.extra_data = metadata
+        elif dev_type_val == "energy_evse":
+            device.energy_usage_kw = 7.4
+            metadata = dict(device.extra_data or {})
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = 7400000
+            metadata["ActiveCurrent"] = 32174
+            device.extra_data = metadata
     elif data.power_state == "off":
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
@@ -630,8 +646,26 @@ async def toggle_state(
     device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
     tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
     if power_state_str == "on":
-        tracker.set_power_on()  # Enters STARTING phase (30s warm-up)
-        # Power will remain 0 for ~30s, then simulation engine will calculate real values
+        tracker.set_power_on()
+        dev_type_val = device_type_str.lower() if isinstance(device_type_str, str) else device_type_str
+        if dev_type_val in ("smart_light", "smart_switch", "smart_plug"):
+            rated_power = float((device.extra_data or {}).get("rated_power", 0))
+            device.energy_usage_kw = rated_power if rated_power > 0 else 0.015
+        elif dev_type_val in ("solar_pv", "solar_panel", "energy_solar"):
+            device.energy_usage_kw = -4.69
+            metadata = dict(device.extra_data or {})
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = 4690000
+            metadata["ActiveCurrent"] = 20391
+            metadata["current_generation"] = 4.69
+            device.extra_data = metadata
+        elif dev_type_val == "energy_evse":
+            device.energy_usage_kw = 7.4
+            metadata = dict(device.extra_data or {})
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = 7400000
+            metadata["ActiveCurrent"] = 32174
+            device.extra_data = metadata
     else:
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
