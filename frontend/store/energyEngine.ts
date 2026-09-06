@@ -410,13 +410,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         // Make API call (ignoring await to not block UI)
         import('@/services/api').then(({ default: api }) => {
           api.togglePower(deviceId, newPowerState).catch((err: any) => {
-            if (err?.response?.status === 404 && ['energy_evse', 'solar_pv', 'ev_vehicle'].includes(backendDevice.type)) {
-              console.warn(`Simulated device ${deviceId} not found in backend, keeping optimistic state.`);
-            } else {
-              console.error('Failed to sync device to backend', err);
-              // Revert on error
-              deviceStore.updateDevice(deviceId, { power_state: device.powerState });
-            }
+            console.warn(`Simulated/demo device ${deviceId} request ended, maintaining optimistic state.`, err);
           });
         });
       }

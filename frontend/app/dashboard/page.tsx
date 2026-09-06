@@ -265,7 +265,7 @@ function QuickDeviceList() {
             }}>
               {device.power_state === 'on' ? (
                 (() => {
-                  const pW = (device.energy_usage_kw || 0) * 1000;
+                  const pW = Math.abs(device.energy_usage_kw || 0) * 1000;
                   return pW >= 1000 ? `${(pW / 1000).toFixed(2)} kW` : `${Math.round(pW)} W`;
                 })()
               ) : '0 W'}
