@@ -1295,9 +1295,9 @@ class SimulationEngine:
 
         voltage_mv = metadata.get("Voltage") or 0
         if not voltage_mv:
-            nominal_v = supply_voltage_v if supply_voltage_v else 0
-            voltage_mv = int(nominal_v * 1000) if nominal_v else 0
-        voltage_v = voltage_mv / 1000.0 if voltage_mv else 0
+            nominal_v = supply_voltage_v if supply_voltage_v else 230.0
+            voltage_mv = int(nominal_v * 1000)
+        voltage_v = voltage_mv / 1000.0 if voltage_mv else 230.0
         current_a = (abs(kw) * 1000.0 / voltage_v) if voltage_v else 0.0
         metadata["Voltage"] = int(voltage_mv)
         metadata["ActiveCurrent"] = int(current_a * 1000)

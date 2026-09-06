@@ -132,7 +132,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     execution_mode: 'simulation',
     energy_usage_kw: -4.69,
     efficiency_percent: 95,
-    metadata: { efficiency: 22.5, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000 },
+    metadata: { efficiency: 22.5, peak_power: 5.0, ActivePower: 4690000, Voltage: 230000, ActiveCurrent: 20391 },
     position_x: 0.2, position_y: 0.85, position_z: -0.3,
     turned_on_at: new Date().toISOString(),
     total_energy_kwh: 15.2,
@@ -291,6 +291,89 @@ export const useDeviceStore = create<DeviceState>()(
     { name: 'rntbci-device-store' }
   )
 );
+
+/**
+ * Unified device state toggle function.
+ * Updates useDeviceStore, syncs useEnergyStore, calls backend APIs,
+ * and maintains optimistic state for simulated / demo devices.
+ */
+export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 'off'): Promise<void> {
+  const currentState = device.power_state === 'on' ? 'on' : 'off';
+  const newState = targetNewState || (currentState === 'on' ? 'off' : 'on');
+  const deviceStore = useDeviceStore.getState();
+
+  const isEvse = device.type === 'energy_evse';
+  const isSolar = device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar';
+
+  const patch: Partial<Device> = { power_state: newState };
+  const currentMeta = deviceStore.devices.find((d) => d.id === device.id)?.metadata || {};
+
+  if (isEvse) {
+    if (newState === 'on') {
+      patch.energy_usage_kw = 7.4;
+      patch.metadata = { ...currentMeta, Voltage: 230000, ActiveCurrent: 32174, ActivePower: 7400000 };
+    } else {
+      patch.energy_usage_kw = 0;
+      patch.metadata = { ...currentMeta, Voltage: 0, ActiveCurrent: 0, ActivePower: 0 };
+    }
+  } else if (isSolar && newState === 'off') {
+    patch.energy_usage_kw = 0;
+    patch.metadata = { ...currentMeta, ActivePower: 0, Voltage: 0, ActiveCurrent: 0 };
+  }
+
+  // 1. Optimistic UI update in global device store
+  deviceStore.updateDevice(device.id, patch);
+
+  // 2. Sync with local energyEngine store if available
+  try {
+    const { useEnergyStore } = await import('@/store/energyEngine');
+    const energyStore = useEnergyStore.getState();
+    const energyDevice = Object.values(energyStore.devices).find((e) => {
+      if (!e) return false;
+      const dName = (device.name || '').toLowerCase();
+      const eName = (e.name || '').toLowerCase();
+      if (dName && eName && (dName === eName || dName.includes(eName) || eName.includes(dName))) return true;
+      if (e.type === device.type) return true;
+      return false;
+    });
+
+    if (energyDevice && energyDevice.powerState !== newState) {
+      energyStore.toggleDevice(energyDevice.id, true);
+    }
+    if (isEvse) {
+      energyStore.setEVChargerState(newState === 'on' ? 'charging' : 'disconnected');
+    }
+  } catch (e) {
+    console.warn('Energy engine sync skipped', e);
+  }
+
+  // 3. Backend API Sync
+  try {
+    const { default: api } = await import('@/services/api');
+    if (isEvse) {
+      if (newState === 'on') {
+        await api.startEVCharge(device.id).catch(() => {});
+        await api.togglePower(device.id, newState).catch(() => {});
+      } else {
+        await api.stopEVCharge(device.id).catch(() => {});
+        await api.togglePower(device.id, newState).catch(() => {});
+      }
+    } else if (isSolar) {
+      const status = newState.toUpperCase();
+      await api.toggleState(device.id, status).catch(() => {});
+    } else {
+      const status = newState.toUpperCase();
+      const updated = await api.toggleState(device.id, status).catch(() => api.togglePower(device.id, newState));
+      if (updated && typeof updated === 'object') {
+        deviceStore.updateDevice(device.id, updated as Partial<Device>);
+      }
+    }
+  } catch (err: any) {
+    if (!['energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'].includes(device.type)) {
+      deviceStore.updateDevice(device.id, { power_state: currentState });
+    }
+  }
+}
 
 // =============================================================================
 // UI STORE
