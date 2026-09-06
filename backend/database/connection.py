@@ -65,6 +65,12 @@ async def init_db() -> bool:
             if "total_power_consumption_kw" not in columns:
                 sync_conn.execute(text("DROP TABLE device_power_history CASCADE"))
 
+        # Auto-migrate execution_mode column on devices table if missing
+        if inspector.has_table("devices"):
+            columns = [col['name'] for col in inspector.get_columns("devices")]
+            if "execution_mode" not in columns:
+                sync_conn.execute(text("ALTER TABLE devices ADD COLUMN execution_mode VARCHAR(32) DEFAULT 'simulation'"))
+
     max_retries = 5
     base_delay = 2
 
