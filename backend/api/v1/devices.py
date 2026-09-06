@@ -551,7 +551,8 @@ async def toggle_power(
     if data.power_state == "on":
         tracker.set_power_on()
         if device_type_str in ("smart_light", "smart_switch", "smart_plug"):
-            device.energy_usage_kw = device.rated_power if device.rated_power > 0 else 0.015
+            rated_power = float((device.extra_data or {}).get("rated_power", 0))
+            device.energy_usage_kw = rated_power if rated_power > 0 else 0.015
     elif data.power_state == "off":
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
@@ -913,7 +914,8 @@ async def public_toggle_light_state(
     tracker = device_simulator.ensure_tracker(str(device.id), "smart_light")
     if power_state_str == "on":
         tracker.set_power_on()
-        device.energy_usage_kw = device.rated_power if device.rated_power > 0 else 0.015
+        rated_power = float((device.extra_data or {}).get("rated_power", 0))
+        device.energy_usage_kw = rated_power if rated_power > 0 else 0.015
     else:
         tracker.set_power_off()  # STOPPING phase
         device.energy_usage_kw = 0.0

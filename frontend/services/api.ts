@@ -307,11 +307,11 @@ class APIClient {
   }
 
   async startEVCharge(id: string) {
-    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/enable`, { method: 'POST', body: { command: 'EnableCharging' } });
+    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/enable`, { method: 'POST', body: { commandId: '0x02', command: 'EnableCharging' } });
   }
 
   async stopEVCharge(id: string) {
-    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/disable`, { method: 'POST', body: { command: 'Disable' } });
+    return this.request(`/api/v1/devices/${id}/endpoint/1/cluster/0x009B/disable`, { method: 'POST', body: { commandId: '0x01', command: 'Disable' } });
   }
 
   async getEVBatteryValue(id: string) {
