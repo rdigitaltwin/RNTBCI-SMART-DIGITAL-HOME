@@ -561,6 +561,8 @@ async def toggle_power(
             metadata["ActivePower"] = 4690000
             metadata["ActiveCurrent"] = 20391
             metadata["current_generation"] = 4.69
+            metadata["Frequency"] = 50000
+            metadata["PowerFactor"] = 98
             device.extra_data = metadata
         elif dev_type_val == "energy_evse":
             device.energy_usage_kw = 7.4
@@ -658,6 +660,8 @@ async def toggle_state(
             metadata["ActivePower"] = 4690000
             metadata["ActiveCurrent"] = 20391
             metadata["current_generation"] = 4.69
+            metadata["Frequency"] = 50000
+            metadata["PowerFactor"] = 98
             device.extra_data = metadata
         elif dev_type_val == "energy_evse":
             device.energy_usage_kw = 7.4
@@ -2095,6 +2099,8 @@ async def get_solar_frequency(
     """Get Grid frequency."""
     device = await _get_solar_device_or_404(device_id, db)
     frequency = _solar_measurement(device, "Frequency")
+    if not frequency and not _solar_is_off(device):
+        frequency = 50000
     return {
         "Frequency": frequency,
         "displayValue": f"{frequency / 1000:.1f} Hz" if frequency else "0 Hz",
@@ -2112,9 +2118,13 @@ async def get_solar_power_factor(
 ):
     """Get Power Factor."""
     device = await _get_solar_device_or_404(device_id, db)
-    pf = (device.extra_data or {}).get("PowerFactor", 0 if _solar_is_off(device) else None)
+    pf = (device.extra_data or {}).get("PowerFactor")
+    if not pf and not _solar_is_off(device):
+        pf = 98
+    elif not pf:
+        pf = 0
     return {
-        "PowerFactor": pf if pf is not None else 0,
+        "PowerFactor": pf,
     }
 
 
