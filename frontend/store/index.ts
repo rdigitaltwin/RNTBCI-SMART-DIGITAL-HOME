@@ -292,6 +292,22 @@ export const useDeviceStore = create<DeviceState>()(
   )
 );
 
+const DEFAULT_DEVICE_KW: Record<string, number> = {
+  hvac: 2.5,
+  smart_light: 0.015,
+  washing_machine: 0.5,
+  refrigerator: 0.15,
+  dishwasher: 1.5,
+  microwave: 1.2,
+  water_heater: 1.2,
+  camera: 0.01,
+  door_lock: 0.003,
+  smart_switch: 0.001,
+  smart_plug: 0.05,
+  mcb: 0,
+  smart_meter: 0.005,
+};
+
 /**
  * Unified device state toggle function.
  * Updates useDeviceStore, syncs useEnergyStore, calls backend APIs,
@@ -306,7 +322,8 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
   const isSolar = device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar';
 
   const patch: Partial<Device> = { power_state: newState };
-  const currentMeta = deviceStore.devices.find((d) => d.id === device.id)?.metadata || {};
+  const currentDevice = deviceStore.devices.find((d) => d.id === device.id) || device;
+  const currentMeta = currentDevice.metadata || {};
 
   if (isEvse) {
     if (newState === 'on') {
@@ -316,9 +333,25 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
       patch.energy_usage_kw = 0;
       patch.metadata = { ...currentMeta, Voltage: 0, ActiveCurrent: 0, ActivePower: 0 };
     }
-  } else if (isSolar && newState === 'off') {
-    patch.energy_usage_kw = 0;
-    patch.metadata = { ...currentMeta, ActivePower: 0, Voltage: 0, ActiveCurrent: 0 };
+  } else if (isSolar) {
+    if (newState === 'on') {
+      patch.energy_usage_kw = -4.69;
+      patch.metadata = { ...currentMeta, ActivePower: 4690000, Voltage: 230000, ActiveCurrent: 20391 };
+    } else {
+      patch.energy_usage_kw = 0;
+      patch.metadata = { ...currentMeta, ActivePower: 0, Voltage: 0, ActiveCurrent: 0 };
+    }
+  } else {
+    if (newState === 'on') {
+      const storedPower = Number(currentMeta.rated_power) || DEFAULT_DEVICE_KW[device.type] || currentDevice.energy_usage_kw || 0.015;
+      patch.energy_usage_kw = storedPower;
+    } else {
+      const activePower = currentDevice.energy_usage_kw || DEFAULT_DEVICE_KW[device.type];
+      if (activePower && activePower > 0) {
+        patch.metadata = { ...currentMeta, rated_power: activePower };
+      }
+      patch.energy_usage_kw = 0;
+    }
   }
 
   // 1. Optimistic UI update in global device store
@@ -363,15 +396,18 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
       await api.toggleState(device.id, status).catch(() => {});
     } else {
       const status = newState.toUpperCase();
-      const updated = await api.toggleState(device.id, status).catch(() => api.togglePower(device.id, newState));
-      if (updated && typeof updated === 'object') {
-        deviceStore.updateDevice(device.id, updated as Partial<Device>);
+      const updated = await api.toggleState(device.id, status)
+        .catch(() => api.togglePower(device.id, newState))
+        .catch(() => null);
+      if (updated && typeof updated === 'object' && ('power_state' in updated || 'status' in updated)) {
+        const updatedPowerState = (updated as any).power_state;
+        if (!updatedPowerState || updatedPowerState === newState) {
+          deviceStore.updateDevice(device.id, updated as Partial<Device>);
+        }
       }
     }
   } catch (err: any) {
-    if (!['energy_evse', 'solar_pv', 'solar_panel', 'energy_solar', 'ev_vehicle'].includes(device.type)) {
-      deviceStore.updateDevice(device.id, { power_state: currentState });
-    }
+    console.warn(`Device ${device.id} API sync failed, maintaining optimistic state.`, err);
   }
 }
 
