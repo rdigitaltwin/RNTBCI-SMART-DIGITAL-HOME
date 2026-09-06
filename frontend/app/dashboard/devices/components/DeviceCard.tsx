@@ -236,7 +236,7 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
 
       {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && isConnected && (() => {
         const generationKw = isOn
-          ? (device.metadata?.ActivePower ? Math.abs(device.metadata.ActivePower as number) / 1000000 : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : 0))
+          ? (device.metadata?.ActivePower ? Math.abs(device.metadata.ActivePower as number) / 1000000 : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : 4.69))
           : 0;
         const voltageV = isOn
           ? ((device.metadata?.Voltage && (device.metadata.Voltage as number) > 0) ? (device.metadata.Voltage as number) / 1000 : 230.0)
