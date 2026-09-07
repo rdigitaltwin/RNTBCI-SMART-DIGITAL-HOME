@@ -964,6 +964,39 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     get()._recalculateMetrics();
     get()._updateLoadHistory();
+
+    // Sync simulated power and states back to the global device store
+    const deviceStore = useDeviceStore.getState();
+    const updatedDevices = deviceStore.devices.map(d => {
+      const energyDev = state.devices[d.id];
+      if (!energyDev) return d;
+      
+      const isEvse = d.type === 'energy_evse';
+      const isSolar = d.type === 'solar_pv' || d.type === 'solar_panel' || d.type === 'energy_solar';
+      
+      let currentPowerKw = energyDev.currentConsumption / 1000;
+      
+      if (isEvse) {
+        currentPowerKw = state.evCharger.state === 'charging' ? state.evCharger.power / 1000 : 0;
+      } else if (isSolar) {
+        // Solar power is usually negative in our display to indicate generation
+        currentPowerKw = energyDev.powerState === 'on' ? -Math.abs(energyDev.defaultPower / 1000) : 0;
+      }
+      
+      if (d.power_state !== energyDev.powerState || d.energy_usage_kw !== currentPowerKw) {
+        return {
+          ...d,
+          power_state: energyDev.powerState,
+          energy_usage_kw: currentPowerKw,
+        };
+      }
+      return d;
+    });
+    
+    // Only update if there are changes to avoid unnecessary re-renders
+    if (updatedDevices.some((d, i) => d !== deviceStore.devices[i])) {
+      deviceStore.setDevices(updatedDevices);
+    }
   },
 }));
 

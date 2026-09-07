@@ -306,6 +306,7 @@ const DEFAULT_DEVICE_KW: Record<string, number> = {
   smart_plug: 0.05,
   mcb: 0,
   smart_meter: 0.005,
+  ev_vehicle: 8.25,
 };
 
 /**
@@ -340,6 +341,19 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
     } else {
       patch.energy_usage_kw = 0;
       patch.metadata = { ...currentMeta, ActivePower: 0, Voltage: 0, ActiveCurrent: 0 };
+    }
+  } else if (device.type === 'ev_vehicle') {
+    if (newState === 'on') {
+      patch.energy_usage_kw = DEFAULT_DEVICE_KW.ev_vehicle;
+      patch.metadata = {
+        ...currentMeta,
+        HVBATVoltage: currentMeta.HVBATVoltage || 398,
+        HVSoC: currentMeta.HVSoC || 80,
+        AuxBatVoltage: currentMeta.AuxBatVoltage || 12.8,
+        AvgSpeed: currentMeta.AvgSpeed || 55,
+      };
+    } else {
+      patch.energy_usage_kw = 0;
     }
   } else {
     if (newState === 'on') {
