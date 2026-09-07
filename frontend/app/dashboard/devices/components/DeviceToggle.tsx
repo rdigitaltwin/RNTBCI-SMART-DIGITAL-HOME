@@ -39,12 +39,27 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
           if (!isConnected || !isOn) {
             return <>0<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>W</span></>;
           }
-          const isSolar = device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar';
-          const defaultSolarWatts = 4690;
-          const usageKw = device.energy_usage_kw != null && device.energy_usage_kw !== 0
-            ? Math.abs(device.energy_usage_kw) 
-            : (isSolar ? defaultSolarWatts / 1000 : 0);
-          const powerW = usageKw * 1000;
+
+          let powerW: number;
+
+          if (device.type === 'ev_vehicle') {
+            // Estimate EV driving power from average speed (~150 Wh/km efficiency)
+            const meta = (device.metadata || {}) as any;
+            const avgSpeed = meta.AvgSpeed as number | undefined;
+            if (avgSpeed && avgSpeed > 0) {
+              powerW = avgSpeed * 150; // Wh/km × km/h ≈ W
+            } else {
+              powerW = 7500; // Reasonable default: 7.5 kW typical EV draw
+            }
+          } else {
+            const isSolar = device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar';
+            const defaultSolarWatts = 4690;
+            const usageKw = device.energy_usage_kw != null && device.energy_usage_kw !== 0
+              ? Math.abs(device.energy_usage_kw) 
+              : (isSolar ? defaultSolarWatts / 1000 : 0);
+            powerW = usageKw * 1000;
+          }
+
           if (powerW >= 1000) {
             return <>{(powerW / 1000).toFixed(2)}<span style={{ fontSize: '10px', color: '#64748B', marginLeft: '2px' }}>kW</span></>;
           } else {
