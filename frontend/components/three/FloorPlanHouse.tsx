@@ -266,6 +266,7 @@ function HouseFoundation() {
 
 function ExteriorArea() {
   const evCharger = useEnergyStore((s) => s.evCharger);
+  const devices = useEnergyStore((s) => s.devices);
   const timeRef = useRef(0);
 
   useFrame((_, delta) => {
@@ -274,6 +275,13 @@ function ExteriorArea() {
 
   const isCharging = evCharger.state === 'charging';
   const evColor = isCharging ? '#00FF9D' : '#64748B';
+
+  const evVehicle = Object.values(devices).find((d) => d.type === 'ev_vehicle');
+  const isEvseConnected = evCharger.state !== 'disconnected';
+  const isVehicleActive = evVehicle?.powerState === 'on';
+  const isVehicleDrawingPower = (evVehicle?.currentConsumption || 0) > 0;
+  
+  const isVehicleCharging = isEvseConnected && isVehicleActive && isVehicleDrawingPower;
 
   return (
     <group position={[-0.5 * SCALE, 0, 4.2 * SCALE]}>
@@ -368,18 +376,18 @@ function ExteriorArea() {
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '9px',
             fontWeight: 600,
-            color: isCharging ? '#00FF9D' : '#94A3B8',
-            background: isCharging ? 'rgba(5, 20, 15, 0.9)' : 'rgba(15, 23, 42, 0.85)',
+            color: isVehicleCharging ? '#00FF9D' : '#94A3B8',
+            background: isVehicleCharging ? 'rgba(5, 20, 15, 0.9)' : 'rgba(15, 23, 42, 0.85)',
             padding: '2px 7px',
             borderRadius: '4px',
-            border: `1px solid ${isCharging ? 'rgba(0, 255, 157, 0.5)' : 'rgba(148, 163, 184, 0.2)'}`,
-            boxShadow: isCharging ? '0 0 10px rgba(0, 255, 157, 0.3)' : 'none',
+            border: `1px solid ${isVehicleCharging ? 'rgba(0, 255, 157, 0.5)' : 'rgba(148, 163, 184, 0.2)'}`,
+            boxShadow: isVehicleCharging ? '0 0 10px rgba(0, 255, 157, 0.3)' : 'none',
             whiteSpace: 'nowrap',
             letterSpacing: '0.5px',
             pointerEvents: 'none',
             transition: 'all 0.3s ease',
           }}>
-            {isCharging ? `⚡ CHARGING • ${evCharger.batteryLevel.toFixed(0)}%` : 'IDLE'}
+            {isVehicleCharging ? `⚡ CHARGING • ${evCharger.batteryLevel.toFixed(0)}%` : 'IDLE'}
           </div>
         </Html>
       </group>
