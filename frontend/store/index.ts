@@ -387,8 +387,23 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
     if (energyDevice && energyDevice.powerState !== newState) {
       energyStore.toggleDevice(energyDevice.id, true);
     }
-    if (isEvse) {
-      energyStore.setEVChargerState(newState === 'on' ? 'charging' : 'disconnected');
+    if (isEvse || device.type === 'ev_vehicle') {
+      const updatedDevices = useDeviceStore.getState().devices;
+      const evChargerDef = updatedDevices.find((d) => d.type === 'energy_evse');
+      const evVehicleDef = updatedDevices.find((d) => d.type === 'ev_vehicle');
+      if (evChargerDef && evVehicleDef) {
+        const isChargerOn = evChargerDef.power_state === 'on';
+        const isVehicleOn = evVehicleDef.power_state === 'on';
+        if (isChargerOn && isVehicleOn) {
+          energyStore.setEVChargerState('charging');
+        } else if (isChargerOn && !isVehicleOn) {
+          energyStore.setEVChargerState('paused');
+        } else {
+          energyStore.setEVChargerState('disconnected');
+        }
+      } else if (isEvse) {
+        energyStore.setEVChargerState(newState === 'on' ? 'paused' : 'disconnected');
+      }
     }
   } catch (e) {
     console.warn('Energy engine sync skipped', e);

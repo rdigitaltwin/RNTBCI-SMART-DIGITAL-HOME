@@ -274,10 +274,10 @@ function ExteriorArea() {
   });
 
   const isCharging = evCharger.state === 'charging';
-  const evColor = isCharging ? '#00FF9D' : '#64748B';
+  const isEvseConnected = evCharger.state !== 'disconnected';
+  const evColor = isCharging ? '#00FF9D' : (isEvseConnected ? '#3B82F6' : '#64748B');
 
   const evVehicle = Object.values(devices).find((d) => d.type === 'ev_vehicle');
-  const isEvseConnected = evCharger.state !== 'disconnected';
   const isVehicleActive = evVehicle?.powerState === 'on';
   const isVehicleDrawingPower = (evVehicle?.currentConsumption || 0) > 0;
   
@@ -334,8 +334,7 @@ function ExteriorArea() {
             border: `1px solid ${evColor}40`,
             whiteSpace: 'nowrap',
           }}>
-            EVSE • {evCharger.state.toUpperCase()}
-            {isCharging && ` • ${evCharger.batteryLevel.toFixed(0)}%`}
+            EVSE • {isCharging ? `CHARGING • ${evCharger.batteryLevel.toFixed(0)}%` : (isEvseConnected ? 'STANDBY' : 'DISCONNECTED')}
           </div>
         </Html>
       </group>
@@ -387,7 +386,7 @@ function ExteriorArea() {
             pointerEvents: 'none',
             transition: 'all 0.3s ease',
           }}>
-            {isVehicleCharging ? `⚡ CHARGING • ${evCharger.batteryLevel.toFixed(0)}%` : 'IDLE'}
+            {isVehicleCharging ? `⚡ CHARGING • ${evCharger.batteryLevel.toFixed(0)}%` : (isVehicleActive ? 'EV • ACTIVE' : 'IDLE')}
           </div>
         </Html>
       </group>
