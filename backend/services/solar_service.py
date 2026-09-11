@@ -56,8 +56,17 @@ class SolarService:
             
         metadata = dict(device.extra_data or {})
         metadata.update(updates)
+
+        # If any real electrical measurement is being written, claim physical-device
+        # execution mode and stamp the telemetry time so the sim engine won't overwrite it.
+        real_telemetry_keys = {"ActivePower", "Voltage", "ActiveCurrent", "Frequency", "PowerFactor"}
+        if real_telemetry_keys.intersection(updates.keys()):
+            device.execution_mode = "device"
+            metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
+
         device.extra_data = metadata
-        
+        device.last_updated = datetime.now(timezone.utc)
+
         state = DeviceState(
             device_id=device.id,
             state_json=metadata,
