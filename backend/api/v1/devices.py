@@ -329,6 +329,13 @@ async def update_device(
         device.power_state = parsed
     if (parsed := _parse_optional_enum(ConnectivityStatus, data.connectivity, "connectivity")) is not None:
         device.connectivity = parsed
+        # Disconnecting a device resets it to simulation mode — nothing is feeding
+        # it real data anymore, so it must not stay claimed as 'device' mode.
+        if parsed == ConnectivityStatus.DISCONNECTED and device.execution_mode == 'device':
+            device.execution_mode = 'simulation'
+            metadata = dict(device.extra_data or {})
+            metadata.pop('_last_real_telemetry_ts', None)
+            device.extra_data = metadata
 
     if data.execution_mode is not None:
         device.execution_mode = data.execution_mode

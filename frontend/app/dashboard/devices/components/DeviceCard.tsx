@@ -19,17 +19,21 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
     const newConnectivity = isConnected ? 'disconnected' : 'connected';
     const newStatus = isConnected ? 'offline' : 'online';
     const newPower = isConnected ? 'off' : device.power_state;
+    // Disconnecting resets to simulation — nothing is feeding real data anymore.
+    const newExecutionMode = isConnected ? 'simulation' : device.execution_mode;
 
     useDeviceStore.getState().updateDevice(device.id, {
       connectivity: newConnectivity,
       status: newStatus,
       power_state: newPower,
+      execution_mode: newExecutionMode,
     });
 
     try {
       await api.updateDevice(device.id, {
         connectivity: newConnectivity,
         status: newStatus,
+        ...(isConnected ? { execution_mode: 'simulation' } : {}),
       });
     } catch (err) {
       console.error('Failed to sync connectivity update', err);
@@ -81,8 +85,26 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
           {/* Device Status Badges */}
           {(() => {
+            // Disconnected → single neutral badge, no SIM/DEV claim
+            if (!isConnected) {
+              return (
+                <div
+                  title="Device is disconnected — no mode active"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    padding: '2px 8px', borderRadius: '10px',
+                    background: 'rgba(100, 116, 139, 0.15)', border: '1px solid rgba(100, 116, 139, 0.3)',
+                    color: '#64748B', fontSize: '10px', fontWeight: 600, letterSpacing: '0.3px',
+                  }}
+                >
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#64748B' }} />
+                  INACTIVE
+                </div>
+              );
+            }
+
             const isPhysical = device.execution_mode === 'device';
-            
+
             const devBadge = isPhysical ? (
               <div
                 title="Physical device — state comes from real hardware"
