@@ -330,6 +330,15 @@ async def update_device(
     if (parsed := _parse_optional_enum(ConnectivityStatus, data.connectivity, "connectivity")) is not None:
         device.connectivity = parsed
 
+    if data.execution_mode is not None:
+        device.execution_mode = data.execution_mode
+        # When explicitly reverting to simulation, clear the stale-telemetry timestamp
+        # so the sim engine picks up immediately without waiting for the staleness window.
+        if data.execution_mode == 'simulation':
+            metadata = dict(device.extra_data or {})
+            metadata.pop('_last_real_telemetry_ts', None)
+            device.extra_data = metadata
+
     await db.commit()
 
     # Log device update communication
