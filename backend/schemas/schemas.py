@@ -149,6 +149,12 @@ class DeviceUpdateRequest(BaseModel):
     status: str | None = None
     power_state: str | None = None
     connectivity: str | None = None
+    execution_mode: str | None = Field(
+        None,
+        pattern="^(simulation|device)$",
+        description="Set to 'simulation' to hand device back to the sim engine, "
+                    "'device' to protect it from simulation overwrite."
+    )
 
 
 class DeviceControlRequest(BaseModel):

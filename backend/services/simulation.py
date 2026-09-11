@@ -195,6 +195,8 @@ DEVICE_CYCLES: dict[str, list[tuple[str, tuple[int, int]]]] = {
 STARTING_DURATION_S = 0.0
 STOPPING_DURATION_S = 0.0
 HISTORY_RECORD_INTERVAL_S = 7  # Record to history tables every 7 seconds
+# Seconds without real telemetry before a 'device'-mode device falls back to simulation
+REAL_DEVICE_STALE_AFTER_S = 30
 
 
 # =============================================================================
@@ -709,6 +711,9 @@ class SimulationEngine:
                 house_cfg = await self._load_house_config(db)
 
                 now = datetime.now(timezone.utc)
+                # NOTE: tracker.metadata override (power_w/source=matter) was
+                # removed — dead code, never assigned. Real-device telemetry
+                # protection is now handled via device.execution_mode + staleness check above.
                 hour = now.hour
                 total_load_kw = 0.0
                 total_load_kvar = 0.0
@@ -761,10 +766,31 @@ class SimulationEngine:
 
                     tracker = self._trackers[device_id]
 
-                    # Skip simulation for physical devices — their telemetry comes from hardware
+                    # Skip simulation for physical devices — their telemetry comes from hardware.
+                    # If no real telemetry has arrived in REAL_DEVICE_STALE_AFTER_S seconds,
+                    # fall back to simulation so the device does not freeze on its last reading.
                     device_exec_mode = getattr(device, 'execution_mode', 'simulation') or 'simulation'
                     if device_exec_mode == 'device':
-                        continue
+                        last_ts_str = (device.extra_data or {}).get('_last_real_telemetry_ts')
+                        if last_ts_str:
+                            try:
+                                last_ts = datetime.fromisoformat(last_ts_str)
+                                age_s = (now - last_ts).total_seconds()
+                                if age_s < REAL_DEVICE_STALE_AFTER_S:
+                                    continue  # Real telemetry is fresh — skip simulation tick
+                                else:
+                                    # Telemetry is stale — fall back to simulation and mark it
+                                    device.execution_mode = 'simulation'
+                                    logger.warning(
+                                        "Device %s (%s) real telemetry stale (%.0fs > %ds) — "
+                                        "reverting to simulation mode",
+                                        device.name, device_id, age_s, REAL_DEVICE_STALE_AFTER_S
+                                    )
+                            except (ValueError, TypeError):
+                                device.execution_mode = 'simulation'
+                        else:
+                            # execution_mode='device' but no timestamp — defensive fallback
+                            device.execution_mode = 'simulation'
 
                     # Sync power state from DB → tracker if out of sync
                     if power_state == PowerState.OFF and tracker.power_phase not in (
