@@ -255,6 +255,7 @@ const INITIAL_DEMO_DEVICES: Device[] = [
     status: 'online',
     power_state: 'off',
     connectivity: 'connected',
+    execution_mode: 'simulation',
     energy_usage_kw: 0.015,
     efficiency_percent: 98,
     metadata: { brightness: 100 },
