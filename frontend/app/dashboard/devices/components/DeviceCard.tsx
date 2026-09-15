@@ -228,27 +228,25 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
       )}
 
       {device.type === 'energy_evse' && isConnected && (() => {
-        const powerKw = isOn
-          ? (device.metadata?.ActivePower ? Math.abs(device.metadata.ActivePower as number) / 1000000 : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : 7.4))
+        const voltageV = (device.metadata?.Voltage && (device.metadata.Voltage as number) > 0)
+          ? (device.metadata.Voltage as number) / 1000
           : 0;
-        const voltageV = isOn
-          ? ((device.metadata?.Voltage && (device.metadata.Voltage as number) > 0) ? (device.metadata.Voltage as number) / 1000 : 230.0)
+        const currentA = (device.metadata?.ActiveCurrent && (device.metadata.ActiveCurrent as number) > 0)
+          ? (device.metadata.ActiveCurrent as number) / 1000
           : 0;
-        const currentA = isOn
-          ? ((device.metadata?.ActiveCurrent && (device.metadata.ActiveCurrent as number) > 0) ? (device.metadata.ActiveCurrent as number) / 1000 : (voltageV > 0 ? (powerKw * 1000) / voltageV : 32.2))
-          : 0;
+        const hasData = voltageV > 0 || currentA > 0;
 
         return (
           <div style={{ marginTop: '12px', display: 'flex', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: hasData ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
                 {voltageV.toFixed(1)} V
               </div>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: hasData ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
                 {currentA.toFixed(1)} A
               </div>
             </div>
@@ -257,33 +255,34 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
       })()}
 
       {(device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar') && isConnected && (() => {
-        const generationKw = isOn
-          ? (device.metadata?.ActivePower ? Math.abs(device.metadata.ActivePower as number) / 1000000 : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : 4.69))
+        const generationKw = device.metadata?.ActivePower
+          ? Math.abs(device.metadata.ActivePower as number) / 1000000
+          : (device.energy_usage_kw ? Math.abs(device.energy_usage_kw) : 0);
+        const voltageV = (device.metadata?.Voltage && (device.metadata.Voltage as number) > 0)
+          ? (device.metadata.Voltage as number) / 1000
           : 0;
-        const voltageV = isOn
-          ? ((device.metadata?.Voltage && (device.metadata.Voltage as number) > 0) ? (device.metadata.Voltage as number) / 1000 : 230.0)
+        const currentA = (device.metadata?.ActiveCurrent && (device.metadata.ActiveCurrent as number) > 0)
+          ? (device.metadata.ActiveCurrent as number) / 1000
           : 0;
-        const currentA = isOn
-          ? ((device.metadata?.ActiveCurrent && (device.metadata.ActiveCurrent as number) > 0) ? (device.metadata.ActiveCurrent as number) / 1000 : (voltageV > 0 ? (generationKw * 1000) / voltageV : 0))
-          : 0;
+        const hasData = generationKw > 0 || voltageV > 0;
 
         return (
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px', background: 'rgba(252, 211, 77, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(252, 211, 77, 0.15)' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Current</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: hasData ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
                 {currentA.toFixed(1)} A
               </div>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Voltage</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: hasData ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
                 {voltageV.toFixed(1)} V
               </div>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Generation</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#FCD34D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: hasData ? '#FCD34D' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
                 {generationKw.toFixed(2)} kW
               </div>
             </div>
@@ -291,31 +290,31 @@ export default function DeviceCard({ device, onClick }: DeviceCardProps) {
         );
       })()}
 
-      {/* EV Vehicle Metrics */}
+      {/* EV Vehicle Metrics — gate on isConnected, not isOn (power_state = ignition, not telemetry availability) */}
       {device.type === 'ev_vehicle' && isConnected && (
         <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'rgba(99, 102, 241, 0.04)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
           <div>
             <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>HV Battery</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn && device.metadata?.HVBATVoltage != null ? String(device.metadata.HVBATVoltage) + ' V' : '0 V'}
+            <div style={{ fontSize: '12px', fontWeight: 600, color: device.metadata?.HVBATVoltage != null ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {device.metadata?.HVBATVoltage != null ? String(device.metadata.HVBATVoltage) + ' V' : '—'}
             </div>
           </div>
           <div>
             <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>HV SoC</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#6366F1' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn && device.metadata?.HVSoC != null ? String(device.metadata.HVSoC) + ' %' : '0 %'}
+            <div style={{ fontSize: '12px', fontWeight: 600, color: device.metadata?.HVSoC != null ? '#6366F1' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {device.metadata?.HVSoC != null ? String(device.metadata.HVSoC) + ' %' : '—'}
             </div>
           </div>
           <div>
             <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Aux Battery</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn && device.metadata?.AuxBatVoltage != null ? String(device.metadata.AuxBatVoltage) + ' V' : '0 V'}
+            <div style={{ fontSize: '12px', fontWeight: 600, color: device.metadata?.AuxBatVoltage != null ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {device.metadata?.AuxBatVoltage != null ? String(device.metadata.AuxBatVoltage) + ' V' : '—'}
             </div>
           </div>
           <div>
             <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '2px' }}>Avg Speed</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: isOn ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
-              {isOn && device.metadata?.AvgSpeed != null ? String(device.metadata.AvgSpeed) + ' km/h' : '0 km/h'}
+            <div style={{ fontSize: '12px', fontWeight: 600, color: device.metadata?.AvgSpeed != null ? '#F8FAFC' : '#64748B', fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.3s' }}>
+              {device.metadata?.AvgSpeed != null ? String(device.metadata.AvgSpeed) + ' km/h' : '—'}
             </div>
           </div>
         </div>
