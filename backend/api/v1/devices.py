@@ -1666,12 +1666,12 @@ async def disable_evse_charging(
     device_id: str,
     endpoint: int,
     cluster: str,
-    payload: EVSECommandRequest,
+    payload: dict = Body(default={}),
     db: AsyncSession = Depends(get_db),
 ):
-    """Disable EVSE charging via Matter command."""
-    if payload.command != "Disable":
-        raise HTTPException(status_code=400, detail="Invalid command. Expected 'Disable'.")
+    """Disable EVSE / EV Vehicle charging via Matter command."""
+    command_id = payload.get("commandId", "0x01")
+    command_name = payload.get("command", "Disable")
 
     device = None
     try:
@@ -1684,18 +1684,25 @@ async def disable_evse_charging(
 
     if device:
         device.power_state = PowerState.OFF
+        device.status = DeviceStatus.OFFLINE
+        device.connectivity = ConnectivityStatus.DISCONNECTED
+        device.execution_mode = "simulation"
         device.last_updated = datetime.now(timezone.utc)
         _halt_electrical_output(device)
         device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
         tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
         tracker.set_power_off()
+        metadata = dict(device.extra_data or {})
+        metadata["enabled"] = False
+        metadata.pop("_last_real_telemetry_ts", None)
+        device.extra_data = metadata
         await db.commit()
 
     update_result = await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
     return {
         "status": "success",
-        "commandId": payload.commandId,
-        "command": payload.command,
+        "commandId": command_id,
+        "command": command_name,
         "cluster": cluster,
         "endpoint": endpoint,
         "response": {
@@ -1712,12 +1719,12 @@ async def enable_evse_charging(
     device_id: str,
     endpoint: int,
     cluster: str,
-    payload: EVSECommandRequest,
+    payload: dict = Body(default={}),
     db: AsyncSession = Depends(get_db),
 ):
-    """Enable EVSE charging via Matter command."""
-    if payload.command != "EnableCharging":
-        raise HTTPException(status_code=400, detail="Invalid command. Expected 'EnableCharging'.")
+    """Enable EVSE / EV Vehicle charging via Matter command."""
+    command_id = payload.get("commandId", "0x02")
+    command_name = payload.get("command", "EnableCharging")
 
     device = None
     try:
@@ -1730,17 +1737,24 @@ async def enable_evse_charging(
 
     if device:
         device.power_state = PowerState.ON
+        device.status = DeviceStatus.ONLINE
+        device.connectivity = ConnectivityStatus.CONNECTED
+        device.execution_mode = "device"
         device.last_updated = datetime.now(timezone.utc)
         device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
         tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
         tracker.set_power_on()
+        metadata = dict(device.extra_data or {})
+        metadata["enabled"] = True
+        metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
+        device.extra_data = metadata
         await db.commit()
 
     update_result = await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
     return {
         "status": "success",
-        "commandId": payload.commandId,
-        "command": payload.command,
+        "commandId": command_id,
+        "command": command_name,
         "cluster": cluster,
         "endpoint": endpoint,
         "response": {
@@ -1748,6 +1762,7 @@ async def enable_evse_charging(
             "SupplyState": "ChargingEnabled"
         }
     }
+
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/settarget")
@@ -2387,9 +2402,114 @@ async def set_ev_vehicle_avgspeed(
     return {"value": value}
 
 
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/enable")
+@limiter.limit("60/minute")
+async def enable_ev_vehicle(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Enable EV Vehicle (Turn power ON, set online & claim hardware device execution mode)."""
+    device = await _ev_vehicle_device_or_404(device_id, db)
+    device.power_state = PowerState.ON
+    device.status = DeviceStatus.ONLINE
+    device.connectivity = ConnectivityStatus.CONNECTED
+    device.execution_mode = "device"
+
+    metadata = dict(device.extra_data or {})
+    metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
+    metadata["enabled"] = True
+    metadata["endpoint"] = endpoint
+    device.extra_data = metadata
+    device.last_updated = datetime.now(timezone.utc)
+
+    await db.commit()
+
+    device_resp = _device_to_response(device)
+    await redis_client.publish_device_update(
+        str(device.id),
+        {
+            "action": "device.updated",
+            "device": device_resp.model_dump(mode="json"),
+        },
+    )
+    return {
+        "status": "enabled",
+        "device_id": str(device.id),
+        "power_state": "on",
+        "connectivity": "connected",
+        "execution_mode": "device",
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/disable")
+@limiter.limit("60/minute")
+async def disable_ev_vehicle(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Disable EV Vehicle (Turn power OFF & set offline)."""
+    device = await _ev_vehicle_device_or_404(device_id, db)
+    device.power_state = PowerState.OFF
+    device.status = DeviceStatus.OFFLINE
+    device.connectivity = ConnectivityStatus.DISCONNECTED
+    device.execution_mode = "simulation"
+
+    metadata = dict(device.extra_data or {})
+    metadata["enabled"] = False
+    metadata.pop("_last_real_telemetry_ts", None)
+    device.extra_data = metadata
+    device.last_updated = datetime.now(timezone.utc)
+
+    await db.commit()
+
+    device_resp = _device_to_response(device)
+    await redis_client.publish_device_update(
+        str(device.id),
+        {
+            "action": "device.updated",
+            "device": device_resp.model_dump(mode="json"),
+        },
+    )
+    return {
+        "status": "disabled",
+        "device_id": str(device.id),
+        "power_state": "off",
+        "connectivity": "disconnected",
+        "execution_mode": "simulation",
+    }
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/EvVehicleData/state")
+@limiter.limit("60/minute")
+async def set_ev_vehicle_enable_state(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set EV Vehicle Enable/Disable state via JSON body (e.g. {"enabled": true} or {"state": "enable"})."""
+    enabled = body.get("enabled")
+    state_str = body.get("state", "").lower()
+    if enabled is True or state_str in ("enable", "enabled", "on", "active"):
+        return await enable_ev_vehicle(request, device_id, endpoint, db)
+    elif enabled is False or state_str in ("disable", "disabled", "off", "inactive"):
+        return await disable_ev_vehicle(request, device_id, endpoint, db)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid body. Expected {'enabled': true/false} or {'state': 'enable'/'disable'}",
+        )
+
+
 # =============================================================================
 # MCB SYNCHRONIZATION
 # =============================================================================
+
 
 @router.post("/{device_id}/mcb/sync")
 @limiter.limit("60/minute")
