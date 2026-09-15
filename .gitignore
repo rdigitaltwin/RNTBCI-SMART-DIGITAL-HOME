@@ -89,3 +89,4 @@ uvicorn.log
 # test_*.py
 # patch_devices.py
 # reset_db.py
+RNTBCI_PROJECT.mov
