@@ -1,0 +1,129 @@
+{
+    "deviceType": {
+        "id": "0x0701",
+        "name": "Nebulizer",
+        "device_name": "Nebulizer",
+        "device_id": "ed3367d0-60b2-480f-acbd-cf4a2000a865",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "Nebulizer",
+                "clusters": [
+                    {
+                        "clusterId": "0x1000",
+                        "name": "NebulizerControl",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "PowerState",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "CurrentSessionTime",
+                                "type": "uint32"
+                            },
+                            {
+                                "name": "TotalUsageTime",
+                                "type": "uint32"
+                            },
+                            {
+                                "name": "MistLevel",
+                                "type": "enum"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "StartSession"
+                            },
+                            {
+                                "name": "PauseSession"
+                            },
+                            {
+                                "name": "StopSession"
+                            },
+                            {
+                                "name": "SetMistLevel"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x1001",
+                        "name": "MedicationMonitoring",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "MedicationLevel",
+                                "type": "percent"
+                            },
+                            {
+                                "name": "MedicationStatus",
+                                "type": "enum"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x1002",
+                        "name": "HealthSessionData",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "LastSessionDuration",
+                                "type": "uint32"
+                            },
+                            {
+                                "name": "SessionsToday",
+                                "type": "uint8"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x1003",
+                        "name": "DeviceSafety",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "TemperatureStatus",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "MaskAttached",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "DeviceError",
+                                "type": "enum"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-07-01T08:44:19.048478+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-01T08:44:19.556867+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+--- simulation.py assignment loop ---
+
+                    # Record into wide home power history model
+                    normalized_name = device.name.lower().replace('"', '').replace('-', '')
+                    import re
+                    normalized_name = re.sub(r'\s+', '_', normalized_name.strip())
+                    normalized_name = re.sub(r'_+', '_', normalized_name)
+                    
+                    if hasattr(home_power, f"{normalized_name}_kw"):
+                        setattr(home_power, f"{normalized_name}_kw", round(kw, 4))
+                        setattr(home_power, f"{normalized_name}_kvar", round(kvar, 4))
+

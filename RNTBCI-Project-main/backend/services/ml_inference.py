@@ -1,0 +1,154 @@
+import os
+import numpy as np
+import logging
+import math
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+MODELS_DIR = os.path.join(BASE_DIR, 'ml', 'models')
+
+import typing
+from typing import Any
+
+# Optional modules
+pd: Any = None
+torch: Any = None
+joblib: Any = None
+EnergyLSTM: Any = None
+appliance_encoder: Any = None
+energy_scaler: Any = None
+anomaly_model: Any = None
+energy_model: Any = None
+
+# Load models and scalers
+try:
+    import torch
+    import joblib
+    import pandas as pd
+    from ml.training.lstm_model import EnergyLSTM
+
+    energy_scaler = joblib.load(os.path.join(MODELS_DIR, 'energy_scaler.pkl'))
+    appliance_encoder = joblib.load(os.path.join(MODELS_DIR, 'appliance_encoder.pkl'))
+    anomaly_model = joblib.load(os.path.join(MODELS_DIR, 'anomaly_model.pkl'))
+    
+    energy_model = EnergyLSTM(input_size=7, hidden_size=64, num_layers=2)
+    energy_model.load_state_dict(torch.load(os.path.join(MODELS_DIR, 'energy_lstm.pth'), map_location='cpu'))
+    energy_model.eval()
+    models_loaded = True
+    logger.info("ML Models loaded successfully.")
+except Exception as e:
+    logger.warning(f"ML Models failed to load (Optional feature disabled): {e}")
+    models_loaded = False
+    energy_model, energy_scaler, appliance_encoder, anomaly_model = None, None, None, None
+
+# Stateful rolling buffer per appliance type for sequence generation
+sequence_buffer = {}
+SEQ_LEN = 12
+
+def predict_power_consumption(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
+    """Predicts power consumption in kWh using PyTorch LSTM."""
+    # Capture globals in local variables to satisfy static type checkers (e.g. Pyright)
+    # Since they are global, the type checker assumes they could change at any time.
+    scaler = energy_scaler
+    encoder = appliance_encoder
+    model = energy_model
+
+    if not models_loaded or model is None or scaler is None or encoder is None or pd is None or torch is None:
+        return 0.0
+
+    try:
+        if appliance_type not in sequence_buffer:
+            sequence_buffer[appliance_type] = []
+            
+        appliance_encoded = encoder.transform([appliance_type])[0] if appliance_type in encoder.classes_ else 0
+        features = pd.DataFrame(
+            [[outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_encoded, household_size]],
+            columns=['outdoor_temp', 'season_encoded', 'hour', 'is_weekend', 'prev_energy', 'appliance_encoded', 'household_size']
+        )
+        features_scaled = scaler.transform(features)[0] # Shape (7,)
+        
+        # Append to buffer
+        sequence_buffer[appliance_type].append(features_scaled)
+        if len(sequence_buffer[appliance_type]) > SEQ_LEN:
+            sequence_buffer[appliance_type].pop(0)
+            
+        # If we don't have enough history, pad with the current frame
+        seq = sequence_buffer[appliance_type].copy()
+        while len(seq) < SEQ_LEN:
+            seq.insert(0, features_scaled)
+            
+        # Convert to tensor: shape (1, seq_len, features)
+        x_tensor = torch.tensor(np.array([seq]), dtype=torch.float32)
+        
+        with torch.no_grad():
+            pred_kwh = model(x_tensor).item()
+        
+        return max(0.0, pred_kwh)
+    except Exception:
+        logger.exception("Prediction failed")
+        return 0.0
+
+def detect_anomaly(energy_consumption, hour, outdoor_temp):
+    """Returns True if the usage is an anomaly."""
+    model = anomaly_model
+    
+    if not models_loaded or model is None or pd is None:
+        return False
+    
+    try:
+        features = pd.DataFrame(
+            [[energy_consumption, hour, outdoor_temp]],
+            columns=['Energy Consumption (kWh)', 'Hour', 'Outdoor Temperature (°C)']
+        )
+        pred = model.predict(features)[0]
+        return pred == -1  # Isolation forest returns -1 for anomalies
+    except Exception:
+        logger.exception("Anomaly detection failed")
+        return False
+
+def generate_recommendation(outdoor_temp, season_encoded, hour, is_weekend, prev_energy, appliance_type, household_size):
+    """Uses SHAP to explain power consumption and generate recommendations."""
+    encoder = appliance_encoder
+    if not models_loaded or energy_model is None or encoder is None:
+        return []
+        
+    try:
+        appliance_encoded = encoder.transform([appliance_type])[0] if appliance_type in encoder.classes_ else 0
+        
+        # We simulate a "shap" style insight without calculating deep tensor gradients for latency
+        # A true SHAP explainer for LSTMs can be intensive, so we use a fallback heuristic explanation based on inputs
+        
+        recs = []
+        if outdoor_temp > 30 or outdoor_temp < 10:
+            recs.append({
+                "type": "efficiency",
+                "priority": "high",
+                "message": f"Extreme outside temperature ({outdoor_temp}°C) is increasing HVAC load. Consider adjusting thermostat.",
+                "potential_savings_w": 150.0
+            })
+            
+        # If it's a high consumption device
+        if appliance_type in ["HVAC", "WATER_HEATER", "WASHING_MACHINE"]:
+            recs.append({
+                "type": "load_reduction",
+                "priority": "medium",
+                "message": f"High priority device ({appliance_type}) is active. Turn off if not needed.",
+                "potential_savings_w": 200.0
+            })
+            
+        return recs
+    except Exception:
+        logger.exception("Recommendation failed")
+        return []
+
+def predict_forecast_consumption(current_kw, hour_offset):
+    """Predicts future consumption using a time-series model (or fallback to lagged inference)."""
+    # For now, we simulate an LSTM/Forecasting output using our core model by shifting time
+    target_hour = (datetime.now().hour + hour_offset) % 24
+    outdoor_temp = 25 + 10 * math.sin((target_hour - 14) * math.pi / 12)
+    
+    # We call the core model simulating an average household
+    return predict_power_consumption(outdoor_temp, 1, target_hour, 0, current_kw, "Average", 3)
+

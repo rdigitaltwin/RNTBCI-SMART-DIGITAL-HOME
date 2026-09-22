@@ -1,0 +1,169 @@
+{
+	"info": {
+		"_postman_id": "c04d0f62-7e90-482a-a92c-0e7d589d8f85",
+		"name": "RNTBCI Smart Home - Light Device Public API",
+		"description": "Public APIs for integrating Light devices into external pipelines. These endpoints do not require authentication.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Light Device Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/devices/public/light/{{device_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"devices",
+						"public",
+						"light",
+						"{{device_id}}"
+					]
+				},
+				"description": "Retrieve the current configuration and state of the smart light."
+			},
+			"response": []
+		},
+		{
+			"name": "Toggle Light State (ON/OFF)",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"ON\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/devices/public/light/{{device_id}}/state",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"devices",
+						"public",
+						"light",
+						"{{device_id}}",
+						"state"
+					]
+				},
+				"description": "Directly toggles the power state of the smart light."
+			},
+			"response": []
+		},
+		{
+			"name": "Advanced Light Control",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"command\": \"set_brightness\",\n    \"parameters\": {\n        \"brightness\": 80\n    }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/devices/public/light/{{device_id}}/control",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"devices",
+						"public",
+						"light",
+						"{{device_id}}",
+						"control"
+					]
+				},
+				"description": "Sends control commands to adjust the smart light's parameters like brightness or color."
+			},
+			"response": []
+		},
+		{
+			"name": "Register Pipeline Webhook",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"webhook_url\": \"https://your-pipeline.com/api/webhook-receiver\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/devices/public/light/{{device_id}}/webhook",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"devices",
+						"public",
+						"light",
+						"{{device_id}}",
+						"webhook"
+					]
+				},
+				"description": "Registers a webhook URL to receive real-time POST requests whenever the light state changes."
+			},
+			"response": []
+		},
+		{
+			"name": "Export All Devices to CSV",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/devices/public/export/csv?type=light",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"devices",
+						"public",
+						"export",
+						"csv"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "light",
+							"description": "Filter by device type name"
+						}
+					]
+				},
+				"description": "Export all device JSON files into a generic Excel-compatible CSV sheet, optionally filtered by type."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://rntbci-project.vercel.app/api/v1",
+			"type": "string",
+			"description": "The base URL for the API"
+		},
+		{
+			"key": "device_id",
+			"value": "ENTER_YOUR_LIGHT_DEVICE_ID_HERE",
+			"type": "string",
+			"description": "The UUID of the smart light"
+		}
+	]
+}
