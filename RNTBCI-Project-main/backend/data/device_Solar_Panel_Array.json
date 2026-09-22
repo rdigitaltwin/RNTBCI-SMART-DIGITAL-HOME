@@ -1,0 +1,96 @@
+{
+    "deviceType": {
+        "id": "0x0017",
+        "name": "SolarPV",
+        "device_name": "Solar Panel Array",
+        "device_id": "solar_panel",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "SolarPV",
+                "clusters": [
+                    {
+                        "clusterId": "0x0003",
+                        "name": "Identify",
+                        "side": "server",
+                        "mandatory": false,
+                        "commands": [
+                            {
+                                "commandId": "0x0040",
+                                "name": "TriggerEffect",
+                                "direction": "invoke",
+                                "fields": []
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0000",
+                        "name": "UserLabel",
+                        "side": "server",
+                        "attributes": [
+                            {
+                                "name": "LabelList",
+                                "type": "list",
+                                "value": [
+                                    {
+                                        "label": "Name",
+                                        "value": "SolarArray01"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0b04",
+                        "name": "ElectricalMeasurement",
+                        "side": "server",
+                        "attributes": [
+                            {
+                                "name": "Voltage",
+                                "type": "int32",
+                                "value": 230000
+                            },
+                            {
+                                "name": "ActiveCurrent",
+                                "type": "int32",
+                                "value": 20400
+                            },
+                            {
+                                "name": "ActivePower",
+                                "type": "int32",
+                                "value": 4690000
+                            },
+                            {
+                                "name": "Frequency",
+                                "type": "int16",
+                                "value": 50000
+                            },
+                            {
+                                "name": "PowerFactor",
+                                "type": "int8",
+                                "value": 98
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0090",
+                        "name": "ElectricalEnergyMeasurement",
+                        "side": "server",
+                        "attributes": [
+                            {
+                                "name": "CumulativeEnergyExported",
+                                "type": "int64",
+                                "value": 15200000
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

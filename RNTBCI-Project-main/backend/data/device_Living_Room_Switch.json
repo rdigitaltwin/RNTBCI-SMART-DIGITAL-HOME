@@ -1,0 +1,99 @@
+{
+    "deviceType": {
+        "id": "0x0103",
+        "name": "OnOffLightSwitch",
+        "device_name": "Living Room Switch",
+        "device_id": "3739bf30-e451-4af7-843f-b708a0ec1cca",
+        "revision": 3,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "OnOffLightSwitch",
+                "clusters": [
+                    {
+                        "clusterId": "0x0003",
+                        "name": "Identify",
+                        "side": "server",
+                        "mandatory": true,
+                        "commands": [
+                            {
+                                "commandId": "0x0040",
+                                "name": "TriggerEffect",
+                                "direction": "invoke",
+                                "mandatory": true,
+                                "request": {
+                                    "effectIdentifier": "uint8",
+                                    "effectVariant": "uint8"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0004",
+                        "name": "Groups",
+                        "side": "server",
+                        "mandatory": true
+                    },
+                    {
+                        "clusterId": "0x0006",
+                        "name": "OnOff",
+                        "side": "client",
+                        "mandatory": true,
+                        "commands": [
+                            {
+                                "commandId": "0x0000",
+                                "name": "Off"
+                            },
+                            {
+                                "commandId": "0x0001",
+                                "name": "On"
+                            },
+                            {
+                                "commandId": "0x0002",
+                                "name": "Toggle"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-07-01T08:44:15.377671+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-01T08:44:15.608292+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-01T08:46:52.028329+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-01T08:46:53.925049+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        }
+    ]
+}

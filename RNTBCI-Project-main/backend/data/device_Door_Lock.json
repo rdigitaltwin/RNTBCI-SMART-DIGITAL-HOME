@@ -1,0 +1,82 @@
+{
+    "deviceType": {
+        "id": "0x000A",
+        "name": "DoorLock",
+        "device_name": "Door Lock",
+        "device_id": "6cb06251-4226-40c2-aa21-a4d2d1d0a444",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "DoorLock",
+                "clusters": [
+                    {
+                        "clusterId": "0x0101",
+                        "name": "DoorLock",
+                        "side": "server",
+                        "mandatory": true,
+                        "features": [
+                            {
+                                "code": "PIN",
+                                "name": "PINCredential"
+                            },
+                            {
+                                "code": "RID",
+                                "name": "RFIDCredential"
+                            }
+                        ],
+                        "attributes": [
+                            {
+                                "attributeId": "0x0000",
+                                "name": "LockState",
+                                "type": "LockStateEnum"
+                            },
+                            {
+                                "attributeId": "0x0001",
+                                "name": "LockType",
+                                "type": "LockTypeEnum"
+                            },
+                            {
+                                "attributeId": "0x0002",
+                                "name": "ActuatorEnabled",
+                                "type": "bool"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "commandId": "0x0000",
+                                "name": "LockDoor"
+                            },
+                            {
+                                "commandId": "0x0001",
+                                "name": "UnlockDoor"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-06-29T10:19:25.287229+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-06-29T10:19:29.982229+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        }
+    ]
+}

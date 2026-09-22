@@ -1,0 +1,119 @@
+{
+    "deviceType": {
+        "id": "0x0309",
+        "name": "HeatPump",
+        "device_name": "Bedroom AC",
+        "device_id": "cc8ac9ac-dd43-4a22-980e-e71477d4033b",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "HeatPump",
+                "clusters": [
+                    {
+                        "clusterId": "0x0201",
+                        "name": "Thermostat",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentTemperature",
+                                "type": "float",
+                                "unit": "\u00b0C"
+                            },
+                            {
+                                "name": "TargetTemperature",
+                                "type": "float",
+                                "unit": "\u00b0C"
+                            },
+                            {
+                                "name": "Mode",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "RunningState",
+                                "type": "enum"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "SetTargetTemperature"
+                            },
+                            {
+                                "name": "SetMode"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0090",
+                        "name": "ElectricalPowerMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Power",
+                                "type": "float",
+                                "unit": "W"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0091",
+                        "name": "ElectricalEnergyMeasurement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Energy",
+                                "type": "float",
+                                "unit": "kWh"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0041",
+                        "name": "UserLabel",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "Label",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-06-29T10:19:23.305463+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-06-29T10:19:28.444671+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-06-29T10:19:29.002743+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        }
+    ]
+}

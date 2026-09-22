@@ -1,0 +1,137 @@
+{
+    "deviceType": {
+        "id": "0x0075",
+        "name": "Dishwasher",
+        "device_name": "Dishwasher",
+        "device_id": "072745c9-1b5a-4d0e-b5f9-9706bae475c6",
+        "revision": 2,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "Dishwasher",
+                "clusters": [
+                    {
+                        "clusterId": "0x0006",
+                        "name": "OnOff",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "PowerState",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0056",
+                        "name": "TemperatureControl",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "TemperatureSetpoint",
+                                "type": "temperature"
+                            },
+                            {
+                                "name": "SelectedTemperatureLevel",
+                                "type": "uint8"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "SetTemperature"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0059",
+                        "name": "DishwasherMode",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "CurrentMode",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x005D",
+                        "name": "DishwasherAlarm",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "AlarmStatus",
+                                "type": "bitmap"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0060",
+                        "name": "OperationalState",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentState",
+                                "type": "string"
+                            }
+                        ],
+                        "events": [
+                            {
+                                "name": "OperationCompletion"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-06-29T10:19:27.501327+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:21:18.491952+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:21:51.778235+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-02T10:21:52.521484+00:00",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-07-30T13:01:19.324201+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        }
+    ]
+}
