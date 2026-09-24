@@ -579,7 +579,9 @@ async def toggle_power(
             metadata["current_generation"] = 4.69
             metadata["Frequency"] = 50000
             metadata["PowerFactor"] = 98
+            metadata.pop("_last_real_telemetry_ts", None)
             device.extra_data = metadata
+            device.execution_mode = "simulation"
         elif dev_type_val == "energy_evse":
             device.energy_usage_kw = 7.4
             metadata = dict(device.extra_data or {})
@@ -590,6 +592,11 @@ async def toggle_power(
     elif data.power_state == "off":
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
+        if device_type_str.lower() in ("solar_pv", "solar_panel", "energy_solar"):
+            metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
+            device.extra_data = metadata
+            device.execution_mode = "simulation"
     elif data.power_state == "standby":
         tracker.set_power_off()
         device.energy_usage_kw = max(device.energy_usage_kw * 0.05, 0.001)
@@ -678,7 +685,10 @@ async def toggle_state(
             metadata["current_generation"] = 4.69
             metadata["Frequency"] = 50000
             metadata["PowerFactor"] = 98
+            # Simulation is now authoritative — clear any stale physical-device claim
+            metadata.pop("_last_real_telemetry_ts", None)
             device.extra_data = metadata
+            device.execution_mode = "simulation"
         elif dev_type_val == "energy_evse":
             device.energy_usage_kw = 7.4
             metadata = dict(device.extra_data or {})
@@ -689,6 +699,12 @@ async def toggle_state(
     else:
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
+        # For Solar/EVSE: clear stale physical telemetry claim so sim owns OFF state
+        if device_type_str.lower() in ("solar_pv", "solar_panel", "energy_solar"):
+            metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
+            device.extra_data = metadata
+            device.execution_mode = "simulation"
 
     # Log event
     event = DeviceEvent(

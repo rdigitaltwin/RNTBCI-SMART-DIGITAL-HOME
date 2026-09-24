@@ -423,7 +423,16 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
       }
     } else if (isSolar) {
       const status = newState.toUpperCase();
-      await api.toggleState(device.id, status).catch(() => {});
+      try {
+        const updated = await api.toggleState(device.id, status);
+        if (updated && typeof updated === 'object') {
+          // Reconcile with authoritative backend response
+          deviceStore.updateDevice(device.id, updated as Partial<Device>);
+        }
+      } catch {
+        // Rollback optimistic state on failure
+        deviceStore.updateDevice(device.id, { power_state: currentState });
+      }
     } else {
       const status = newState.toUpperCase();
       const updated = await api.toggleState(device.id, status)

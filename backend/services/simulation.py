@@ -786,6 +786,9 @@ class SimulationEngine:
                                         "reverting to simulation mode",
                                         device.name, device_id, age_s, REAL_DEVICE_STALE_AFTER_S
                                     )
+                                    # Resync tracker with DB power_state so sim picks up immediately
+                                    if power_state == PowerState.ON and tracker.power_phase == DevicePowerPhase.OFF.value:
+                                        tracker.set_power_on()
                             except (ValueError, TypeError):
                                 device.execution_mode = 'simulation'
                         else:
