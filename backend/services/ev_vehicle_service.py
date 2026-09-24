@@ -48,11 +48,12 @@ class EvVehicleService:
         metadata = dict(device.extra_data or {})
         metadata.update(updates)
 
-        # Any write from the physical EV vehicle telemetry endpoints claims device mode.
-        real_telemetry_keys = {"HVBATVoltage", "HVSoC", "AuxBatVoltage", "AvgSpeed"}
-        if real_telemetry_keys.intersection(updates.keys()):
+        # Only claim physical device execution mode if explicitly requested in updates
+        if updates.get("execution_mode") == "device":
             device.execution_mode = "device"
             metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
+        elif not device.execution_mode:
+            device.execution_mode = "simulation"
 
         device.extra_data = metadata
         device.last_updated = datetime.now(timezone.utc)

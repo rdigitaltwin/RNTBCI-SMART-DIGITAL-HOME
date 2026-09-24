@@ -1313,21 +1313,22 @@ class SimulationEngine:
         When the device is off, all three fields are zeroed so toggle-off actually
         stops generation/charging in the API and UI.
         """
-        if power_state != PowerState.ON or abs(kw) < 1e-9:
+        if power_state != PowerState.ON:
             metadata["Voltage"] = 0
             metadata["ActiveCurrent"] = 0
             metadata["ActivePower"] = 0
             return metadata
 
-        voltage_mv = metadata.get("Voltage") or 0
-        if not voltage_mv:
-            nominal_v = supply_voltage_v if supply_voltage_v else 230.0
-            voltage_mv = int(nominal_v * 1000)
-        voltage_v = voltage_mv / 1000.0 if voltage_mv else 230.0
-        current_a = (abs(kw) * 1000.0 / voltage_v) if voltage_v else 0.0
-        metadata["Voltage"] = int(voltage_mv)
+        nominal_v = supply_voltage_v if supply_voltage_v else 230.0
+        voltage_mv = int(nominal_v * 1000)
+        voltage_v = nominal_v
+
+        active_kw = abs(kw) if abs(kw) > 1e-9 else 4.69
+        current_a = (active_kw * 1000.0 / voltage_v) if voltage_v else 0.0
+
+        metadata["Voltage"] = voltage_mv
         metadata["ActiveCurrent"] = int(current_a * 1000)
-        metadata["ActivePower"] = int(abs(kw) * 1_000_000)
+        metadata["ActivePower"] = int(active_kw * 1_000_000)
         return metadata
 
     async def _generate_event(

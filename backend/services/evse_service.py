@@ -69,17 +69,12 @@ class EVSEService:
             active_power_mw = updates["ActivePower"]
             device.energy_usage_kw = round(active_power_mw / 1_000_000, 4)
             device.last_updated = datetime.now(timezone.utc)
-            # Real telemetry received — claim physical-device execution mode
-            # and stamp the last real telemetry time so staleness can be detected.
+        if updates.get("execution_mode") == "device":
             device.execution_mode = "device"
             metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
             device.extra_data = metadata
-
-        if "Voltage" in updates or "ActiveCurrent" in updates:
-            # Real electrical measurement received
-            device.execution_mode = "device"
-            metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
-            device.extra_data = metadata
+        elif not device.execution_mode:
+            device.execution_mode = "simulation"
         
         # DB commit must propagate on failure — a failed write must never appear as success
         state = DeviceState(
