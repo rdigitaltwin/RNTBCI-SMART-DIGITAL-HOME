@@ -650,7 +650,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         set((s) => ({
           devices: {
             ...s.devices,
-            [evDeviceId as string]: { ...evDevice, powerState: 'off', status: 'disconnected', currentConsumption: 0 },
+            [evDeviceId as string]: { ...evDevice, powerState: 'off', status: 'standby', currentConsumption: 0 },
           },
         }));
       }

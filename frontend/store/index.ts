@@ -413,15 +413,7 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
   // 3. Backend API Sync
   try {
     const { default: api } = await import('@/services/api');
-    if (isEvse) {
-      if (newState === 'on') {
-        await api.startEVCharge(device.id).catch(() => {});
-        await api.togglePower(device.id, newState).catch(() => {});
-      } else {
-        await api.stopEVCharge(device.id).catch(() => {});
-        await api.togglePower(device.id, newState).catch(() => {});
-      }
-    } else if (isSolar) {
+    if (isSolar) {
       const status = newState.toUpperCase();
       try {
         const updated = await api.toggleState(device.id, status);
