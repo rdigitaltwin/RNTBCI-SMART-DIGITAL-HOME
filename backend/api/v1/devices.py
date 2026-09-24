@@ -1739,7 +1739,8 @@ async def enable_evse_charging(
         device.power_state = PowerState.ON
         device.status = DeviceStatus.ONLINE
         device.connectivity = ConnectivityStatus.CONNECTED
-        device.execution_mode = "device"
+        if not device.execution_mode:
+            device.execution_mode = "simulation"
         device.last_updated = datetime.now(timezone.utc)
         device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
         tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
@@ -2415,10 +2416,10 @@ async def enable_ev_vehicle(
     device.power_state = PowerState.ON
     device.status = DeviceStatus.ONLINE
     device.connectivity = ConnectivityStatus.CONNECTED
-    device.execution_mode = "device"
+    if not device.execution_mode:
+        device.execution_mode = "simulation"
 
     metadata = dict(device.extra_data or {})
-    metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
     metadata["enabled"] = True
     metadata["endpoint"] = endpoint
     device.extra_data = metadata
@@ -2439,7 +2440,7 @@ async def enable_ev_vehicle(
         "device_id": str(device.id),
         "power_state": "on",
         "connectivity": "connected",
-        "execution_mode": "device",
+        "execution_mode": device.execution_mode,
     }
 
 
