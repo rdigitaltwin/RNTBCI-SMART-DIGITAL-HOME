@@ -48,53 +48,20 @@ class EVSEService:
 
     @staticmethod
     async def update_evse_state(device_id: str, updates: dict, db: AsyncSession):
+        from backend.services.device_telemetry_service import update_device_telemetry
+        device = await update_device_telemetry(device_id, updates, db)
+        if device is not None:
+            return device
+
+        # EVSE-specific fallback for legacy tests/clients querying without valid UUID
         try:
-            device_uuid = uuid.UUID(device_id)
-            result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid))
-            device = result.scalar_one_or_none()
+            uuid.UUID(device_id)
         except (ValueError, AttributeError):
             result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.type == DeviceType.ENERGY_EVSE))
-            device = result.scalars().first()
-
-        if not device:
-            return None
-            
-        metadata = dict(device.extra_data or {})
-        metadata.update(updates)
-        device.extra_data = metadata
-
-        # If ActivePower was set, immediately update energy_usage_kw so the
-        # dashboard reflects the new value without waiting for the simulation tick.
-        if "ActivePower" in updates:
-            active_power_mw = updates["ActivePower"]
-            device.energy_usage_kw = round(active_power_mw / 1_000_000, 4)
-            device.last_updated = datetime.now(timezone.utc)
-        if updates.get("execution_mode") == "device":
-            device.execution_mode = "device"
-            metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
-            device.extra_data = metadata
-        elif not device.execution_mode:
-            device.execution_mode = "simulation"
-        
-        # DB commit must propagate on failure — a failed write must never appear as success
-        state = DeviceState(
-            device_id=device.id,
-            state_json=metadata,
-        )
-        db.add(state)
-        await db.commit()
-
-        # Redis publish is soft-failure only — durable state is already committed above
-        try:
-            from backend.api.v1.devices import _device_to_response
-            device_resp = _device_to_response(device)
-            await redis_client.publish_device_update(str(device.id), {
-                "action": "device.updated",
-                "device": device_resp.model_dump(mode="json"),
-            })
-        except Exception as e:
-            logger.warning(f"EVSE Redis publish failed (non-fatal): {e}")
-        return device
+            fallback_device = result.scalars().first()
+            if fallback_device:
+                return await update_device_telemetry(str(fallback_device.id), updates, db)
+        return None
 
     @staticmethod
     async def get_current_state(device_id: str, db: AsyncSession) -> dict:
