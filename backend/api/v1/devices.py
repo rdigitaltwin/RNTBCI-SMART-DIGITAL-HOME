@@ -99,8 +99,14 @@ def _halt_electrical_output(device: Device) -> None:
     metadata["Voltage"] = 0
     metadata["ActiveCurrent"] = 0
     metadata["ActivePower"] = 0
+    metadata.pop("_last_real_telemetry_ts", None)
     if _device_type_value(device) == DeviceType.SOLAR_PV.value:
         metadata["current_generation"] = 0
+    elif _device_type_value(device) == DeviceType.ENERGY_EVSE.value:
+        metadata["state"] = "NotPluggedIn"
+        metadata["supply_state"] = "Disabled"
+        metadata["State"] = "Disabled"
+        metadata["SupplyState"] = "Disabled"
     device.extra_data = metadata
 
 
@@ -565,38 +571,51 @@ async def toggle_power(
     device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
     tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
     if data.power_state == "on":
+        device.execution_mode = "simulation"
         tracker.set_power_on()
         dev_type_val = device_type_str.lower() if isinstance(device_type_str, str) else device_type_str
         if dev_type_val in ("smart_light", "smart_switch", "smart_plug"):
             rated_power = float((device.extra_data or {}).get("rated_power", 0))
             device.energy_usage_kw = rated_power if rated_power > 0 else 0.015
+            metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
+            device.extra_data = metadata
         elif dev_type_val in ("solar_pv", "solar_panel", "energy_solar"):
             device.energy_usage_kw = -4.69
             metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
             metadata["Voltage"] = 230000
             metadata["ActivePower"] = 4690000
             metadata["ActiveCurrent"] = 20391
             metadata["current_generation"] = 4.69
             metadata["Frequency"] = 50000
             metadata["PowerFactor"] = 98
-            metadata.pop("_last_real_telemetry_ts", None)
             device.extra_data = metadata
-            device.execution_mode = "simulation"
         elif dev_type_val == "energy_evse":
             device.energy_usage_kw = 7.4
+            endpoint = (device.extra_data or {}).get("endpoint", 1)
+            matter_type = (device.extra_data or {}).get("matter_device_type", "0x050C")
+            metadata = {
+                "endpoint": endpoint,
+                "matter_device_type": matter_type,
+                "state": "Charging",
+                "supply_state": "ChargingEnabled",
+                "State": "ChargingEnabled",
+                "SupplyState": "ChargingEnabled",
+                "fault_state": "NoError",
+                "FaultState": "NoError",
+                "Voltage": 230000,
+                "ActiveCurrent": 32174,
+                "ActivePower": 7400000,
+            }
+            device.extra_data = metadata
+        else:
             metadata = dict(device.extra_data or {})
-            metadata["Voltage"] = 230000
-            metadata["ActivePower"] = 7400000
-            metadata["ActiveCurrent"] = 32174
+            metadata.pop("_last_real_telemetry_ts", None)
             device.extra_data = metadata
     elif data.power_state == "off":
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
-        if device_type_str.lower() in ("solar_pv", "solar_panel", "energy_solar"):
-            metadata = dict(device.extra_data or {})
-            metadata.pop("_last_real_telemetry_ts", None)
-            device.extra_data = metadata
-            device.execution_mode = "simulation"
     elif data.power_state == "standby":
         tracker.set_power_off()
         device.energy_usage_kw = max(device.energy_usage_kw * 0.05, 0.001)
@@ -671,40 +690,51 @@ async def toggle_state(
     device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
     tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
     if power_state_str == "on":
+        device.execution_mode = "simulation"
         tracker.set_power_on()
         dev_type_val = device_type_str.lower() if isinstance(device_type_str, str) else device_type_str
         if dev_type_val in ("smart_light", "smart_switch", "smart_plug"):
             rated_power = float((device.extra_data or {}).get("rated_power", 0))
             device.energy_usage_kw = rated_power if rated_power > 0 else 0.015
+            metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
+            device.extra_data = metadata
         elif dev_type_val in ("solar_pv", "solar_panel", "energy_solar"):
             device.energy_usage_kw = -4.69
             metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
             metadata["Voltage"] = 230000
             metadata["ActivePower"] = 4690000
             metadata["ActiveCurrent"] = 20391
             metadata["current_generation"] = 4.69
             metadata["Frequency"] = 50000
             metadata["PowerFactor"] = 98
-            # Simulation is now authoritative — clear any stale physical-device claim
-            metadata.pop("_last_real_telemetry_ts", None)
             device.extra_data = metadata
-            device.execution_mode = "simulation"
         elif dev_type_val == "energy_evse":
             device.energy_usage_kw = 7.4
+            endpoint = (device.extra_data or {}).get("endpoint", 1)
+            matter_type = (device.extra_data or {}).get("matter_device_type", "0x050C")
+            metadata = {
+                "endpoint": endpoint,
+                "matter_device_type": matter_type,
+                "state": "Charging",
+                "supply_state": "ChargingEnabled",
+                "State": "ChargingEnabled",
+                "SupplyState": "ChargingEnabled",
+                "fault_state": "NoError",
+                "FaultState": "NoError",
+                "Voltage": 230000,
+                "ActiveCurrent": 32174,
+                "ActivePower": 7400000,
+            }
+            device.extra_data = metadata
+        else:
             metadata = dict(device.extra_data or {})
-            metadata["Voltage"] = 230000
-            metadata["ActivePower"] = 7400000
-            metadata["ActiveCurrent"] = 32174
+            metadata.pop("_last_real_telemetry_ts", None)
             device.extra_data = metadata
     else:
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
         _halt_electrical_output(device)
-        # For Solar/EVSE: clear stale physical telemetry claim so sim owns OFF state
-        if device_type_str.lower() in ("solar_pv", "solar_panel", "energy_solar"):
-            metadata = dict(device.extra_data or {})
-            metadata.pop("_last_real_telemetry_ts", None)
-            device.extra_data = metadata
-            device.execution_mode = "simulation"
 
     # Log event
     event = DeviceEvent(
@@ -1700,8 +1730,6 @@ async def disable_evse_charging(
 
     if device:
         device.power_state = PowerState.OFF
-        device.status = DeviceStatus.OFFLINE
-        device.connectivity = ConnectivityStatus.DISCONNECTED
         device.execution_mode = "simulation"
         device.last_updated = datetime.now(timezone.utc)
         _halt_electrical_output(device)
@@ -1755,8 +1783,7 @@ async def enable_evse_charging(
         device.power_state = PowerState.ON
         device.status = DeviceStatus.ONLINE
         device.connectivity = ConnectivityStatus.CONNECTED
-        if not device.execution_mode:
-            device.execution_mode = "simulation"
+        device.execution_mode = "device"
         device.last_updated = datetime.now(timezone.utc)
         device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
         tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
@@ -2432,8 +2459,7 @@ async def enable_ev_vehicle(
     device.power_state = PowerState.ON
     device.status = DeviceStatus.ONLINE
     device.connectivity = ConnectivityStatus.CONNECTED
-    if not device.execution_mode:
-        device.execution_mode = "simulation"
+    device.execution_mode = "device"
 
     metadata = dict(device.extra_data or {})
     metadata["enabled"] = True
@@ -2468,11 +2494,9 @@ async def disable_ev_vehicle(
     endpoint: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Disable EV Vehicle (Turn power OFF & set offline)."""
+    """Disable EV Vehicle (Turn power OFF)."""
     device = await _ev_vehicle_device_or_404(device_id, db)
     device.power_state = PowerState.OFF
-    device.status = DeviceStatus.OFFLINE
-    device.connectivity = ConnectivityStatus.DISCONNECTED
     device.execution_mode = "simulation"
 
     metadata = dict(device.extra_data or {})
@@ -2495,7 +2519,7 @@ async def disable_ev_vehicle(
         "status": "disabled",
         "device_id": str(device.id),
         "power_state": "off",
-        "connectivity": "disconnected",
+        "connectivity": "connected",
         "execution_mode": "simulation",
     }
 
