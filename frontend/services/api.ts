@@ -322,6 +322,37 @@ class APIClient {
     return this.request(`/api/v1/devices/${id}/mode`, { method: 'PATCH', body: { mode } });
   }
 
+  // Generic Device Enable / Disable
+  async enableDevice(id: string) {
+    return this.request(`/api/v1/devices/${id}/enable`, { method: 'POST', body: {} });
+  }
+
+  async disableDevice(id: string) {
+    return this.request(`/api/v1/devices/${id}/disable`, { method: 'POST', body: {} });
+  }
+
+  // Real-device Telemetry
+  async setDeviceActivePower(id: string, activePower: number, endpoint = 1, cluster = 'ElectricalPowerMeasurement') {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/${cluster}/setactivepower`, {
+      method: 'POST',
+      body: { ActivePower: activePower },
+    });
+  }
+
+  async setDeviceVoltage(id: string, voltage: number, endpoint = 1, cluster = 'ElectricalPowerMeasurement') {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/${cluster}/setvoltage`, {
+      method: 'POST',
+      body: { Voltage: voltage },
+    });
+  }
+
+  async setDeviceActiveCurrent(id: string, activeCurrent: number, endpoint = 1, cluster = 'ElectricalPowerMeasurement') {
+    return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/${cluster}/setactivecurrent`, {
+      method: 'POST',
+      body: { ActiveCurrent: activeCurrent },
+    });
+  }
+
   // EV Vehicle
   async getEVVehicleHVBatVoltage(id: string, endpoint: number = 1) {
     return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/hvbatvoltage`);

@@ -614,7 +614,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
                 </div>
               )}
 
-              {liveDevice.type === 'energy_evse' && isConnected && (
+              {(liveDevice.type === 'energy_evse' || meta.Voltage != null || meta.ActiveCurrent != null || meta.ActivePower != null) && isConnected && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>

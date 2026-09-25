@@ -36,6 +36,7 @@ from backend.redis.client import redis_client
 from backend.services.evse_service import evse_service
 from backend.services.solar_service import solar_service
 from backend.services.ev_vehicle_service import ev_vehicle_service
+from backend.services.device_telemetry_service import update_device_telemetry, device_telemetry_service
 from backend.schemas import (
     DeviceControlRequest,
     DeviceCreateRequest,
@@ -60,7 +61,8 @@ from backend.services.simulation import device_simulator, DEFAULT_ON_MODE, DEVIC
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
 
-router = APIRouter(prefix="/devices", tags=["Devices"])
+router = APIRouter(prefix="/devices", tags=["Devices"], dependencies=[Depends(get_current_user)])
+public_router = APIRouter(prefix="/devices", tags=["Devices - Public"])
 
 
 def _device_to_response(device: Device) -> DeviceResponse:
@@ -132,7 +134,6 @@ async def list_devices(
     search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceListResponse:
     """List all devices with optional filters."""
@@ -277,7 +278,6 @@ async def create_device(
 async def get_device(
     request: Request,
     device_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
     """Get a single device by ID."""
@@ -409,7 +409,6 @@ async def delete_device(
 async def get_device_state(
     request: Request,
     device_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceStateResponse:
     """Get the current state of a device."""
@@ -843,7 +842,7 @@ async def change_device_mode(
 
     return device_resp
 
-@router.post("/public/light/{device_id}/webhook", response_model=dict)
+@public_router.post("/public/light/{device_id}/webhook", response_model=dict)
 @limiter.limit("10/minute")
 async def public_register_webhook(
     request: Request,
@@ -869,7 +868,7 @@ async def public_register_webhook(
 
     return {"status": "success", "message": f"Webhook URL registered for {device.name}"}
 
-@router.get("/public/export/csv")
+@public_router.get("/public/export/csv")
 @limiter.limit("10/minute")
 async def public_export_devices_csv(
     request: Request,
@@ -937,7 +936,7 @@ async def public_export_devices_csv(
     )
 
 
-@router.get("/public/export/postman")
+@public_router.get("/public/export/postman")
 @limiter.limit("10/minute")
 async def public_export_postman_collection(
     request: Request
@@ -958,7 +957,7 @@ async def public_export_postman_collection(
 
 
 
-@router.get("/public/light/{device_id}", response_model=DeviceResponse)
+@public_router.get("/public/light/{device_id}", response_model=DeviceResponse)
 @limiter.limit("100/minute")
 async def public_get_light(
     request: Request,
@@ -983,7 +982,7 @@ async def public_get_light(
     return _device_to_response(device)
 
 
-@router.patch("/public/light/{device_id}/state", response_model=DeviceResponse)
+@public_router.patch("/public/light/{device_id}/state", response_model=DeviceResponse)
 @limiter.limit("60/minute")
 async def public_toggle_light_state(
     request: Request,
@@ -1061,7 +1060,7 @@ async def public_toggle_light_state(
     return device_resp
 
 
-@router.patch("/public/light/{device_id}/control", response_model=DeviceResponse)
+@public_router.patch("/public/light/{device_id}/control", response_model=DeviceResponse)
 @limiter.limit("60/minute")
 async def public_control_light(
     request: Request,
@@ -1147,7 +1146,7 @@ async def public_control_light(
     return device_resp
 
 
-@router.get("/public/device-data", response_model=dict)
+@public_router.get("/public/device-data", response_model=dict)
 @limiter.limit("30/minute")
 async def public_list_device_data(
     request: Request,
@@ -1176,7 +1175,7 @@ async def public_list_device_data(
     }
 
 
-@router.get("/public/device-data/{device_name}")
+@public_router.get("/public/device-data/{device_name}")
 @limiter.limit("30/minute")
 async def public_get_device_data(
     request: Request,
@@ -1263,7 +1262,7 @@ def _find_device_file(identifier: str) -> Optional[str]:
     return None
 
 
-@router.get("/public/matter/{identifier}/endpoint/{endpoint}")
+@public_router.get("/public/matter/{identifier}/endpoint/{endpoint}")
 @limiter.limit("60/minute")
 async def matter_get_device(
     request: Request,
@@ -1283,7 +1282,7 @@ async def matter_get_device(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/{command_path:path}")
+@public_router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/{command_path:path}")
 @limiter.limit("60/minute")
 async def matter_post_command_path(
     request: Request,
@@ -1317,7 +1316,7 @@ async def matter_post_command_path(
     return await _handle_matter_command(identifier, action=command, payload=payload, db=db, background_tasks=background_tasks)
 
 
-@router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/command")
+@public_router.post("/public/matter/{identifier}/endpoint/{endpoint}/cluster/{cluster}/command")
 @limiter.limit("60/minute")
 async def matter_post_command_body(
     request: Request,
@@ -1481,7 +1480,6 @@ async def get_device_energy(
     request: Request,
     device_id: uuid.UUID,
     limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[EnergyRecordResponse]:
     """Get energy history for a device."""
@@ -1514,7 +1512,6 @@ async def get_device_events(
     severity: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EventListResponse:
     """Get events for a device."""
@@ -1626,7 +1623,7 @@ def _get_default_state(device_type: DeviceType) -> dict:
     return defaults.get(device_type, {})
 
 
-@router.post("/public/matter/migrate-schemas")
+@public_router.post("/public/matter/migrate-schemas")
 @limiter.limit("5/minute")
 async def migrate_all_schemas(request: Request) -> dict:
     """Force migrate all JSON schemas in the logs directory to the new Matter format."""
@@ -1705,107 +1702,173 @@ async def get_evse_device_details(
     return evse_data
 
 
+@router.post("/{device_id}/disable")
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/disable")
 @limiter.limit("60/minute")
-async def disable_evse_charging(
+async def disable_device(
     request: Request,
     device_id: str,
-    endpoint: int,
-    cluster: str,
     payload: dict = Body(default={}),
+    endpoint: int = 1,
+    cluster: str = "Generic",
     db: AsyncSession = Depends(get_db),
 ):
-    """Disable EVSE / EV Vehicle charging via Matter command."""
+    """Disable device power and revert to simulation mode (connectivity/status untouched)."""
     command_id = payload.get("commandId", "0x01")
     command_name = payload.get("command", "Disable")
 
     device = None
     try:
         device_uuid = uuid.UUID(device_id)
-        result = await db.execute(select(Device).where(Device.id == device_uuid))
+        result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid))
         device = result.scalar_one_or_none()
     except (ValueError, AttributeError):
-        result = await db.execute(select(Device).where(Device.type == DeviceType.ENERGY_EVSE))
+        result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.type == DeviceType.ENERGY_EVSE))
         device = result.scalars().first()
 
-    if device:
-        device.power_state = PowerState.OFF
-        device.execution_mode = "simulation"
-        device.last_updated = datetime.now(timezone.utc)
-        _halt_electrical_output(device)
-        device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
-        tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
-        tracker.set_power_off()
-        metadata = dict(device.extra_data or {})
-        metadata["enabled"] = False
-        metadata.pop("_last_real_telemetry_ts", None)
-        device.extra_data = metadata
-        await db.commit()
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
 
-    update_result = await evse_service.update_evse_state(device_id, {"State": "Disabled", "SupplyState": "Disabled"}, db)
-    return {
+    device.power_state = PowerState.OFF
+    device.execution_mode = "simulation"
+    device.last_updated = datetime.now(timezone.utc)
+    _halt_electrical_output(device)
+    
+    device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+    tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+    tracker.set_power_off()
+    
+    metadata = dict(device.extra_data or {})
+    metadata["enabled"] = False
+    metadata.pop("_last_real_telemetry_ts", None)
+    if device_type_str == DeviceType.ENERGY_EVSE.value:
+        metadata["State"] = "Disabled"
+        metadata["SupplyState"] = "Disabled"
+    device.extra_data = metadata
+
+    state = DeviceState(
+        device_id=device.id,
+        state_json=metadata,
+    )
+    db.add(state)
+    await db.commit()
+
+    try:
+        from backend.api.v1.devices import _device_to_response
+        device_resp = _device_to_response(device)
+        await redis_client.publish_device_update(str(device.id), {
+            "action": "device.updated",
+            "device": device_resp.model_dump(mode="json"),
+        })
+    except Exception as e:
+        logger.warning(f"Disable device Redis publish failed: {e}")
+
+    response_data = {
         "status": "success",
         "commandId": command_id,
         "command": command_name,
         "cluster": cluster,
         "endpoint": endpoint,
-        "response": {
-            "State": "Disabled",
-            "SupplyState": "Disabled"
-        }
+        "device_id": str(device.id),
+        "execution_mode": "simulation",
+        "power_state": "off",
+        "connectivity": device.connectivity.value if hasattr(device.connectivity, "value") else str(device.connectivity),
     }
+    if device_type_str == DeviceType.ENERGY_EVSE.value:
+        response_data["response"] = {
+            "State": metadata.get("State", "Disabled"),
+            "SupplyState": metadata.get("SupplyState", "Disabled")
+        }
+    else:
+        response_data["response"] = {
+            "enabled": False
+        }
+    return response_data
 
 
+@router.post("/{device_id}/enable")
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/enable")
 @limiter.limit("60/minute")
-async def enable_evse_charging(
+async def enable_device(
     request: Request,
     device_id: str,
-    endpoint: int,
-    cluster: str,
     payload: dict = Body(default={}),
+    endpoint: int = 1,
+    cluster: str = "Generic",
     db: AsyncSession = Depends(get_db),
 ):
-    """Enable EVSE / EV Vehicle charging via Matter command."""
+    """Enable real-device mode for any device (Matter command or generic enable)."""
     command_id = payload.get("commandId", "0x02")
-    command_name = payload.get("command", "EnableCharging")
+    command_name = payload.get("command", "EnableCharging" if cluster == "EnergyEVSE" else "Enable")
 
     device = None
     try:
         device_uuid = uuid.UUID(device_id)
-        result = await db.execute(select(Device).where(Device.id == device_uuid))
+        result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.id == device_uuid))
         device = result.scalar_one_or_none()
     except (ValueError, AttributeError):
-        result = await db.execute(select(Device).where(Device.type == DeviceType.ENERGY_EVSE))
+        result = await db.execute(select(Device).options(selectinload(Device.room)).where(Device.type == DeviceType.ENERGY_EVSE))
         device = result.scalars().first()
 
-    if device:
-        device.power_state = PowerState.ON
-        device.status = DeviceStatus.ONLINE
-        device.connectivity = ConnectivityStatus.CONNECTED
-        device.execution_mode = "device"
-        device.last_updated = datetime.now(timezone.utc)
-        device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
-        tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
-        tracker.set_power_on()
-        metadata = dict(device.extra_data or {})
-        metadata["enabled"] = True
-        metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
-        device.extra_data = metadata
-        await db.commit()
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
 
-    update_result = await evse_service.update_evse_state(device_id, {"State": "ChargingEnabled", "SupplyState": "ChargingEnabled"}, db)
-    return {
+    device.power_state = PowerState.ON
+    device.status = DeviceStatus.ONLINE
+    device.connectivity = ConnectivityStatus.CONNECTED
+    device.execution_mode = "device"
+    device.last_updated = datetime.now(timezone.utc)
+    
+    device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+    tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+    tracker.set_power_on()
+    
+    metadata = dict(device.extra_data or {})
+    metadata["enabled"] = True
+    metadata["_last_real_telemetry_ts"] = datetime.now(timezone.utc).isoformat()
+    if device_type_str == DeviceType.ENERGY_EVSE.value:
+        metadata["State"] = "ChargingEnabled"
+        metadata["SupplyState"] = "ChargingEnabled"
+    device.extra_data = metadata
+    
+    state = DeviceState(
+        device_id=device.id,
+        state_json=metadata,
+    )
+    db.add(state)
+    await db.commit()
+
+    try:
+        from backend.api.v1.devices import _device_to_response
+        device_resp = _device_to_response(device)
+        await redis_client.publish_device_update(str(device.id), {
+            "action": "device.updated",
+            "device": device_resp.model_dump(mode="json"),
+        })
+    except Exception as e:
+        logger.warning(f"Enable device Redis publish failed: {e}")
+
+    response_data = {
         "status": "success",
         "commandId": command_id,
         "command": command_name,
         "cluster": cluster,
         "endpoint": endpoint,
-        "response": {
-            "State": "ChargingEnabled",
-            "SupplyState": "ChargingEnabled"
-        }
+        "device_id": str(device.id),
+        "execution_mode": "device",
+        "power_state": "on",
+        "connectivity": "connected",
     }
+    if device_type_str == DeviceType.ENERGY_EVSE.value:
+        response_data["response"] = {
+            "State": metadata.get("State", "ChargingEnabled"),
+            "SupplyState": metadata.get("SupplyState", "ChargingEnabled")
+        }
+    else:
+        response_data["response"] = {
+            "enabled": True
+        }
+    return response_data
 
 
 
@@ -1959,20 +2022,23 @@ async def identify_evse(
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/setactivepower")
+@router.post("/{device_id}/telemetry/setactivepower")
 @limiter.limit("60/minute")
-async def set_evse_active_power(
+async def set_device_active_power(
     request: Request,
     device_id: str,
-    endpoint: int,
-    cluster: str,
     payload: dict = Body(...),
+    endpoint: int = 1,
+    cluster: str = "ElectricalPowerMeasurement",
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EVSE active power measurement (milliwatts)."""
+    """Set active power measurement (milliwatts) for any device."""
     active_power = payload.get("ActivePower")
     if active_power is None:
         raise HTTPException(status_code=400, detail="Missing 'ActivePower' in body")
-    await evse_service.update_evse_state(device_id, {"ActivePower": active_power}, db)
+    device = await update_device_telemetry(device_id, {"ActivePower": active_power}, db)
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     return {
         "status": "success",
         "cluster": cluster,
@@ -1982,20 +2048,23 @@ async def set_evse_active_power(
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/setvoltage")
+@router.post("/{device_id}/telemetry/setvoltage")
 @limiter.limit("60/minute")
-async def set_evse_voltage(
+async def set_device_voltage(
     request: Request,
     device_id: str,
-    endpoint: int,
-    cluster: str,
     payload: dict = Body(...),
+    endpoint: int = 1,
+    cluster: str = "ElectricalPowerMeasurement",
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EVSE voltage measurement (millivolts)."""
+    """Set voltage measurement (millivolts) for any device."""
     voltage = payload.get("Voltage")
     if voltage is None:
         raise HTTPException(status_code=400, detail="Missing 'Voltage' in body")
-    await evse_service.update_evse_state(device_id, {"Voltage": voltage}, db)
+    device = await update_device_telemetry(device_id, {"Voltage": voltage}, db)
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     return {
         "status": "success",
         "cluster": cluster,
@@ -2005,20 +2074,23 @@ async def set_evse_voltage(
 
 
 @router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/setactivecurrent")
+@router.post("/{device_id}/telemetry/setactivecurrent")
 @limiter.limit("60/minute")
-async def set_evse_active_current(
+async def set_device_active_current(
     request: Request,
     device_id: str,
-    endpoint: int,
-    cluster: str,
     payload: dict = Body(...),
+    endpoint: int = 1,
+    cluster: str = "ElectricalPowerMeasurement",
     db: AsyncSession = Depends(get_db),
 ):
-    """Set EVSE active current measurement (milliamps)."""
+    """Set active current measurement (milliamps) for any device."""
     active_current = payload.get("ActiveCurrent")
     if active_current is None:
         raise HTTPException(status_code=400, detail="Missing 'ActiveCurrent' in body")
-    await evse_service.update_evse_state(device_id, {"ActiveCurrent": active_current}, db)
+    device = await update_device_telemetry(device_id, {"ActiveCurrent": active_current}, db)
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     return {
         "status": "success",
         "cluster": cluster,
