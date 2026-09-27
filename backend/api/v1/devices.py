@@ -1674,32 +1674,42 @@ async def migrate_all_schemas(request: Request) -> dict:
 
 @router.get("/{device_id}/endpoint/{endpoint}")
 @limiter.limit("60/minute")
-async def get_evse_device_details(
+async def get_device_endpoint_details(
     request: Request,
     device_id: str,
     endpoint: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get EVSE device details matching the exact Matter JSON spec."""
+    """Get device details matching the exact Matter JSON spec (EVSE or generic)."""
+    device_uuid = None
     try:
         device_uuid = uuid.UUID(device_id)
+        is_uuid = True
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid device_id format")
+        is_uuid = False
 
-    result = await db.execute(select(Device).where(Device.id == device_uuid))
-    device = result.scalar_one_or_none()
-    if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+    if is_uuid:
+        result = await db.execute(select(Device).where(Device.id == device_uuid))
+        device = result.scalar_one_or_none()
+        if device:
+            device_type = device.type.value if hasattr(device.type, 'value') else device.type
+            if device_type == "Energy_EVSE":
+                evse_data = await evse_service.get_evse_device("Energy_EVSE")
+                if evse_data:
+                    evse_data["live_state"] = device.extra_data or {}
+                    return evse_data
 
-    # Load the exact Matter JSON template
-    evse_data = await evse_service.get_evse_device("Energy_EVSE")
-    if not evse_data:
-        raise HTTPException(status_code=404, detail="EVSE Specification data not found")
-
-    # Merge live state from device.extra_data so callers see current EnableCharging/Disable state
-    evse_data["live_state"] = device.extra_data or {}
-
-    return evse_data
+    # Fallback to file-based Matter devices
+    file_path = _find_device_file(device_id)
+    if file_path:
+        try:
+            with open(file_path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load device file: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+            
+    raise HTTPException(status_code=404, detail="Device not found")
 
 
 @router.post("/{device_id}/disable")
@@ -1754,7 +1764,6 @@ async def disable_device(
     await db.commit()
 
     try:
-        from backend.api.v1.devices import _device_to_response
         device_resp = _device_to_response(device)
         await redis_client.publish_device_update(str(device.id), {
             "action": "device.updated",
@@ -1772,7 +1781,7 @@ async def disable_device(
         "device_id": str(device.id),
         "execution_mode": "simulation",
         "power_state": "off",
-        "connectivity": device.connectivity.value if hasattr(device.connectivity, "value") else str(device.connectivity),
+        "connectivity": device.connectivity.value if hasattr(device.connectivity, "value") else device.connectivity,
     }
     if device_type_str == DeviceType.ENERGY_EVSE.value:
         response_data["response"] = {
@@ -1839,7 +1848,6 @@ async def enable_device(
     await db.commit()
 
     try:
-        from backend.api.v1.devices import _device_to_response
         device_resp = _device_to_response(device)
         await redis_client.publish_device_update(str(device.id), {
             "action": "device.updated",
@@ -2617,6 +2625,62 @@ async def set_ev_vehicle_enable_state(
             status_code=400,
             detail="Invalid body. Expected {'enabled': true/false} or {'state': 'enable'/'disable'}",
         )
+
+
+# =============================================================================
+# FALLBACK MATTER COMMANDS (Catch-all for commands not explicitly defined above)
+# =============================================================================
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/{command_path:path}")
+@limiter.limit("60/minute")
+async def generic_matter_post_command_path(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    command_path: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Fallback Matter Protocol POST endpoint for commands specified in URL (e.g. /cluster/OnOff/On)."""
+    try:
+        payload = await request.json()
+    except (ValueError, json.JSONDecodeError):
+        payload = {}
+        
+    clean_command_path = command_path.strip("/")
+    known_commands = ["triggereffect", "toggle", "on", "off", "setlevel", "capturesnapshot", "copyscene", "occupancy", "movetolevel"]
+    if cluster.lower() in known_commands:
+        if clean_command_path:
+            clean_command_path = f"{cluster}/{clean_command_path}"
+        else:
+            clean_command_path = cluster
+            
+    command = payload.get("command", clean_command_path if clean_command_path else cluster)
+    return await _handle_matter_command(device_id, action=command, payload=payload, db=db, background_tasks=background_tasks)
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/command")
+@limiter.limit("60/minute")
+async def generic_matter_post_command_body(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Fallback Matter Protocol POST endpoint for commands specified in body (e.g. {"command": "On"})."""
+    try:
+        payload = await request.json()
+    except (ValueError, json.JSONDecodeError):
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+        
+    command = payload.get("command")
+    if not command:
+        raise HTTPException(status_code=400, detail="Missing 'command' in body")
+        
+    return await _handle_matter_command(device_id, action=command, payload=payload, db=db, background_tasks=background_tasks)
 
 
 # =============================================================================
