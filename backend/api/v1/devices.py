@@ -1342,23 +1342,30 @@ async def matter_post_command_body(
 async def _handle_matter_command(identifier: str, action: str, payload: dict, db: AsyncSession, background_tasks: BackgroundTasks) -> dict:
     """Internal handler for Matter commands."""
     file_path = _find_device_file(identifier)
-    if not file_path:
-        raise HTTPException(status_code=404, detail="Device not found")
         
     # Parse file to get real device name and ID if possible
     device_name = identifier.replace("_", " ")
     device_id = ""
-    try:
-        with open(file_path, "r") as f:
-            data = json.load(f)
-            # Try to get from JSON, but fallback to identifier if missing
-            json_name = data.get("deviceType", {}).get("device_name", "")
-            if json_name:
-                device_name = json_name
-            device_id = data.get("deviceType", {}).get("device_id", "")
-    except (IOError, ValueError, json.JSONDecodeError):
-        pass
-        
+    
+    if file_path:
+        try:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+                # Try to get from JSON, but fallback to identifier if missing
+                json_name = data.get("deviceType", {}).get("device_name", "")
+                if json_name:
+                    device_name = json_name
+                device_id = data.get("deviceType", {}).get("device_id", "")
+        except (IOError, ValueError, json.JSONDecodeError):
+            pass
+    else:
+        # If no file exists, see if the identifier is a UUID
+        try:
+            uuid.UUID(identifier)
+            device_id = identifier
+        except ValueError:
+            pass
+
     # Also update Postgres DB and fire websockets if it's a known state command
     try:
         if device_id:
@@ -1376,7 +1383,11 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
             if device:
                 device_id = str(device.id)
                 
+        if not device and not file_path:
+            raise HTTPException(status_code=404, detail="Device not found")
+                
         if device:
+            device_name = device.name
             action_lower = action.lower()
             power_changed = False
             power_state_str = None
