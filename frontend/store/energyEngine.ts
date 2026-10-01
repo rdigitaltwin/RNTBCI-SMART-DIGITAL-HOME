@@ -968,7 +968,10 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     // Sync simulated power and states back to the global device store
     const deviceStore = useDeviceStore.getState();
     const updatedDevices = deviceStore.devices.map(d => {
-      const energyDev = state.devices[d.id];
+      let energyDev = state.devices[d.id];
+      if (!energyDev) {
+        energyDev = Object.values(state.devices).find(e => e.type === d.type || e.applianceId === d.id);
+      }
       if (!energyDev) return d;
       
       const isEvse = d.type === 'energy_evse';
@@ -980,13 +983,12 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         currentPowerKw = state.evCharger.state === 'charging' ? state.evCharger.power / 1000 : 0;
       } else if (isSolar) {
         // Solar power is usually negative in our display to indicate generation
-        currentPowerKw = energyDev.powerState === 'on' ? -Math.abs(energyDev.defaultPower / 1000) : 0;
+        currentPowerKw = d.power_state === 'on' ? -Math.abs(energyDev.defaultPower / 1000) : 0;
       }
       
-      if (d.power_state !== energyDev.powerState || d.energy_usage_kw !== currentPowerKw) {
+      if (d.energy_usage_kw !== currentPowerKw) {
         return {
           ...d,
-          power_state: energyDev.powerState,
           energy_usage_kw: currentPowerKw,
         };
       }
@@ -1073,11 +1075,13 @@ useDeviceStore.subscribe((state, prevState) => {
       }
       const targetState = device.power_state === 'on' ? 'on' : 'off';
       
-      // Only toggle if states don't match (prevents infinite loops)
-      if (energyDevice && energyDevice.powerState !== targetState) {
-        // Toggle it locally without syncing back to the backend
-        energyState.toggleDevice(energyDevice.id, true);
-      }
+      // Keep all matching energyStore device entries in sync with targetState
+      Object.values(energyState.devices).forEach(ed => {
+        if (ed.id === device.id || ed.type === device.type || ed.applianceId === device.id) {
+          ed.powerState = targetState;
+          if (targetState === 'off') ed.currentConsumption = 0;
+        }
+      });
       
       // Also sync EV Charger specifically
       if (device.type === 'energy_evse') {

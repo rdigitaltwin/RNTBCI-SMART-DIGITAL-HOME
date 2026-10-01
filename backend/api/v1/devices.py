@@ -537,19 +537,35 @@ async def control_device(
 @limiter.limit("60/minute")
 async def toggle_power(
     request: Request,
-    device_id: uuid.UUID,
+    device_id: str,
     data: DevicePowerRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
     """Toggle device power state. Delegates power calculation to the simulation engine."""
-    result = await db.execute(
-        select(Device)
-        .options(selectinload(Device.room))
-        .where(Device.id == device_id)
-    )
-    device = result.scalar_one_or_none()
+    device = None
+    try:
+        dev_uuid = uuid.UUID(str(device_id))
+        result = await db.execute(
+            select(Device)
+            .options(selectinload(Device.room))
+            .where(Device.id == dev_uuid)
+        )
+        device = result.scalar_one_or_none()
+    except ValueError:
+        pass
+
+    if not device:
+        d_type = DeviceType.SOLAR_PV if "solar" in str(device_id).lower() else None
+        if d_type:
+            result = await db.execute(
+                select(Device)
+                .options(selectinload(Device.room))
+                .where(Device.type == d_type)
+            )
+            device = result.scalar_one_or_none()
+
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
@@ -664,19 +680,35 @@ async def toggle_power(
 @limiter.limit("60/minute")
 async def toggle_state(
     request: Request,
-    device_id: uuid.UUID,
+    device_id: str,
     data: DeviceStateRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
     """Toggle device state (ON/OFF). Delegates power to simulation engine state machine."""
-    result = await db.execute(
-        select(Device)
-        .options(selectinload(Device.room))
-        .where(Device.id == device_id)
-    )
-    device = result.scalar_one_or_none()
+    device = None
+    try:
+        dev_uuid = uuid.UUID(str(device_id))
+        result = await db.execute(
+            select(Device)
+            .options(selectinload(Device.room))
+            .where(Device.id == dev_uuid)
+        )
+        device = result.scalar_one_or_none()
+    except ValueError:
+        pass
+
+    if not device:
+        d_type = DeviceType.SOLAR_PV if "solar" in str(device_id).lower() else None
+        if d_type:
+            result = await db.execute(
+                select(Device)
+                .options(selectinload(Device.room))
+                .where(Device.type == d_type)
+            )
+            device = result.scalar_one_or_none()
+
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 

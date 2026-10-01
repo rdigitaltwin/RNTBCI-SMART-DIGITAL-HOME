@@ -376,18 +376,12 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
   try {
     const { useEnergyStore } = await import('@/store/energyEngine');
     const energyStore = useEnergyStore.getState();
-    const energyDevice = Object.values(energyStore.devices).find((e) => {
-      if (!e) return false;
-      const dName = (device.name || '').toLowerCase();
-      const eName = (e.name || '').toLowerCase();
-      if (dName && eName && (dName === eName || dName.includes(eName) || eName.includes(dName))) return true;
-      if (e.type === device.type) return true;
-      return false;
+    Object.values(energyStore.devices).forEach((ed) => {
+      if (ed && (ed.id === device.id || ed.type === device.type || ed.applianceId === device.id)) {
+        ed.powerState = newState;
+        if (newState === 'off') ed.currentConsumption = 0;
+      }
     });
-
-    if (energyDevice && energyDevice.powerState !== newState) {
-      energyStore.toggleDevice(energyDevice.id, true);
-    }
     if (isEvse || device.type === 'ev_vehicle') {
       const updatedDevices = useDeviceStore.getState().devices;
       const evChargerDef = updatedDevices.find((d) => d.type === 'energy_evse');
@@ -413,28 +407,14 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
   // 3. Backend API Sync
   try {
     const { default: api } = await import('@/services/api');
-    if (isSolar) {
-      const status = newState.toUpperCase();
-      try {
-        const updated = await api.toggleState(device.id, status);
-        if (updated && typeof updated === 'object') {
-          // Reconcile with authoritative backend response
-          deviceStore.updateDevice(device.id, updated as Partial<Device>);
-        }
-      } catch {
-        // Rollback optimistic state on failure
-        deviceStore.updateDevice(device.id, { power_state: currentState });
-      }
-    } else {
-      const status = newState.toUpperCase();
-      const updated = await api.toggleState(device.id, status)
-        .catch(() => api.togglePower(device.id, newState))
-        .catch(() => null);
-      if (updated && typeof updated === 'object' && ('power_state' in updated || 'status' in updated)) {
-        const updatedPowerState = (updated as any).power_state;
-        if (!updatedPowerState || updatedPowerState === newState) {
-          deviceStore.updateDevice(device.id, updated as Partial<Device>);
-        }
+    const status = newState.toUpperCase();
+    const updated = await api.toggleState(device.id, status)
+      .catch(() => api.togglePower(device.id, newState))
+      .catch(() => null);
+    if (updated && typeof updated === 'object' && ('power_state' in updated || 'status' in updated)) {
+      const updatedPowerState = (updated as any).power_state;
+      if (!updatedPowerState || updatedPowerState === newState) {
+        deviceStore.updateDevice(device.id, updated as Partial<Device>);
       }
     }
   } catch (err: any) {
