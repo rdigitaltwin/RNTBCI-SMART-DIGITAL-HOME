@@ -850,6 +850,8 @@ class SimulationEngine:
                     metadata = dict(device.extra_data or {})
 
                     if device_type in (DeviceType.SOLAR_PV, DeviceType.ENERGY_EVSE):
+                        if device_type == DeviceType.SOLAR_PV and power_state != PowerState.ON:
+                            kw, kvar = 0.0, 0.0
                         metadata = self._sync_electrical_cluster(
                             metadata, kw, power_state, house_cfg.get("supply_voltage_v")
                         )
