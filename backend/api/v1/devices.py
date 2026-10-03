@@ -2156,14 +2156,20 @@ async def set_device_active_current(
 
 
 async def _get_solar_device_or_404(device_id: str, db: AsyncSession) -> Device:
+    device = None
     try:
-        device_uuid = uuid.UUID(device_id)
+        device_uuid = uuid.UUID(str(device_id))
+        result = await db.execute(select(Device).where(Device.id == device_uuid))
+        device = result.scalar_one_or_none()
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid device_id format")
-    result = await db.execute(select(Device).where(Device.id == device_uuid))
-    device = result.scalar_one_or_none()
+        pass
+
     if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+        result = await db.execute(select(Device).where(Device.type == DeviceType.SOLAR_PV))
+        device = result.scalar_one_or_none()
+
+    if not device:
+        raise HTTPException(status_code=404, detail="Solar device not found")
     return device
 
 

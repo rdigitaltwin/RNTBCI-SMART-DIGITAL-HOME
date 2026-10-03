@@ -276,12 +276,23 @@ export const useDeviceStore = create<DeviceState>()(
       setRooms: (rooms) => set({ rooms }),
       selectDevice: (device) => set({ selectedDevice: device }),
       updateDevice: (id, updates) =>
-        set((state) => ({
-          devices: state.devices.map((d) => (d.id === id ? { ...d, ...updates } : d)),
-          selectedDevice: state.selectedDevice?.id === id
-            ? { ...state.selectedDevice, ...updates }
-            : state.selectedDevice,
-        })),
+        set((state) => {
+          const targetDevice = state.devices.find((d) => d.id === id);
+          const isSolar = targetDevice?.type === 'solar_pv' || targetDevice?.type === 'solar_panel' || targetDevice?.type === 'energy_solar' || id === 'solar_panel' || updates.type === 'solar_pv';
+
+          return {
+            devices: state.devices.map((d) => {
+              const dIsSolar = d.type === 'solar_pv' || d.type === 'solar_panel' || d.type === 'energy_solar' || d.id === 'solar_panel';
+              if (d.id === id || (isSolar && dIsSolar)) {
+                return { ...d, ...updates };
+              }
+              return d;
+            }),
+            selectedDevice: (state.selectedDevice?.id === id || (isSolar && (state.selectedDevice?.type === 'solar_pv' || state.selectedDevice?.type === 'solar_panel')))
+              ? { ...state.selectedDevice, ...updates }
+              : state.selectedDevice,
+          };
+        }),
       addDevice: (device) => set((state) => ({ devices: [...state.devices, device] })),
       removeDevice: (id) =>
         set((state) => ({
