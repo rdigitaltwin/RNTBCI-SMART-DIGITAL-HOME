@@ -384,15 +384,30 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
   deviceStore.updateDevice(device.id, patch);
 
   // 2. Sync with local energyEngine store if available
+  // Use Zustand's setState() — NOT direct mutation — so formal state stays consistent
   try {
     const { useEnergyStore } = await import('@/store/energyEngine');
     const energyStore = useEnergyStore.getState();
+    const deviceUpdates: Record<string, { powerState: 'on' | 'off'; currentConsumption: number }> = {};
     Object.values(energyStore.devices).forEach((ed) => {
       if (ed && (ed.id === device.id || ed.type === device.type || ed.applianceId === device.id)) {
-        ed.powerState = newState;
-        if (newState === 'off') ed.currentConsumption = 0;
+        deviceUpdates[ed.id] = {
+          powerState: newState,
+          currentConsumption: newState === 'off' ? 0 : ed.currentConsumption,
+        };
       }
     });
+    if (Object.keys(deviceUpdates).length > 0) {
+      useEnergyStore.setState((s) => {
+        const updatedDevices = { ...s.devices };
+        Object.entries(deviceUpdates).forEach(([id, updates]) => {
+          if (updatedDevices[id]) {
+            updatedDevices[id] = { ...updatedDevices[id], ...updates };
+          }
+        });
+        return { devices: updatedDevices };
+      });
+    }
     if (isEvse || device.type === 'ev_vehicle') {
       const updatedDevices = useDeviceStore.getState().devices;
       const evChargerDef = updatedDevices.find((d) => d.type === 'energy_evse');

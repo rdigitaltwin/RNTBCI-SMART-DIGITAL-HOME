@@ -966,11 +966,13 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     get()._updateLoadHistory();
 
     // Sync simulated power and states back to the global device store
+    // Re-read energy state AFTER accumulation to get the latest formal values
+    const latestState = get();
     const deviceStore = useDeviceStore.getState();
     const updatedDevices = deviceStore.devices.map(d => {
-      let energyDev = state.devices[d.id];
+      let energyDev: EnergyDevice | undefined = latestState.devices[d.id];
       if (!energyDev) {
-        energyDev = Object.values(state.devices).find(e => e.type === d.type || e.applianceId === d.id);
+        energyDev = Object.values(latestState.devices).find(e => e.type === d.type || e.applianceId === d.id);
       }
       if (!energyDev) return d;
       
@@ -980,7 +982,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
       let currentPowerKw = energyDev.currentConsumption / 1000;
       
       if (isEvse) {
-        currentPowerKw = state.evCharger.state === 'charging' ? state.evCharger.power / 1000 : 0;
+        currentPowerKw = latestState.evCharger.state === 'charging' ? latestState.evCharger.power / 1000 : 0;
       } else if (isSolar) {
         // Solar power is usually negative in our display to indicate generation
         currentPowerKw = d.power_state === 'on' ? -Math.abs(energyDev.defaultPower / 1000) : 0;
@@ -996,8 +998,11 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     });
     
     // Only update if there are changes to avoid unnecessary re-renders
+    // Guard with isSyncing to prevent subscribe handler from re-triggering
     if (updatedDevices.some((d, i) => d !== deviceStore.devices[i])) {
+      isSyncing = true;
       deviceStore.setDevices(updatedDevices);
+      isSyncing = false;
     }
   },
 }));
@@ -1055,31 +1060,62 @@ useDeviceStore.subscribe((state, prevState) => {
   if (isSyncing) return;
   
   const energyState = useEnergyStore.getState();
-  if (energyState.deviceOrder.length === 0 || Object.keys(energyState.devices).length !== state.devices.length) {
-    if (state.devices.length > 0) {
-      energyState.initializeDevices();
+  
+  // Only call initializeDevices when the energy engine is truly empty OR
+  // the device list actually gained/lost devices (not just property changes).
+  const energyDeviceCount = Object.keys(energyState.devices).length;
+  const storeDeviceCount = state.devices.length;
+  if (energyState.deviceOrder.length === 0 && storeDeviceCount > 0) {
+    energyState.initializeDevices();
+    if (energyState.deviceOrder.length === 0) return;
+  } else if (energyDeviceCount !== storeDeviceCount && storeDeviceCount > 0) {
+    // A device was added or removed — reinitialize, but preserve toggled power states
+    const currentPowerStates: Record<string, 'on' | 'off'> = {};
+    state.devices.forEach(d => {
+      currentPowerStates[d.id] = d.power_state as 'on' | 'off';
+    });
+    energyState.initializeDevices();
+    // After reinit, restore power states from the authoritative device store
+    const freshState = useEnergyStore.getState();
+    const patched: Record<string, EnergyDevice> = { ...freshState.devices };
+    let changed = false;
+    Object.keys(patched).forEach(id => {
+      const authoritative = currentPowerStates[id];
+      if (authoritative && patched[id].powerState !== authoritative) {
+        patched[id] = {
+          ...patched[id],
+          powerState: authoritative,
+          currentConsumption: authoritative === 'off' ? 0 : patched[id].currentConsumption,
+        };
+        changed = true;
+      }
+    });
+    if (changed) {
+      useEnergyStore.setState({ devices: patched });
     }
     if (energyState.deviceOrder.length === 0) return;
   }
   
   isSyncing = true;
   
+  // Sync power state changes from the device store into the energy engine
+  // using Zustand's set() so the formal state is updated (not direct mutation)
+  const deviceUpdates: Record<string, Partial<EnergyDevice>> = {};
+  let hasUpdates = false;
+  
   state.devices.forEach(device => {
     const prevDevice = prevState.devices.find(d => d.id === device.id);
     if (!prevDevice || prevDevice.power_state !== device.power_state) {
-      // The energy store ID is exactly the backend device ID now
-      const energyId = device.id;
-      let energyDevice = energyState.devices[energyId];
-      if (!energyDevice) {
-        energyDevice = Object.values(energyState.devices).find(d => d.type === device.type) as any;
-      }
       const targetState = device.power_state === 'on' ? 'on' : 'off';
       
-      // Keep all matching energyStore device entries in sync with targetState
+      // Collect updates for all matching energy devices
       Object.values(energyState.devices).forEach(ed => {
         if (ed.id === device.id || ed.type === device.type || ed.applianceId === device.id) {
-          ed.powerState = targetState;
-          if (targetState === 'off') ed.currentConsumption = 0;
+          deviceUpdates[ed.id] = {
+            powerState: targetState,
+            currentConsumption: targetState === 'off' ? 0 : ed.currentConsumption,
+          };
+          hasUpdates = true;
         }
       });
       
@@ -1094,6 +1130,19 @@ useDeviceStore.subscribe((state, prevState) => {
       }
     }
   });
+  
+  // Apply all energy device updates in a single Zustand set() call
+  if (hasUpdates) {
+    useEnergyStore.setState((s) => {
+      const updatedDevices = { ...s.devices };
+      Object.entries(deviceUpdates).forEach(([id, updates]) => {
+        if (updatedDevices[id]) {
+          updatedDevices[id] = { ...updatedDevices[id], ...updates };
+        }
+      });
+      return { devices: updatedDevices };
+    });
+  }
   
   isSyncing = false;
 });
