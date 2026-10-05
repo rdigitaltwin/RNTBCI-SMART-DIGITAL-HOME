@@ -304,21 +304,25 @@ export const useDeviceStore = create<DeviceState>()(
   )
 );
 
-const DEFAULT_DEVICE_KW: Record<string, number> = {
+export const DEFAULT_DEVICE_KW: Record<string, number> = {
   hvac: 2.5,
+  air_conditioner: 1.8,
+  heat_pump: 2.0,
   smart_light: 0.015,
   washing_machine: 0.5,
   refrigerator: 0.15,
-  dishwasher: 1.5,
+  dishwasher: 1.2,
   microwave: 1.2,
-  water_heater: 1.2,
-  camera: 0.01,
+  water_heater: 1.5,
+  camera: 0.015,
   door_lock: 0.003,
-  smart_switch: 0.001,
-  smart_plug: 0.05,
+  smart_switch: 0.0015,
+  smart_plug: 0.8,
   mcb: 0,
   smart_meter: 0.005,
-  ev_vehicle: 8.25,
+  ev_vehicle: 7.5,
+  energy_evse: 7.4,
+  solar_pv: 4.69,
 };
 
 /**
@@ -440,7 +444,11 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
     if (updated && typeof updated === 'object' && ('power_state' in updated || 'status' in updated)) {
       const updatedPowerState = (updated as any).power_state;
       if (!updatedPowerState || updatedPowerState === newState) {
-        deviceStore.updateDevice(device.id, updated as Partial<Device>);
+        const patchData = { ...(updated as Partial<Device>) };
+        if (newState === 'on' && (!patchData.energy_usage_kw || patchData.energy_usage_kw === 0)) {
+          patchData.energy_usage_kw = patch.energy_usage_kw;
+        }
+        deviceStore.updateDevice(device.id, patchData);
       }
     }
   } catch (err: any) {

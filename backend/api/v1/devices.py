@@ -112,6 +112,48 @@ def _halt_electrical_output(device: Device) -> None:
     device.extra_data = metadata
 
 
+def _get_default_device_kw(device: Device) -> float:
+    """Return default active power (kW) for a device when turned on."""
+    dev_type_val = device.type.value.lower() if isinstance(device.type, DeviceType) else str(device.type).lower()
+    meta = dict(device.extra_data or {})
+    if "rated_power" in meta:
+        try:
+            val = float(meta["rated_power"])
+            if val > 0:
+                return val
+        except (ValueError, TypeError):
+            pass
+    if "power_kw" in meta:
+        try:
+            val = float(meta["power_kw"])
+            if val > 0:
+                return val
+        except (ValueError, TypeError):
+            pass
+
+    defaults = {
+        "smart_light": 0.015,
+        "smart_switch": 0.0015,
+        "smart_plug": 0.8,
+        "hvac": 2.5,
+        "air_conditioner": 1.8,
+        "washing_machine": 0.5,
+        "dishwasher": 1.2,
+        "refrigerator": 0.15,
+        "water_heater": 1.5,
+        "heat_pump": 2.0,
+        "microwave": 1.2,
+        "camera": 0.015,
+        "door_lock": 0.002,
+        "energy_evse": 7.4,
+        "solar_pv": -4.69,
+        "solar_panel": -4.69,
+        "energy_solar": -4.69,
+        "ev_vehicle": 7.5,
+    }
+    return defaults.get(dev_type_val, 0.15)
+
+
 def _parse_optional_enum(enum_cls, value, field_name: str):
     if value is None:
         return None
@@ -445,19 +487,35 @@ async def get_device_state(
 @limiter.limit("60/minute")
 async def control_device(
     request: Request,
-    device_id: uuid.UUID,
+    device_id: str,
     data: DeviceControlRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(require_user_or_admin),
     db: AsyncSession = Depends(get_db),
 ) -> DeviceResponse:
     """Send a control command to a device."""
-    result = await db.execute(
-        select(Device)
-        .options(selectinload(Device.room))
-        .where(Device.id == device_id)
-    )
-    device = result.scalar_one_or_none()
+    device = None
+    try:
+        dev_uuid = uuid.UUID(str(device_id))
+        result = await db.execute(
+            select(Device)
+            .options(selectinload(Device.room))
+            .where(Device.id == dev_uuid)
+        )
+        device = result.scalar_one_or_none()
+    except ValueError:
+        pass
+
+    if not device:
+        d_type = DeviceType.SOLAR_PV if "solar" in str(device_id).lower() else None
+        if d_type:
+            result = await db.execute(
+                select(Device)
+                .options(selectinload(Device.room))
+                .where(Device.type == d_type)
+            )
+            device = result.scalar_one_or_none()
+
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 
@@ -474,6 +532,40 @@ async def control_device(
     new_metadata.update(data.parameters)
     device.extra_data = new_metadata
     device.last_updated = datetime.now(timezone.utc)
+
+    # Handle power toggle commands inside control endpoint
+    cmd_lower = data.command.lower()
+    device_type_str = device.type.value if isinstance(device.type, DeviceType) else device.type
+    tracker = device_simulator.ensure_tracker(str(device.id), device_type_str)
+    if cmd_lower in ("turn_off", "off", "disable", "stop"):
+        device.power_state = PowerState.OFF
+        tracker.set_power_off()
+        _halt_electrical_output(device)
+    elif cmd_lower in ("turn_on", "on", "enable", "start"):
+        device.power_state = PowerState.ON
+        tracker.set_power_on()
+        dev_type_val = device_type_str.lower() if isinstance(device_type_str, str) else device_type_str
+        if dev_type_val in ("solar_pv", "solar_panel", "energy_solar"):
+            device.energy_usage_kw = -4.69
+            metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = 4690000
+            metadata["ActiveCurrent"] = 20391
+            metadata["current_generation"] = 4.69
+            metadata["Frequency"] = 50000
+            metadata["PowerFactor"] = 98
+            device.extra_data = metadata
+        else:
+            default_kw = _get_default_device_kw(device)
+            device.energy_usage_kw = default_kw
+            metadata = dict(device.extra_data or {})
+            metadata.pop("_last_real_telemetry_ts", None)
+            metadata["rated_power"] = default_kw
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = int(default_kw * 1_000_000)
+            metadata["ActiveCurrent"] = int((default_kw * 1000 / 230.0) * 1000)
+            device.extra_data = metadata
 
     # Save new state
     state = DeviceState(
@@ -625,8 +717,14 @@ async def toggle_power(
             }
             device.extra_data = metadata
         else:
+            default_kw = _get_default_device_kw(device)
+            device.energy_usage_kw = default_kw
             metadata = dict(device.extra_data or {})
             metadata.pop("_last_real_telemetry_ts", None)
+            metadata["rated_power"] = default_kw
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = int(default_kw * 1_000_000)
+            metadata["ActiveCurrent"] = int((default_kw * 1000 / 230.0) * 1000)
             device.extra_data = metadata
     elif data.power_state == "off":
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)
@@ -760,8 +858,14 @@ async def toggle_state(
             }
             device.extra_data = metadata
         else:
+            default_kw = _get_default_device_kw(device)
+            device.energy_usage_kw = default_kw
             metadata = dict(device.extra_data or {})
             metadata.pop("_last_real_telemetry_ts", None)
+            metadata["rated_power"] = default_kw
+            metadata["Voltage"] = 230000
+            metadata["ActivePower"] = int(default_kw * 1_000_000)
+            metadata["ActiveCurrent"] = int((default_kw * 1000 / 230.0) * 1000)
             device.extra_data = metadata
     else:
         tracker.set_power_off()  # Enters STOPPING phase (gradual shutdown)

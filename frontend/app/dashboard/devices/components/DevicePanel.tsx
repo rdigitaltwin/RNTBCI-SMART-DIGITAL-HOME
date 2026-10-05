@@ -316,12 +316,12 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
           useDeviceStore.getState().updateDevice(liveDevice.id, {
             metadata: {
               ...currentMeta,
-              Voltage: voltage.Voltage || currentMeta?.Voltage,
-              ActiveCurrent: current.ActiveCurrent || currentMeta?.ActiveCurrent,
-              ActivePower: power.ActivePower || currentMeta?.ActivePower,
-              Frequency: freq.Frequency || currentMeta?.Frequency,
-              PowerFactor: pf.Voltage || pf.PowerFactor || currentMeta?.PowerFactor,
-              LabelList: label.LabelList || currentMeta?.LabelList
+              Voltage: voltage.Voltage ?? currentMeta?.Voltage,
+              ActiveCurrent: current.ActiveCurrent ?? currentMeta?.ActiveCurrent,
+              ActivePower: power.ActivePower ?? currentMeta?.ActivePower,
+              Frequency: freq.Frequency ?? currentMeta?.Frequency,
+              PowerFactor: pf.PowerFactor ?? pf.Voltage ?? currentMeta?.PowerFactor,
+              LabelList: label.LabelList ?? currentMeta?.LabelList
             }
           });
         } catch (err) {

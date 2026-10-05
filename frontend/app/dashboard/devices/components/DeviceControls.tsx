@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { WifiOff } from 'lucide-react';
-import { type Device, useDeviceStore, useEventStore } from '@/store';
+import { type Device, useDeviceStore, useEventStore, toggleDeviceState } from '@/store';
 import api from '@/services/api';
 import { isDeviceConnected } from '../constants';
 
@@ -176,12 +176,36 @@ export default function DeviceControls({ device, color }: DeviceControlsProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         <button
-          onClick={() => handleControl('turn_on')}
-          style={{ padding: '12px', borderRadius: '8px', background: '#FCD34D20', color: '#FCD34D', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+          onClick={() => {
+            if (!isOn) toggleDeviceState(device);
+          }}
+          disabled={isOn}
+          style={{
+            padding: '12px',
+            borderRadius: '8px',
+            background: isOn ? 'rgba(252, 211, 77, 0.05)' : '#FCD34D20',
+            color: isOn ? '#64748B' : '#FCD34D',
+            border: 'none',
+            cursor: isOn ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isOn ? 0.6 : 1,
+          }}
         >☀️ Enable Generation</button>
         <button
-          onClick={() => handleControl('turn_off')}
-          style={{ padding: '12px', borderRadius: '8px', background: '#EF444420', color: '#EF4444', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+          onClick={() => {
+            if (isOn) toggleDeviceState(device);
+          }}
+          disabled={!isOn}
+          style={{
+            padding: '12px',
+            borderRadius: '8px',
+            background: !isOn ? 'rgba(239, 68, 68, 0.05)' : '#EF444420',
+            color: !isOn ? '#64748B' : '#EF4444',
+            border: 'none',
+            cursor: !isOn ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: !isOn ? 0.6 : 1,
+          }}
         >⏹ Disable</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>

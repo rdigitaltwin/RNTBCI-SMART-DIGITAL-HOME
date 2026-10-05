@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Zap, WifiOff } from 'lucide-react';
 import api from '@/services/api';
-import { useDeviceStore, toggleDeviceState, type Device } from '@/store';
+import { useDeviceStore, toggleDeviceState, type Device, DEFAULT_DEVICE_KW } from '@/store';
 import { isDeviceConnected } from '../constants';
 
 interface DeviceToggleProps {
@@ -54,9 +54,10 @@ export default function DeviceToggle({ device, color }: DeviceToggleProps) {
           } else {
             const isSolar = device.type === 'solar_pv' || device.type === 'solar_panel' || device.type === 'energy_solar';
             const defaultSolarWatts = 4690;
+            const fallbackKw = isSolar ? defaultSolarWatts / 1000 : (DEFAULT_DEVICE_KW[device.type] ?? 0.1);
             const usageKw = device.energy_usage_kw != null && device.energy_usage_kw !== 0
               ? Math.abs(device.energy_usage_kw) 
-              : (isSolar ? defaultSolarWatts / 1000 : 0);
+              : fallbackKw;
             powerW = usageKw * 1000;
           }
 
