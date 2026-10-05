@@ -968,7 +968,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
     // Sync simulated power and states back to the global device store
     const deviceStore = useDeviceStore.getState();
     const updatedDevices = deviceStore.devices.map(d => {
-      let energyDev = state.devices[d.id];
+      let energyDev: EnergyDevice | undefined = state.devices[d.id];
       if (!energyDev) {
         energyDev = Object.values(state.devices).find(e => e.type === d.type || e.applianceId === d.id);
       }
@@ -984,6 +984,10 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
       } else if (isSolar) {
         // Solar power is usually negative in our display to indicate generation
         currentPowerKw = d.power_state === 'on' ? -Math.abs(energyDev.defaultPower / 1000) : 0;
+      } else {
+        if (d.power_state === 'on' && currentPowerKw === 0) {
+          currentPowerKw = (energyDev.defaultPower || 100) / 1000;
+        }
       }
       
       if (d.energy_usage_kw !== currentPowerKw) {

@@ -290,11 +290,8 @@ class DeviceStateTracker:
         """Transition instantly to RUNNING or STARTING phase."""
         if self.power_phase in (DevicePowerPhase.RUNNING.value, DevicePowerPhase.STARTING.value):
             return  # Already on or starting
-        # Instant devices like lights, switches, and plugs have 0s warmup delay
-        if self.device_type_str in ("smart_light", "smart_switch", "smart_plug", "camera", "door_lock"):
-            self.power_phase = DevicePowerPhase.RUNNING.value
-        else:
-            self.power_phase = DevicePowerPhase.STARTING.value
+        # Devices enter RUNNING phase immediately so power is non-zero right away
+        self.power_phase = DevicePowerPhase.RUNNING.value
         self.phase_timer = 0.0
         self.operating_mode = mode or DEFAULT_ON_MODE.get(self.device_type_str, "on")
         # Start auto-cycle if applicable

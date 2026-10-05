@@ -157,14 +157,19 @@ class WebSocketClient {
       const action = (payload as Record<string, unknown>).action as string | undefined;
       if (deviceId && action === 'telemetry') {
         const powerKw = (payload as Record<string, unknown>).power_kw as number | undefined;
+        const powerState = (payload as Record<string, unknown>).power_state as string | undefined;
         const meta = (payload as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-        if (powerKw !== undefined) {
+        if (powerKw !== undefined || powerState !== undefined) {
           const currentDevice = useDeviceStore.getState().devices.find(d => d.id === deviceId);
           const currentMeta = currentDevice?.metadata || {};
           
-          const patch: Partial<import('@/store').Device> = {
-            energy_usage_kw: powerKw,
-          };
+          const patch: Partial<import('@/store').Device> = {};
+          if (powerKw !== undefined) {
+            patch.energy_usage_kw = powerKw;
+          }
+          if (powerState !== undefined) {
+            patch.power_state = powerState as any;
+          }
           if (meta) {
             patch.metadata = { ...currentMeta, ...meta };
           }
