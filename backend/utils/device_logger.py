@@ -2,6 +2,8 @@
 
 import json
 import os
+import re
+import uuid
 import datetime
 from typing import Any
 
@@ -14,25 +16,25 @@ class DeviceLogger:
     # ── Device-type to schema mapping ────────────────────────────────────
     # Maps recognisable substrings in a device name to the correct schema
     # builder.  Order matters: first match wins.
-    _DEVICE_TYPE_KEYWORDS = {
-        "Charger":     "evse",
-        "EVSE":        "evse",
-        "Light":       "light",
-        "Camera":      "camera",
-        "Dishwasher":  "dishwasher",
-        "Washing":     "dishwasher",
-        "Lock":        "doorlock",
-        "Heater":      "heatpump",
-        "Switch":      "switch",
-        "Solar":       "solar",
-        "PV":          "solar",
-    }
+    _DEVICE_TYPE_PATTERNS = [
+        (r"charger|evse",                         "evse"),
+        (r"garage",                               "garagedoor"),
+        (r"dish\s*washer",                        "dishwasher"),
+        (r"washing|washer|laundry",               "washer"),
+        (r"water\s*heater|geyser|heater",         "waterheater"),
+        (r"heat\s*pump|\bac\b|air\s*cond",        "heatpump"),
+        (r"light",                                "light"),
+        (r"camera",                               "camera"),
+        (r"lock",                                 "doorlock"),
+        (r"switch",                               "switch"),
+        (r"solar|\bpv\b",                         "solar"),
+    ]
 
     @classmethod
     def _resolve_device_type(cls, device_name: str) -> str:
         """Resolve a human-readable device name to a Matter device-type key."""
-        for keyword, dtype in cls._DEVICE_TYPE_KEYWORDS.items():
-            if keyword.lower() in device_name.lower():
+        for pattern, dtype in cls._DEVICE_TYPE_PATTERNS:
+            if re.search(pattern, device_name, re.IGNORECASE):
                 return dtype
         return "light"   # fallback
 
@@ -255,6 +257,113 @@ class DeviceLogger:
         }
 
     @staticmethod
+    def _schema_washer(device_name: str, device_id: str) -> dict:
+        """LaundryWasher - Matter 0x0073."""
+        return {
+            "deviceType": {
+                "id": "0x0073",
+                "name": "LaundryWasher",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "classification": {"class": "simple", "scope": "endpoint"},
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "LaundryWasher",
+                    "clusters": [
+                        {"clusterId": "0x0006", "name": "OnOff", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "PowerState", "type": "bool"}]},
+                        {"clusterId": "0x0051", "name": "LaundryWasherMode", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "SupportedModes", "type": "list"}, {"name": "CurrentMode", "type": "string"}]},
+                        {"clusterId": "0x0053", "name": "LaundryWasherControls", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "SpinSpeeds", "type": "list"},
+                                        {"name": "SpinSpeedCurrent", "type": "uint8"},
+                                        {"name": "NumberOfRinses", "type": "uint8"},
+                                        {"name": "SupportedRinses", "type": "list"}]},
+                        {"clusterId": "0x0056", "name": "TemperatureControl", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "TemperatureSetpoint", "type": "temperature"},
+                                        {"name": "SelectedTemperatureLevel", "type": "uint8"}],
+                         "commands": [{"name": "SetTemperature"}]},
+                        {"clusterId": "0x0060", "name": "OperationalState", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "CurrentState", "type": "string"}],
+                         "events": [{"name": "OperationCompletion"}]},
+                    ]
+                }]
+            },
+            "communication_history": []
+        }
+
+    @staticmethod
+    def _schema_waterheater(device_name: str, device_id: str) -> dict:
+        """WaterHeater - Matter 0x050F (distinct from HeatPump 0x0309)."""
+        return {
+            "deviceType": {
+                "id": "0x050F",
+                "name": "WaterHeater",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "classification": {"class": "simple", "scope": "endpoint"},
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "WaterHeater",
+                    "clusters": [
+                        {"clusterId": "0x0201", "name": "Thermostat", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "CurrentTemperature", "type": "float", "unit": "C"},
+                                        {"name": "TargetTemperature", "type": "float", "unit": "C"}],
+                         "commands": [{"name": "SetTargetTemperature"}]},
+                        {"clusterId": "0x0094", "name": "WaterHeaterManagement", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "HeaterTypes", "type": "bitmap"},
+                                        {"name": "HeatDemand", "type": "bitmap"},
+                                        {"name": "BoostState", "type": "enum"}],
+                         "commands": [{"name": "Boost"}, {"name": "CancelBoost"}]},
+                        {"clusterId": "0x0090", "name": "ElectricalPowerMeasurement", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "Power", "type": "float", "unit": "W"}]},
+                        {"clusterId": "0x0091", "name": "ElectricalEnergyMeasurement", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "Energy", "type": "float", "unit": "kWh"}]},
+                    ]
+                }]
+            },
+            "communication_history": []
+        }
+
+    @staticmethod
+    def _schema_garagedoor(device_name: str, device_id: str) -> dict:
+        """GarageDoor - project-defined type 0x0601 (see API_Garagedoor_DataModel.md)."""
+        return {
+            "deviceType": {
+                "id": "0x0601",
+                "name": "GarageDoor",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "classification": {"class": "simple", "scope": "endpoint"},
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "GarageDoor",
+                    "clusters": [
+                        {"clusterId": "0x2000", "name": "DoorControl", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "DoorState", "type": "enum"},
+                                        {"name": "Position", "type": "percent"},
+                                        {"name": "LockState", "type": "enum"}],
+                         "commands": [{"name": "OpenDoor"}, {"name": "CloseDoor"}, {"name": "StopDoor"},
+                                      {"name": "SetPosition"}, {"name": "LockDoor"}, {"name": "UnlockDoor"}]},
+                        {"clusterId": "0x2001", "name": "SafetySensors", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "ObstructionDetected", "type": "bool"},
+                                        {"name": "SafetyBeamStatus", "type": "enum"}]},
+                        {"clusterId": "0x2002", "name": "UsageAlerts", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "OpenCount", "type": "uint32"},
+                                        {"name": "LastOperationTime", "type": "timestamp"}]},
+                        {"clusterId": "0x2003", "name": "Connectivity", "side": "server", "mandatory": False,
+                         "attributes": [{"name": "OnlineStatus", "type": "enum"},
+                                        {"name": "SignalStrength", "type": "int"}]},
+                    ]
+                }]
+            },
+            "communication_history": []
+        }
+
+    @staticmethod
     def _schema_doorlock(device_name: str, device_id: str) -> dict:
         """DoorLock – Matter 0x000A."""
         return {
@@ -294,7 +403,7 @@ class DeviceLogger:
 
     @staticmethod
     def _schema_heatpump(device_name: str, device_id: str) -> dict:
-        """HeatPump – Matter 0x0309.  Used for AC and water heater devices."""
+        """HeatPump – Matter 0x0309.  Used for AC / heat pump devices (water heaters have their own type)."""
         return {
             "deviceType": {
                 "id": "0x0309",
@@ -626,6 +735,9 @@ class DeviceLogger:
         "dishwasher": "_schema_dishwasher",
         "doorlock":   "_schema_doorlock",
         "heatpump":   "_schema_heatpump",
+        "washer":     "_schema_washer",
+        "waterheater": "_schema_waterheater",
+        "garagedoor": "_schema_garagedoor",
         "switch":     "_schema_switch",
         "solar":      "_schema_solar",
     }
@@ -633,10 +745,54 @@ class DeviceLogger:
     @classmethod
     def _get_matter_schema(cls, device_name: str, device_id: str) -> dict:
         """Returns the correct Matter-style JSON schema for a device based on its name."""
+        if not device_id:
+            # Never emit a schema without a UUID (stable per device name)
+            device_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"rntbci.device.{device_name}"))
         dtype = cls._resolve_device_type(device_name)
         method_name = cls._SCHEMA_BUILDER_MAP.get(dtype, "_schema_light")
         builder = getattr(cls, method_name)
         return builder(device_name, device_id)
+
+    # Types whose schema was previously mis-assigned (washer->Dishwasher, water heater->HeatPump,
+    # garage door->DoorLock). Only these are auto-corrected; hand-authored files are never touched.
+    _REPAIRABLE_KEYS = {"washer", "waterheater", "garagedoor"}
+
+    @classmethod
+    def _repair_schema(cls, schema: dict, device_name: str) -> tuple[dict, bool]:
+        """Return (schema, changed). Rebuild a wrongly-typed schema, keeping its UUID and history."""
+        dtype = cls._resolve_device_type(device_name)
+        if dtype not in cls._REPAIRABLE_KEYS:
+            return schema, False
+        old = schema.get("deviceType", {})
+        old_id = old.get("device_id") or ""
+        fresh = cls._get_matter_schema(device_name, old_id)
+        if old.get("id") == fresh["deviceType"]["id"]:
+            return schema, False
+        fresh["communication_history"] = schema.get("communication_history", [])
+        return fresh, True
+
+    @classmethod
+    def repair_stale_schemas(cls) -> int:
+        """Fix persisted schema files with the wrong device type. Returns number repaired."""
+        if not os.path.isdir(cls._log_dir):
+            return 0
+        repaired = 0
+        for filename in os.listdir(cls._log_dir):
+            if not (filename.startswith("device_") and filename.endswith(".json")):
+                continue
+            path = os.path.join(cls._log_dir, filename)
+            try:
+                with open(path, "r") as f:
+                    schema = json.load(f)
+                name = filename[len("device_"):-len(".json")].replace("_", " ")
+                schema, changed = cls._repair_schema(schema, name)
+                if changed:
+                    with open(path, "w") as f:
+                        json.dump(schema, f, indent=4)
+                    repaired += 1
+            except (OSError, ValueError):
+                continue
+        return repaired
 
     @classmethod
     def log_communication(cls, device_id: str, device_name: str, action: str, payload: Any, source: str = "api"):
@@ -659,6 +815,8 @@ class DeviceLogger:
                     history = schema.get("communication_history", [])
                     schema = cls._get_matter_schema(device_name, device_id)
                     schema["communication_history"] = history
+                if schema:
+                    schema, _ = cls._repair_schema(schema, device_name)
             except json.JSONDecodeError:
                 pass
                 
