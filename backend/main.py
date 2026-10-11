@@ -64,6 +64,15 @@ async def lifespan(app: FastAPI):
         logger.error("Failed to initialize database. Aborting startup to prevent cascaded failures.")
         raise RuntimeError("Database unavailable")
 
+    # Correct persisted device schema files that were generated with the wrong Matter type
+    try:
+        from backend.utils.device_logger import DeviceLogger
+        fixed = DeviceLogger.repair_stale_schemas()
+        if fixed:
+            logger.info("Repaired %d device schema file(s) with wrong device type", fixed)
+    except Exception as e:
+        logger.warning(f"Device schema repair skipped: {e}")
+
     # Connect Redis (Redis client handles its own offline states usually)
     try:
         await redis_client.connect()

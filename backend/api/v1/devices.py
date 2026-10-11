@@ -1807,8 +1807,11 @@ async def migrate_all_schemas(request: Request) -> dict:
             except Exception as e:
                 pass
                 
+    repaired_count = DeviceLogger.repair_stale_schemas()
+
     return {
         "status": "success",
+        "repaired_count": repaired_count,
         "message": f"Successfully migrated {migrated_count} out of {total_count} device schemas.",
         "migrated_count": migrated_count,
         "total_count": total_count
@@ -2781,6 +2784,71 @@ async def set_ev_vehicle_enable_state(
 
 
 # =============================================================================
+# READ-ONLY ATTRIBUTES (GET-only) + APPLIANCE ATTRIBUTE READS
+# =============================================================================
+
+_GET_ONLY_ATTRIBUTES = {
+    "cumulativeenergyexported", "periodicenergyexported", "activepower", "voltage",
+    "activecurrent", "frequency", "powerfactor", "stateofcharge", "currentsessionenergy",
+    "hvbatvoltage", "hvsoc", "auxbatvoltage", "avgspeed", "gettargets",
+    "washermodes", "spinspeed", "spinspeeds", "numberofrinses", "norinse", "temperatureconfig",
+}
+
+
+def _normalize_attribute(name: str) -> str:
+    n = name.lower().replace("_", "").replace("-", "")
+    return n[3:] if n.startswith("get") else n
+
+
+async def _find_device_by_id_or_name(identifier: str, db: AsyncSession) -> Optional[Device]:
+    try:
+        result = await db.execute(select(Device).where(Device.id == uuid.UUID(identifier)))
+    except ValueError:
+        result = await db.execute(select(Device).where(Device.name == identifier.replace("_", " ")))
+    return result.scalar_one_or_none()
+
+
+def _read_laundry_washer_attribute(attr: str, state: dict) -> Optional[dict]:
+    if attr in ("washermodes", "washermode"):
+        return {"CurrentMode": state.get("wash_mode", "normal"),
+                "SupportedModes": ["normal", "delicate", "heavy", "quick"]}
+    if attr in ("spinspeed", "spinspeeds"):
+        return {"SpinSpeedCurrent": state.get("spin_speed", 1000),
+                "SpinSpeeds": [0, 400, 800, 1000, 1200]}
+    if attr in ("numberofrinses", "norinse"):
+        return {"NumberOfRinses": state.get("number_of_rinses", 1),
+                "SupportedRinses": [0, 1, 2, 3]}
+    if attr == "temperatureconfig":
+        return {"TemperatureSetpoint": state.get("temperature_setpoint", 40),
+                "SelectedTemperatureLevel": state.get("temperature_level", 1)}
+    return None
+
+
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/{attribute}")
+@limiter.limit("60/minute")
+async def get_appliance_attribute(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    cluster: str,
+    attribute: str,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """GET counterpart for read-only appliance attributes (e.g. washer modes, rinses, spin speed)."""
+    device = await _find_device_by_id_or_name(device_id, db)
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    attr = _normalize_attribute(attribute)
+    dtype = device.type.value if hasattr(device.type, "value") else device.type
+    data = None
+    if dtype == "washing_machine":
+        data = _read_laundry_washer_attribute(attr, device.extra_data or {})
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Attribute '{attribute}' not available for this device")
+    return data
+
+
+# =============================================================================
 # FALLBACK MATTER COMMANDS (Catch-all for commands not explicitly defined above)
 # =============================================================================
 
@@ -2802,6 +2870,17 @@ async def generic_matter_post_command_path(
         payload = {}
         
     clean_command_path = command_path.strip("/")
+
+    # Read-only attributes are GET-only. Without this guard the catch-all accepted POST
+    # for any path and returned 200, so documented-GET endpoints silently "worked" as POST.
+    last_segment = (clean_command_path.split("/")[-1] if clean_command_path else cluster).lower()
+    if last_segment in _GET_ONLY_ATTRIBUTES or last_segment.startswith("get"):
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail=f"'{last_segment}' is a read-only attribute. Use GET.",
+            headers={"Allow": "GET"},
+        )
+
     known_commands = ["triggereffect", "toggle", "on", "off", "setlevel", "capturesnapshot", "copyscene", "occupancy", "movetolevel"]
     if cluster.lower() in known_commands:
         if clean_command_path:

@@ -7,6 +7,8 @@
   "deviceType": {
     "id": "0x0309",
     "name": "HeatPump",
+    "device_name": "Living Room AC",
+    "device_id": "01c77ecf-f367-4c45-b5d9-6b0bfb33d703",
     "revision": 1,
     "classification": { "class": "simple", "scope": "endpoint" },
     "endpoints": [
