@@ -1832,6 +1832,7 @@ async def get_device_endpoint_details(
 ):
     """Get device details matching the exact Matter JSON spec (EVSE or generic)."""
     device_uuid = None
+    device_name_from_db = None
     try:
         device_uuid = uuid.UUID(device_id)
         is_uuid = True
@@ -1842,6 +1843,7 @@ async def get_device_endpoint_details(
         result = await db.execute(select(Device).where(Device.id == device_uuid))
         device = result.scalar_one_or_none()
         if device:
+            device_name_from_db = device.name
             device_type = device.type.value if hasattr(device.type, 'value') else device.type
             if device_type == "Energy_EVSE":
                 evse_data = await evse_service.get_evse_device("Energy_EVSE")
@@ -1854,11 +1856,20 @@ async def get_device_endpoint_details(
     if file_path:
         try:
             with open(file_path, "r") as f:
-                return json.load(f)
+                data = json.load(f)
         except Exception as e:
             logger.error(f"Failed to load device file: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
-            
+        if device_name_from_db:
+            data, _ = DeviceLogger._repair_schema(data, device_name_from_db)
+            dt = data.get("deviceType", {})
+            if not dt.get("device_id"):
+                dt["device_id"] = device_id
+        return data
+
+    if device_name_from_db:
+        return DeviceLogger._get_matter_schema(device_name_from_db, device_id)
+
     raise HTTPException(status_code=404, detail="Device not found")
 
 
@@ -2505,7 +2516,7 @@ async def get_solar_user_label(
     return {"label": "", "value": ""}
 
 
-@router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/labellist")
+@router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/setlabellist")
 @limiter.limit("60/minute")
 async def set_solar_user_label(
     request: Request,
@@ -2788,7 +2799,7 @@ async def set_ev_vehicle_enable_state(
 # =============================================================================
 
 _GET_ONLY_ATTRIBUTES = {
-    "cumulativeenergyexported", "periodicenergyexported", "activepower", "voltage",
+    "labellist", "cumulativeenergyexported", "periodicenergyexported", "activepower", "voltage",
     "activecurrent", "frequency", "powerfactor", "stateofcharge", "currentsessionenergy",
     "hvbatvoltage", "hvsoc", "auxbatvoltage", "avgspeed", "gettargets",
     "washermodes", "spinspeed", "spinspeeds", "numberofrinses", "norinse", "temperatureconfig",
