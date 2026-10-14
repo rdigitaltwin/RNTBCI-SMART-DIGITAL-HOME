@@ -270,7 +270,7 @@ class APIClient {
   }
 
   async setSolarUserLabel(id: string, label: string, value: string) {
-    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/UserLabel/labellist`, { method: 'POST', body: { label, value } });
+    return this.request(`/api/v1/devices/${id}/solar/endpoint/1/cluster/UserLabel/setlabellist`, { method: 'POST', body: { label, value } });
   }
 
   async getSolarVoltage(id: string) {
