@@ -136,6 +136,66 @@
                 "DoorState": "stopped"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.107816+05:30",
+            "action": "OpenDoor",
+            "payload": {
+                "status": "success",
+                "command": "OpenDoor",
+                "DoorState": "open"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.111590+05:30",
+            "action": "CloseDoor",
+            "payload": {
+                "status": "success",
+                "command": "CloseDoor",
+                "DoorState": "closed"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.115207+05:30",
+            "action": "StopDoor",
+            "payload": {
+                "status": "success",
+                "command": "StopDoor",
+                "DoorState": "stopped"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.230768+05:30",
+            "action": "OpenDoor",
+            "payload": {
+                "status": "success",
+                "command": "OpenDoor",
+                "DoorState": "open"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.235385+05:30",
+            "action": "CloseDoor",
+            "payload": {
+                "status": "success",
+                "command": "CloseDoor",
+                "DoorState": "closed"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.239831+05:30",
+            "action": "StopDoor",
+            "payload": {
+                "status": "success",
+                "command": "StopDoor",
+                "DoorState": "stopped"
+            },
+            "source": "matter_api"
         }
     ]
 }

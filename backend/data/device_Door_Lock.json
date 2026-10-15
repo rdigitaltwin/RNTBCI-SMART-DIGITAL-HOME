@@ -97,6 +97,46 @@
                 "LockState": "unlocked"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.097481+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.101794+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.218405+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.223418+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
         }
     ]
 }

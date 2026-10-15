@@ -150,6 +150,82 @@
                 "NumberOfRinses": "Extra"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.169226+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.173385+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.181944+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.188335+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.301530+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.306091+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.319800+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.331359+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
         }
     ]
 }

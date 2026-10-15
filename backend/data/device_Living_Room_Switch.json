@@ -121,6 +121,60 @@
                 "name": "Toggle"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.150469+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.155037+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.159499+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.280806+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.286690+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.291566+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
         }
     ]
 }

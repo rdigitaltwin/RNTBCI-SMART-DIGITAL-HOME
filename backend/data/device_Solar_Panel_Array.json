@@ -109,6 +109,38 @@
                 "power_state": "off"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.277529+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.280917+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.430204+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.433097+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
         }
     ]
 }

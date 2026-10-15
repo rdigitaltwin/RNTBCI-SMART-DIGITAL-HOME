@@ -160,6 +160,62 @@
                 "targetTemperatureLevel": 3
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.081490+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.086032+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.090517+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.201033+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.205891+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.211042+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
         }
     ]
 }

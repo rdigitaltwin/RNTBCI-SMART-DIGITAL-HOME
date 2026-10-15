@@ -139,6 +139,104 @@
                 "timestamp": "2026-10-15T11:31:02.375682+05:30"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.054499+05:30",
+            "action": "StartVideoStream",
+            "payload": {
+                "status": "success",
+                "command": "StartVideoStream",
+                "stream": "startvideostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.059747+05:30",
+            "action": "StopVideoStream",
+            "payload": {
+                "status": "success",
+                "command": "StopVideoStream",
+                "stream": "stopvideostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.064220+05:30",
+            "action": "StartAudioStream",
+            "payload": {
+                "status": "success",
+                "command": "StartAudioStream",
+                "stream": "startaudiostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.068419+05:30",
+            "action": "StopAudioStream",
+            "payload": {
+                "status": "success",
+                "command": "StopAudioStream",
+                "stream": "stopaudiostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.072601+05:30",
+            "action": "CaptureSnapshot",
+            "payload": {
+                "snapshotUrl": "/media/Security_Camera/snapshot.jpg",
+                "timestamp": "2026-10-15T11:36:08.072493+05:30"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.171483+05:30",
+            "action": "StartVideoStream",
+            "payload": {
+                "status": "success",
+                "command": "StartVideoStream",
+                "stream": "startvideostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.177053+05:30",
+            "action": "StopVideoStream",
+            "payload": {
+                "status": "success",
+                "command": "StopVideoStream",
+                "stream": "stopvideostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.181665+05:30",
+            "action": "StartAudioStream",
+            "payload": {
+                "status": "success",
+                "command": "StartAudioStream",
+                "stream": "startaudiostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.186786+05:30",
+            "action": "StopAudioStream",
+            "payload": {
+                "status": "success",
+                "command": "StopAudioStream",
+                "stream": "stopaudiostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.192091+05:30",
+            "action": "CaptureSnapshot",
+            "payload": {
+                "snapshotUrl": "/media/Security_Camera/snapshot.jpg",
+                "timestamp": "2026-10-15T11:36:47.191925+05:30"
+            },
+            "source": "matter_api"
         }
     ]
 }

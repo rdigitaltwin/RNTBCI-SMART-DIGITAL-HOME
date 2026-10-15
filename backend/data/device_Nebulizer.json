@@ -160,6 +160,78 @@
                 "command": "SetMistLevel"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.132072+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.136220+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.139899+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:08.143746+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.260258+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.264592+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.269059+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:36:47.272782+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel"
+            },
+            "source": "matter_api"
         }
     ]
 }
