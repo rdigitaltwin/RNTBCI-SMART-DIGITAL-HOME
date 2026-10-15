@@ -1,0 +1,130 @@
+{
+    "deviceType": {
+        "id": "0x050F",
+        "name": "WaterHeater",
+        "device_name": "Water Heater",
+        "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "WaterHeater",
+                "clusters": [
+                    {
+                        "clusterId": "0x0201",
+                        "name": "Thermostat",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentTemperature",
+                                "type": "float",
+                                "unit": "C"
+                            },
+                            {
+                                "name": "TargetTemperature",
+                                "type": "float",
+                                "unit": "C"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "SetTargetTemperature"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0094",
+                        "name": "WaterHeaterManagement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "HeaterTypes",
+                                "type": "bitmap"
+                            },
+                            {
+                                "name": "HeatDemand",
+                                "type": "bitmap"
+                            },
+                            {
+                                "name": "BoostState",
+                                "type": "enum"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "Boost"
+                            },
+                            {
+                                "name": "CancelBoost"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0090",
+                        "name": "ElectricalPowerMeasurement",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "Power",
+                                "type": "float",
+                                "unit": "W"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0091",
+                        "name": "ElectricalEnergyMeasurement",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "Energy",
+                                "type": "float",
+                                "unit": "kWh"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-10-15T11:31:02.495611+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.499673+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.503620+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
+        }
+    ]
+}

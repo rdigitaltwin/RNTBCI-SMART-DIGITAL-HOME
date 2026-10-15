@@ -1,0 +1,155 @@
+{
+    "deviceType": {
+        "id": "0x0073",
+        "name": "LaundryWasher",
+        "device_name": "Washing Machine",
+        "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "LaundryWasher",
+                "clusters": [
+                    {
+                        "clusterId": "0x0006",
+                        "name": "OnOff",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "OnOff",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "PowerState",
+                                "type": "bool"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0051",
+                        "name": "LaundryWasherMode",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "SupportedModes",
+                                "type": "list"
+                            },
+                            {
+                                "name": "CurrentMode",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0053",
+                        "name": "LaundryWasherControls",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "SpinSpeeds",
+                                "type": "list"
+                            },
+                            {
+                                "name": "SpinSpeedCurrent",
+                                "type": "uint8"
+                            },
+                            {
+                                "name": "NumberOfRinses",
+                                "type": "uint8"
+                            },
+                            {
+                                "name": "SupportedRinses",
+                                "type": "list"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0056",
+                        "name": "TemperatureControl",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "TemperatureSetpoint",
+                                "type": "temperature"
+                            },
+                            {
+                                "name": "SelectedTemperatureLevel",
+                                "type": "uint8"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "SetTemperature"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0060",
+                        "name": "OperationalState",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentState",
+                                "type": "string"
+                            }
+                        ],
+                        "events": [
+                            {
+                                "name": "OperationCompletion"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-10-15T11:31:02.468471+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.472741+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.481268+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.487343+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
+        }
+    ]
+}

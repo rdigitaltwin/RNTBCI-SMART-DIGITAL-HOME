@@ -1,0 +1,1304 @@
+[
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0008/CurrentLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0008/MaxLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0008/MinLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+    "name": "Bathroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/4f21774d-cac5-43b8-b5b5-502bc4ad6dd3/endpoint/1/cluster/0x0406/Occupancy"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0041/Label"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0090/Power"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0091/Energy"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0201/CurrentTemperature"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0201/Mode"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0201/RunningState"
+  },
+  {
+    "method": "GET",
+    "device_id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+    "name": "Bedroom AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/83cd6514-1ece-4f0c-b6a5-5044967e45e2/endpoint/1/cluster/0x0201/TargetTemperature"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0008/CurrentLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0008/MaxLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0008/MinLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+    "name": "Bedroom Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/3584a47b-370f-48bd-b59e-445dddb479e1/endpoint/1/cluster/0x0406/Occupancy"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0006/PowerState"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0056/SelectedTemperatureLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0056/TemperatureSetpoint"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0059/CurrentMode"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x005D/AlarmStatus"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0060/CurrentState"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+    "name": "Dishwasher",
+    "type": "DISHWASHER",
+    "url": "/api/v1/devices/f75d41ea-91a3-460c-8020-9a5e15bd5354/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+    "name": "Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/30eb3d26-9c82-46b3-8170-187d74985c09/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+    "name": "Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/30eb3d26-9c82-46b3-8170-187d74985c09/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+    "name": "Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/30eb3d26-9c82-46b3-8170-187d74985c09/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+    "name": "Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/30eb3d26-9c82-46b3-8170-187d74985c09/endpoint/1/cluster/0x0101/ActuatorEnabled"
+  },
+  {
+    "method": "GET",
+    "device_id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+    "name": "Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/30eb3d26-9c82-46b3-8170-187d74985c09/endpoint/1/cluster/0x0101/LockState"
+  },
+  {
+    "method": "GET",
+    "device_id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+    "name": "Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/30eb3d26-9c82-46b3-8170-187d74985c09/endpoint/1/cluster/0x0101/LockType"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0090/Frequency"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0090/PowerFactor"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0090/PowerMode"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0091/CumulativeEnergyExported"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0091/CumulativeEnergyImported"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0091/PeriodicEnergyExported"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0091/PeriodicEnergyImported"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/ChargingEnabledUntil"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/FaultState"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/MaximumChargeCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/MinimumChargeCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/NextChargeRequiredEnergy"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/NextChargeStartTime"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/NextChargeTargetSoC"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/NextChargeTargetTime"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/SessionDuration"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/SessionEnergyCharged"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/State"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/StateOfCharge"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/SupplyState"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x0099/UserMaximumChargeCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x009D/CurrentMode"
+  },
+  {
+    "method": "GET",
+    "device_id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+    "name": "EV Charger",
+    "type": "ENERGY_EVSE",
+    "url": "/api/v1/devices/b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e/endpoint/1/cluster/0x009D/SupportedModes"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0099/AuxBatVoltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0099/AvgSpeed"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0099/HVBATVoltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+    "name": "EV Vehicle",
+    "type": "EV_VEHICLE",
+    "url": "/api/v1/devices/fb338bef-0060-4626-93a6-ef7df4ac3bcb/endpoint/1/cluster/0x0099/HVSoC"
+  },
+  {
+    "method": "GET",
+    "device_id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+    "name": "Front Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/5514a0c1-cad7-408a-9928-1852e4c6eb35/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+    "name": "Front Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/5514a0c1-cad7-408a-9928-1852e4c6eb35/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+    "name": "Front Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/5514a0c1-cad7-408a-9928-1852e4c6eb35/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+    "name": "Front Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/5514a0c1-cad7-408a-9928-1852e4c6eb35/endpoint/1/cluster/0x0101/ActuatorEnabled"
+  },
+  {
+    "method": "GET",
+    "device_id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+    "name": "Front Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/5514a0c1-cad7-408a-9928-1852e4c6eb35/endpoint/1/cluster/0x0101/LockState"
+  },
+  {
+    "method": "GET",
+    "device_id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+    "name": "Front Door Lock",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/5514a0c1-cad7-408a-9928-1852e4c6eb35/endpoint/1/cluster/0x0101/LockType"
+  },
+  {
+    "method": "GET",
+    "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+    "name": "Garage Door",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+    "name": "Garage Door",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+    "name": "Garage Door",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+    "name": "Garage Door",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd/endpoint/1/cluster/0x0101/ActuatorEnabled"
+  },
+  {
+    "method": "GET",
+    "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+    "name": "Garage Door",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd/endpoint/1/cluster/0x0101/LockState"
+  },
+  {
+    "method": "GET",
+    "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+    "name": "Garage Door",
+    "type": "DOOR_LOCK",
+    "url": "/api/v1/devices/e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd/endpoint/1/cluster/0x0101/LockType"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0008/CurrentLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0008/MaxLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0008/MinLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+    "name": "Hallway Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/cc393520-bff6-4783-b1c8-0fdee742ed8b/endpoint/1/cluster/0x0406/Occupancy"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0008/CurrentLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0008/MaxLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0008/MinLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+    "name": "Kitchen Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/e4cf6b01-3642-4962-ad15-ebe908c7b2f8/endpoint/1/cluster/0x0406/Occupancy"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0041/Label"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0090/Power"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0091/Energy"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0201/CurrentTemperature"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0201/Mode"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0201/RunningState"
+  },
+  {
+    "method": "GET",
+    "device_id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+    "name": "Living Room AC",
+    "type": "HVAC",
+    "url": "/api/v1/devices/47cc8ab0-ab1e-43c0-9571-d3bc2478e88c/endpoint/1/cluster/0x0201/TargetTemperature"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0008/CurrentLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0008/MaxLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0008/MinLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+    "name": "Living Room Main Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/36f2c08c-5789-4c05-8a43-18f0365973f7/endpoint/1/cluster/0x0406/Occupancy"
+  },
+  {
+    "method": "GET",
+    "device_id": "c39bf632-f112-4b64-a294-1f93cbf65584",
+    "name": "Living Room Switch",
+    "type": "SMART_SWITCH",
+    "url": "/api/v1/devices/c39bf632-f112-4b64-a294-1f93cbf65584/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "c39bf632-f112-4b64-a294-1f93cbf65584",
+    "name": "Living Room Switch",
+    "type": "SMART_SWITCH",
+    "url": "/api/v1/devices/c39bf632-f112-4b64-a294-1f93cbf65584/endpoint/1/cluster/0x0006/PowerState"
+  },
+  {
+    "method": "GET",
+    "device_id": "c39bf632-f112-4b64-a294-1f93cbf65584",
+    "name": "Living Room Switch",
+    "type": "SMART_SWITCH",
+    "url": "/api/v1/devices/c39bf632-f112-4b64-a294-1f93cbf65584/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "c39bf632-f112-4b64-a294-1f93cbf65584",
+    "name": "Living Room Switch",
+    "type": "SMART_SWITCH",
+    "url": "/api/v1/devices/c39bf632-f112-4b64-a294-1f93cbf65584/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "c39bf632-f112-4b64-a294-1f93cbf65584",
+    "name": "Living Room Switch",
+    "type": "SMART_SWITCH",
+    "url": "/api/v1/devices/c39bf632-f112-4b64-a294-1f93cbf65584/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+    "name": "Refrigerator",
+    "type": "REFRIGERATOR",
+    "url": "/api/v1/devices/ae1107cc-cceb-49aa-bf30-45a31c503bf1/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+    "name": "Refrigerator",
+    "type": "REFRIGERATOR",
+    "url": "/api/v1/devices/ae1107cc-cceb-49aa-bf30-45a31c503bf1/endpoint/1/cluster/0x0056/SelectedTemperatureLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+    "name": "Refrigerator",
+    "type": "REFRIGERATOR",
+    "url": "/api/v1/devices/ae1107cc-cceb-49aa-bf30-45a31c503bf1/endpoint/1/cluster/0x0056/TemperatureSetpoint"
+  },
+  {
+    "method": "GET",
+    "device_id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+    "name": "Refrigerator",
+    "type": "REFRIGERATOR",
+    "url": "/api/v1/devices/ae1107cc-cceb-49aa-bf30-45a31c503bf1/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+    "name": "Refrigerator",
+    "type": "REFRIGERATOR",
+    "url": "/api/v1/devices/ae1107cc-cceb-49aa-bf30-45a31c503bf1/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+    "name": "Refrigerator",
+    "type": "REFRIGERATOR",
+    "url": "/api/v1/devices/ae1107cc-cceb-49aa-bf30-45a31c503bf1/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0551/CurrentFrameRate"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0551/MaxNetworkBandwidth"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0551/MicrophoneMuted"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0551/RecordingPrivacyMode"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0551/SpeakerVolume"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0801/MaxClientCertificates"
+  },
+  {
+    "method": "GET",
+    "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+    "name": "Security Camera",
+    "type": "CAMERA",
+    "url": "/api/v1/devices/ef1dcda2-0119-4db9-85fd-e24ac85e1096/endpoint/1/cluster/0x0801/MaxRootCertificates"
+  },
+  {
+    "method": "GET",
+    "device_id": "39429d3d-7f5a-405c-9e63-1812836e8c9b",
+    "name": "Smart Plug - Dryer",
+    "type": "SMART_PLUG",
+    "url": "/api/v1/devices/39429d3d-7f5a-405c-9e63-1812836e8c9b/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "39429d3d-7f5a-405c-9e63-1812836e8c9b",
+    "name": "Smart Plug - Dryer",
+    "type": "SMART_PLUG",
+    "url": "/api/v1/devices/39429d3d-7f5a-405c-9e63-1812836e8c9b/endpoint/1/cluster/0x0006/PowerState"
+  },
+  {
+    "method": "GET",
+    "device_id": "39429d3d-7f5a-405c-9e63-1812836e8c9b",
+    "name": "Smart Plug - Dryer",
+    "type": "SMART_PLUG",
+    "url": "/api/v1/devices/39429d3d-7f5a-405c-9e63-1812836e8c9b/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "39429d3d-7f5a-405c-9e63-1812836e8c9b",
+    "name": "Smart Plug - Dryer",
+    "type": "SMART_PLUG",
+    "url": "/api/v1/devices/39429d3d-7f5a-405c-9e63-1812836e8c9b/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "39429d3d-7f5a-405c-9e63-1812836e8c9b",
+    "name": "Smart Plug - Dryer",
+    "type": "SMART_PLUG",
+    "url": "/api/v1/devices/39429d3d-7f5a-405c-9e63-1812836e8c9b/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0041/LabelList"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0090/CumulativeEnergyExported"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0b04/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0b04/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0b04/Frequency"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0b04/PowerFactor"
+  },
+  {
+    "method": "GET",
+    "device_id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+    "name": "Solar Panel Array",
+    "type": "SOLAR_PV",
+    "url": "/api/v1/devices/1ec2d468-1d91-4a34-9d55-5049b6e41ea0/endpoint/1/cluster/0x0b04/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0008/CurrentLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0008/MaxLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0008/MinLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+    "name": "Utility Light",
+    "type": "SMART_LIGHT",
+    "url": "/api/v1/devices/636cbfb9-f65a-44a1-addf-e37722083ec7/endpoint/1/cluster/0x0406/Occupancy"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0006/OnOff"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0006/PowerState"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0051/CurrentMode"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0051/SupportedModes"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0053/NumberOfRinses"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0053/SpinSpeedCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0053/SpinSpeeds"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0053/SupportedRinses"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0056/SelectedTemperatureLevel"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0056/TemperatureSetpoint"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0060/CurrentState"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "bf431833-e422-49ea-8235-da09454d02b4",
+    "name": "Washing Machine",
+    "type": "WASHING_MACHINE",
+    "url": "/api/v1/devices/bf431833-e422-49ea-8235-da09454d02b4/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0090/ActiveCurrent"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0090/ActivePower"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0090/Power"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0090/Voltage"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0091/Energy"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0094/BoostState"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0094/HeatDemand"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0094/HeaterTypes"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0201/CurrentTemperature"
+  },
+  {
+    "method": "GET",
+    "device_id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+    "name": "Water Heater",
+    "type": "WATER_HEATER",
+    "url": "/api/v1/devices/5dd8cce9-6033-46ff-8be1-25c1b5078dc7/endpoint/1/cluster/0x0201/TargetTemperature"
+  }
+]

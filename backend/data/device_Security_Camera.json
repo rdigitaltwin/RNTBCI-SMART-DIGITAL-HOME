@@ -1,0 +1,144 @@
+{
+    "deviceType": {
+        "id": "0x0142",
+        "name": "Camera",
+        "device_name": "Security Camera",
+        "device_id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "Camera",
+                "clusters": [
+                    {
+                        "clusterId": "0x0551",
+                        "name": "CameraAVStreamManagement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "CurrentFrameRate",
+                                "type": "uint16"
+                            },
+                            {
+                                "name": "MaxNetworkBandwidth",
+                                "type": "uint32"
+                            },
+                            {
+                                "name": "RecordingPrivacyMode",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "MicrophoneMuted",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "SpeakerVolume",
+                                "type": "uint8"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "StartVideoStream"
+                            },
+                            {
+                                "name": "StopVideoStream"
+                            },
+                            {
+                                "name": "StartAudioStream"
+                            },
+                            {
+                                "name": "StopAudioStream"
+                            },
+                            {
+                                "name": "CaptureSnapshot"
+                            }
+                        ],
+                        "events": [
+                            {
+                                "name": "MotionDetected"
+                            },
+                            {
+                                "name": "StreamStarted"
+                            },
+                            {
+                                "name": "StreamStopped"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x0801",
+                        "name": "TLSCertificateManagement",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "MaxRootCertificates",
+                                "type": "uint8"
+                            },
+                            {
+                                "name": "MaxClientCertificates",
+                                "type": "uint8"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-10-15T11:31:02.358303+05:30",
+            "action": "StartVideoStream",
+            "payload": {
+                "status": "success",
+                "command": "StartVideoStream",
+                "stream": "startvideostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.362831+05:30",
+            "action": "StopVideoStream",
+            "payload": {
+                "status": "success",
+                "command": "StopVideoStream",
+                "stream": "stopvideostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.367444+05:30",
+            "action": "StartAudioStream",
+            "payload": {
+                "status": "success",
+                "command": "StartAudioStream",
+                "stream": "startaudiostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.371639+05:30",
+            "action": "StopAudioStream",
+            "payload": {
+                "status": "success",
+                "command": "StopAudioStream",
+                "stream": "stopaudiostream"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.375804+05:30",
+            "action": "CaptureSnapshot",
+            "payload": {
+                "snapshotUrl": "/media/Security_Camera/snapshot.jpg",
+                "timestamp": "2026-10-15T11:31:02.375682+05:30"
+            },
+            "source": "matter_api"
+        }
+    ]
+}

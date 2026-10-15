@@ -1,0 +1,1095 @@
+{
+  "devices": [
+    {
+      "id": "4f21774d-cac5-43b8-b5b5-502bc4ad6dd3",
+      "name": "Bathroom Light",
+      "type": "SMART_LIGHT",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0008",
+              "name": "LevelControl",
+              "attributes": [
+                "CurrentLevel",
+                "MaxLevel",
+                "MinLevel"
+              ]
+            },
+            {
+              "cluster_id": "0x0062",
+              "name": "ScenesManagement",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0406",
+              "name": "OccupancySensing",
+              "attributes": [
+                "Occupancy"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: ScenesManagement (0x0062)"
+      ]
+    },
+    {
+      "id": "83cd6514-1ece-4f0c-b6a5-5044967e45e2",
+      "name": "Bedroom AC",
+      "type": "HVAC",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0041",
+              "name": "UserLabel",
+              "attributes": [
+                "Label"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Power",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0091",
+              "name": "ElectricalEnergyMeasurement",
+              "attributes": [
+                "Energy"
+              ]
+            },
+            {
+              "cluster_id": "0x0201",
+              "name": "Thermostat",
+              "attributes": [
+                "CurrentTemperature",
+                "Mode",
+                "RunningState",
+                "TargetTemperature"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "3584a47b-370f-48bd-b59e-445dddb479e1",
+      "name": "Bedroom Light",
+      "type": "SMART_LIGHT",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0008",
+              "name": "LevelControl",
+              "attributes": [
+                "CurrentLevel",
+                "MaxLevel",
+                "MinLevel"
+              ]
+            },
+            {
+              "cluster_id": "0x0062",
+              "name": "ScenesManagement",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0406",
+              "name": "OccupancySensing",
+              "attributes": [
+                "Occupancy"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: ScenesManagement (0x0062)"
+      ]
+    },
+    {
+      "id": "f75d41ea-91a3-460c-8020-9a5e15bd5354",
+      "name": "Dishwasher",
+      "type": "DISHWASHER",
+      "status": "ONLINE",
+      "power_state": "STANDBY",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff",
+                "PowerState"
+              ]
+            },
+            {
+              "cluster_id": "0x0056",
+              "name": "TemperatureControl",
+              "attributes": [
+                "SelectedTemperatureLevel",
+                "TemperatureSetpoint"
+              ]
+            },
+            {
+              "cluster_id": "0x0059",
+              "name": "DishwasherMode",
+              "attributes": [
+                "CurrentMode"
+              ]
+            },
+            {
+              "cluster_id": "0x005D",
+              "name": "DishwasherAlarm",
+              "attributes": [
+                "AlarmStatus"
+              ]
+            },
+            {
+              "cluster_id": "0x0060",
+              "name": "OperationalState",
+              "attributes": [
+                "CurrentState"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "30eb3d26-9c82-46b3-8170-187d74985c09",
+      "name": "Door Lock",
+      "type": "DOOR_LOCK",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0101",
+              "name": "DoorLock",
+              "attributes": [
+                "ActuatorEnabled",
+                "LockState",
+                "LockType"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e",
+      "name": "EV Charger",
+      "type": "ENERGY_EVSE",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Frequency",
+                "PowerFactor",
+                "PowerMode",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0091",
+              "name": "ElectricalEnergyMeasurement",
+              "attributes": [
+                "CumulativeEnergyExported",
+                "CumulativeEnergyImported",
+                "PeriodicEnergyExported",
+                "PeriodicEnergyImported"
+              ]
+            },
+            {
+              "cluster_id": "0x0099",
+              "name": "EnergyEVSE",
+              "attributes": [
+                "ChargingEnabledUntil",
+                "FaultState",
+                "MaximumChargeCurrent",
+                "MinimumChargeCurrent",
+                "NextChargeRequiredEnergy",
+                "NextChargeStartTime",
+                "NextChargeTargetSoC",
+                "NextChargeTargetTime",
+                "SessionDuration",
+                "SessionEnergyCharged",
+                "State",
+                "StateOfCharge",
+                "SupplyState",
+                "UserMaximumChargeCurrent"
+              ]
+            },
+            {
+              "cluster_id": "0x009D",
+              "name": "EnergyEVSEMode",
+              "attributes": [
+                "CurrentMode",
+                "SupportedModes"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)"
+      ]
+    },
+    {
+      "id": "fb338bef-0060-4626-93a6-ef7df4ac3bcb",
+      "name": "EV Vehicle",
+      "type": "EV_VEHICLE",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0099",
+              "name": "EvVehicleData",
+              "attributes": [
+                "AuxBatVoltage",
+                "AvgSpeed",
+                "HVBATVoltage",
+                "HVSoC"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "5514a0c1-cad7-408a-9928-1852e4c6eb35",
+      "name": "Front Door Lock",
+      "type": "DOOR_LOCK",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0101",
+              "name": "DoorLock",
+              "attributes": [
+                "ActuatorEnabled",
+                "LockState",
+                "LockType"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+      "name": "Garage Door",
+      "type": "DOOR_LOCK",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0101",
+              "name": "DoorLock",
+              "attributes": [
+                "ActuatorEnabled",
+                "LockState",
+                "LockType"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "name implies garage door but stored type is DOOR_LOCK"
+      ]
+    },
+    {
+      "id": "cc393520-bff6-4783-b1c8-0fdee742ed8b",
+      "name": "Hallway Light",
+      "type": "SMART_LIGHT",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0008",
+              "name": "LevelControl",
+              "attributes": [
+                "CurrentLevel",
+                "MaxLevel",
+                "MinLevel"
+              ]
+            },
+            {
+              "cluster_id": "0x0062",
+              "name": "ScenesManagement",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0406",
+              "name": "OccupancySensing",
+              "attributes": [
+                "Occupancy"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: ScenesManagement (0x0062)"
+      ]
+    },
+    {
+      "id": "e4cf6b01-3642-4962-ad15-ebe908c7b2f8",
+      "name": "Kitchen Light",
+      "type": "SMART_LIGHT",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0008",
+              "name": "LevelControl",
+              "attributes": [
+                "CurrentLevel",
+                "MaxLevel",
+                "MinLevel"
+              ]
+            },
+            {
+              "cluster_id": "0x0062",
+              "name": "ScenesManagement",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0406",
+              "name": "OccupancySensing",
+              "attributes": [
+                "Occupancy"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: ScenesManagement (0x0062)"
+      ]
+    },
+    {
+      "id": "47cc8ab0-ab1e-43c0-9571-d3bc2478e88c",
+      "name": "Living Room AC",
+      "type": "HVAC",
+      "status": "ONLINE",
+      "power_state": "ON",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0041",
+              "name": "UserLabel",
+              "attributes": [
+                "Label"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Power",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0091",
+              "name": "ElectricalEnergyMeasurement",
+              "attributes": [
+                "Energy"
+              ]
+            },
+            {
+              "cluster_id": "0x0201",
+              "name": "Thermostat",
+              "attributes": [
+                "CurrentTemperature",
+                "Mode",
+                "RunningState",
+                "TargetTemperature"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "36f2c08c-5789-4c05-8a43-18f0365973f7",
+      "name": "Living Room Main Light",
+      "type": "SMART_LIGHT",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0008",
+              "name": "LevelControl",
+              "attributes": [
+                "CurrentLevel",
+                "MaxLevel",
+                "MinLevel"
+              ]
+            },
+            {
+              "cluster_id": "0x0062",
+              "name": "ScenesManagement",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0406",
+              "name": "OccupancySensing",
+              "attributes": [
+                "Occupancy"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: ScenesManagement (0x0062)"
+      ]
+    },
+    {
+      "id": "c39bf632-f112-4b64-a294-1f93cbf65584",
+      "name": "Living Room Switch",
+      "type": "SMART_SWITCH",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0004",
+              "name": "Groups",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff",
+                "PowerState"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: Groups (0x0004)"
+      ]
+    },
+    {
+      "id": "ae1107cc-cceb-49aa-bf30-45a31c503bf1",
+      "name": "Refrigerator",
+      "type": "REFRIGERATOR",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0056",
+              "name": "TemperatureControl",
+              "attributes": [
+                "SelectedTemperatureLevel",
+                "TemperatureSetpoint"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "ef1dcda2-0119-4db9-85fd-e24ac85e1096",
+      "name": "Security Camera",
+      "type": "CAMERA",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0551",
+              "name": "CameraAVStreamManagement",
+              "attributes": [
+                "CurrentFrameRate",
+                "MaxNetworkBandwidth",
+                "MicrophoneMuted",
+                "RecordingPrivacyMode",
+                "SpeakerVolume"
+              ]
+            },
+            {
+              "cluster_id": "0x0801",
+              "name": "TLSCertificateManagement",
+              "attributes": [
+                "MaxClientCertificates",
+                "MaxRootCertificates"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "39429d3d-7f5a-405c-9e63-1812836e8c9b",
+      "name": "Smart Plug - Dryer",
+      "type": "SMART_PLUG",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff",
+                "PowerState"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "1ec2d468-1d91-4a34-9d55-5049b6e41ea0",
+      "name": "Solar Panel Array",
+      "type": "SOLAR_PV",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0041",
+              "name": "UserLabel",
+              "attributes": [
+                "LabelList"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalEnergyMeasurement",
+              "attributes": [
+                "CumulativeEnergyExported"
+              ]
+            },
+            {
+              "cluster_id": "0x0b04",
+              "name": "ElectricalMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Frequency",
+                "PowerFactor",
+                "Voltage"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "orphaned metadata key: HVSoC",
+        "orphaned metadata key: AvgSpeed",
+        "orphaned metadata key: HVBATVoltage"
+      ]
+    },
+    {
+      "id": "636cbfb9-f65a-44a1-addf-e37722083ec7",
+      "name": "Utility Light",
+      "type": "SMART_LIGHT",
+      "status": "ONLINE",
+      "power_state": "OFF",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0003",
+              "name": "Identify",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff"
+              ]
+            },
+            {
+              "cluster_id": "0x0008",
+              "name": "LevelControl",
+              "attributes": [
+                "CurrentLevel",
+                "MaxLevel",
+                "MinLevel"
+              ]
+            },
+            {
+              "cluster_id": "0x0062",
+              "name": "ScenesManagement",
+              "attributes": []
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0406",
+              "name": "OccupancySensing",
+              "attributes": [
+                "Occupancy"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": [
+        "empty attributes: Identify (0x0003)",
+        "empty attributes: ScenesManagement (0x0062)"
+      ]
+    },
+    {
+      "id": "bf431833-e422-49ea-8235-da09454d02b4",
+      "name": "Washing Machine",
+      "type": "WASHING_MACHINE",
+      "status": "ONLINE",
+      "power_state": "STANDBY",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0006",
+              "name": "OnOff",
+              "attributes": [
+                "OnOff",
+                "PowerState"
+              ]
+            },
+            {
+              "cluster_id": "0x0051",
+              "name": "LaundryWasherMode",
+              "attributes": [
+                "CurrentMode",
+                "SupportedModes"
+              ]
+            },
+            {
+              "cluster_id": "0x0053",
+              "name": "LaundryWasherControls",
+              "attributes": [
+                "NumberOfRinses",
+                "SpinSpeedCurrent",
+                "SpinSpeeds",
+                "SupportedRinses"
+              ]
+            },
+            {
+              "cluster_id": "0x0056",
+              "name": "TemperatureControl",
+              "attributes": [
+                "SelectedTemperatureLevel",
+                "TemperatureSetpoint"
+              ]
+            },
+            {
+              "cluster_id": "0x0060",
+              "name": "OperationalState",
+              "attributes": [
+                "CurrentState"
+              ]
+            },
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Voltage"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7",
+      "name": "Water Heater",
+      "type": "WATER_HEATER",
+      "status": "ONLINE",
+      "power_state": "STANDBY",
+      "connectivity": "CONNECTED",
+      "execution_mode": "simulation",
+      "endpoints": [
+        {
+          "endpoint_id": 1,
+          "clusters": [
+            {
+              "cluster_id": "0x0090",
+              "name": "ElectricalPowerMeasurement",
+              "attributes": [
+                "ActiveCurrent",
+                "ActivePower",
+                "Power",
+                "Voltage"
+              ]
+            },
+            {
+              "cluster_id": "0x0091",
+              "name": "ElectricalEnergyMeasurement",
+              "attributes": [
+                "Energy"
+              ]
+            },
+            {
+              "cluster_id": "0x0094",
+              "name": "WaterHeaterManagement",
+              "attributes": [
+                "BoostState",
+                "HeatDemand",
+                "HeaterTypes"
+              ]
+            },
+            {
+              "cluster_id": "0x0201",
+              "name": "Thermostat",
+              "attributes": [
+                "CurrentTemperature",
+                "TargetTemperature"
+              ]
+            }
+          ]
+        }
+      ],
+      "flags": []
+    }
+  ]
+}

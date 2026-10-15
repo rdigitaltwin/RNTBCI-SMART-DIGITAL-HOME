@@ -1,0 +1,141 @@
+{
+    "deviceType": {
+        "id": "0x0601",
+        "name": "GarageDoor",
+        "device_name": "Garage Door",
+        "device_id": "e95c6fd6-fa2c-40fd-b633-c86e7b5d68fd",
+        "revision": 1,
+        "classification": {
+            "class": "simple",
+            "scope": "endpoint"
+        },
+        "endpoints": [
+            {
+                "endpointId": 1,
+                "deviceType": "GarageDoor",
+                "clusters": [
+                    {
+                        "clusterId": "0x2000",
+                        "name": "DoorControl",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "DoorState",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "Position",
+                                "type": "percent"
+                            },
+                            {
+                                "name": "LockState",
+                                "type": "enum"
+                            }
+                        ],
+                        "commands": [
+                            {
+                                "name": "OpenDoor"
+                            },
+                            {
+                                "name": "CloseDoor"
+                            },
+                            {
+                                "name": "StopDoor"
+                            },
+                            {
+                                "name": "SetPosition"
+                            },
+                            {
+                                "name": "LockDoor"
+                            },
+                            {
+                                "name": "UnlockDoor"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x2001",
+                        "name": "SafetySensors",
+                        "side": "server",
+                        "mandatory": true,
+                        "attributes": [
+                            {
+                                "name": "ObstructionDetected",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "SafetyBeamStatus",
+                                "type": "enum"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x2002",
+                        "name": "UsageAlerts",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "OpenCount",
+                                "type": "uint32"
+                            },
+                            {
+                                "name": "LastOperationTime",
+                                "type": "timestamp"
+                            }
+                        ]
+                    },
+                    {
+                        "clusterId": "0x2003",
+                        "name": "Connectivity",
+                        "side": "server",
+                        "mandatory": false,
+                        "attributes": [
+                            {
+                                "name": "OnlineStatus",
+                                "type": "enum"
+                            },
+                            {
+                                "name": "SignalStrength",
+                                "type": "int"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-10-15T11:31:02.408932+05:30",
+            "action": "OpenDoor",
+            "payload": {
+                "status": "success",
+                "command": "OpenDoor",
+                "DoorState": "open"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.412781+05:30",
+            "action": "CloseDoor",
+            "payload": {
+                "status": "success",
+                "command": "CloseDoor",
+                "DoorState": "closed"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.417354+05:30",
+            "action": "StopDoor",
+            "payload": {
+                "status": "success",
+                "command": "StopDoor",
+                "DoorState": "stopped"
+            },
+            "source": "matter_api"
+        }
+    ]
+}
