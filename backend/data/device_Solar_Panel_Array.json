@@ -92,5 +92,23 @@
                 ]
             }
         ]
-    }
+    },
+    "communication_history": [
+        {
+            "timestamp": "2026-10-15T11:31:02.573909+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "on"
+            },
+            "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.577250+05:30",
+            "action": "power_toggle",
+            "payload": {
+                "power_state": "off"
+            },
+            "source": "api"
+        }
+    ]
 }

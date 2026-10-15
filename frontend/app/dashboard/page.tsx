@@ -26,13 +26,12 @@ import { StatCard } from '@/components/ui/DashboardCards';
 // =============================================================================
 
 function EnergyChart() {
-  const metricsRef = useRef<Record<string, number>>({});
-  metricsRef.current = useSimulationStore((s) => s.metrics);
   const [data, setData] = useState<Array<{ time: string; power: number }>>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const totalPower = (metricsRef.current?.total_power_w || 0) / 1000;
+      const metrics = useSimulationStore.getState().metrics;
+      const totalPower = (metrics?.total_power_w || 0) / 1000;
       setData((prev) => {
         const newPoint = {
           time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),

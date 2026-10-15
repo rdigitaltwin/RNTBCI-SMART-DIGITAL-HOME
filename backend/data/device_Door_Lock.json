@@ -77,6 +77,26 @@
                 "power_state": "on"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.398402+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.402895+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
         }
     ]
 }

@@ -114,6 +114,26 @@
                 "power_state": "off"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.423645+05:30",
+            "action": "SetTargetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTargetTemperature",
+                "temperature": 23.0
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.427727+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Heat"
+            },
+            "source": "matter_api"
         }
     ]
 }

@@ -132,6 +132,34 @@
                 "power_state": "off"
             },
             "source": "api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.383191+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.387971+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T11:31:02.392269+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
         }
     ]
 }

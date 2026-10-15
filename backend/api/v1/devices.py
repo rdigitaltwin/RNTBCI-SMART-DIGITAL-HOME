@@ -54,6 +54,13 @@ from backend.schemas import (
     WebhookRegistrationRequest,
 )
 from backend.utils.device_logger import DeviceLogger
+from backend.utils.matter_catalog import (
+    ResolveError,
+    apply_attribute_write,
+    read_bare_cluster,
+    read_resolved_attribute,
+    resolve_matter_path,
+)
 from backend.utils.webhook import dispatch_webhook
 from backend.websockets.manager import ws_manager
 from backend.services.simulation import device_simulator, DEFAULT_ON_MODE, DEVICE_MODE_PROFILES
@@ -1475,6 +1482,71 @@ async def matter_post_command_body(
     return await _handle_matter_command(identifier, action=command, payload=payload, db=db, background_tasks=background_tasks)
 
 
+def _apply_reference_command(device: Device, action: str, payload: dict) -> Optional[dict]:
+    """Persist documented Matter commands. Returns a response body when handled."""
+    action_l = (action or "").lower().strip().strip("/")
+    meta = dict(device.extra_data or {})
+    response = None
+    if action_l == "settemperature":
+        level = payload.get("targetTemperatureLevel", payload.get("temperature"))
+        meta["SelectedTemperatureLevel"] = level
+        meta["temperature_level"] = level
+        if payload.get("temperature") is not None:
+            meta["temperature_setpoint"] = payload["temperature"]
+        response = {"status": "success", "command": "SetTemperature", "targetTemperatureLevel": level}
+    elif action_l == "settargettemperature":
+        meta["target_temperature"] = payload.get("temperature")
+        response = {"status": "success", "command": "SetTargetTemperature", "temperature": payload.get("temperature")}
+    elif action_l == "setmode":
+        meta["mode"] = payload.get("mode")
+        response = {"status": "success", "command": "SetMode", "mode": payload.get("mode")}
+    elif action_l == "lockdoor":
+        meta["LockState"] = "locked"
+        response = {"status": "success", "command": "LockDoor", "LockState": "locked"}
+    elif action_l == "unlockdoor":
+        meta["LockState"] = "unlocked"
+        response = {"status": "success", "command": "UnlockDoor", "LockState": "unlocked"}
+    elif action_l in ("opendoor", "closedoor", "stopdoor"):
+        door_state = {"opendoor": "open", "closedoor": "closed", "stopdoor": "stopped"}[action_l]
+        meta["DoorState"] = door_state
+        response = {"status": "success", "command": action, "DoorState": door_state}
+    elif action_l in ("startvideostream", "stopvideostream", "startaudiostream", "stopaudiostream"):
+        meta["stream"] = action_l
+        if "resolution" in payload:
+            meta["resolution"] = payload["resolution"]
+        if "frameRate" in payload:
+            meta["frameRate"] = payload["frameRate"]
+        response = {"status": "success", "command": action, "stream": action_l}
+    elif action_l == "setspin":
+        speed = payload.get("spinSpeedCurrent", payload.get("value"))
+        meta["spin_speed"] = speed
+        response = {"status": "success", "command": "setspin", "SpinSpeedCurrent": speed}
+    elif action_l == "setrinse":
+        rinses = payload.get("numberOfRinses", payload.get("value"))
+        meta["number_of_rinses"] = rinses
+        response = {"status": "success", "command": "setrinse", "NumberOfRinses": rinses}
+    elif action_l in ("startsession", "pausesession", "stopsession"):
+        meta["session"] = action_l
+        response = {"status": "success", "command": action, "session": action_l}
+    elif action_l == "setmistlevel":
+        meta["MistLevel"] = payload.get("level")
+        response = {"status": "success", "command": "SetMistLevel", "MistLevel": payload.get("level")}
+    elif action_l == "boost":
+        meta["BoostState"] = "active"
+        meta["boost_duration_sec"] = payload.get("durationSec")
+        if payload.get("targetTemp") is not None:
+            meta["target_temperature"] = payload["targetTemp"]
+        response = {"status": "success", "command": "Boost", "BoostState": "active"}
+    elif action_l == "cancelboost":
+        meta["BoostState"] = "inactive"
+        response = {"status": "success", "command": "CancelBoost", "BoostState": "inactive"}
+    if response is None:
+        return None
+    device.extra_data = meta
+    device.last_updated = datetime.now(timezone.utc)
+    return response
+
+
 async def _handle_matter_command(identifier: str, action: str, payload: dict, db: AsyncSession, background_tasks: BackgroundTasks) -> dict:
     """Internal handler for Matter commands."""
     file_path = _find_device_file(identifier)
@@ -1503,6 +1575,7 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
             pass
 
     # Also update Postgres DB and fire websockets if it's a known state command
+    applied_response = None
     try:
         if device_id:
             device_uuid = uuid.UUID(device_id)
@@ -1569,6 +1642,10 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
                         "state": device_resp.model_dump(mode="json")
                     }
                     background_tasks.add_task(dispatch_webhook, webhook_url, hook_payload)
+            else:
+                applied_response = _apply_reference_command(device, action, payload)
+                if applied_response is not None:
+                    await db.commit()
     except Exception as e:
         # Don't block the Matter API if DB sync fails
         pass
@@ -1609,6 +1686,8 @@ async def _handle_matter_command(identifier: str, action: str, payload: dict, db
         response_data = {"id": "0x01", "name": "On"}
     elif action_lower == "toggle":
         response_data = {"id": "0x02", "name": "Toggle"}
+    elif applied_response is not None:
+        response_data = applied_response
         
     # Now log it to JSON with the generated response as the payload
     try:
@@ -1831,28 +1910,23 @@ async def get_device_endpoint_details(
     db: AsyncSession = Depends(get_db),
 ):
     """Get device details matching the exact Matter JSON spec (EVSE or generic)."""
-    device_uuid = None
-    device_name_from_db = None
-    try:
-        device_uuid = uuid.UUID(device_id)
-        is_uuid = True
-    except ValueError:
-        is_uuid = False
+    device = await _find_device_by_id_or_name(device_id, db)
+    device_name_from_db = device.name if device else None
 
-    if is_uuid:
-        result = await db.execute(select(Device).where(Device.id == device_uuid))
-        device = result.scalar_one_or_none()
-        if device:
-            device_name_from_db = device.name
-            device_type = device.type.value if hasattr(device.type, 'value') else device.type
-            if device_type == "Energy_EVSE":
-                evse_data = await evse_service.get_evse_device("Energy_EVSE")
-                if evse_data:
-                    evse_data["live_state"] = device.extra_data or {}
-                    return evse_data
+    if device:
+        device_type = device.type.value if hasattr(device.type, "value") else device.type
+        if str(device_type).lower() in ("energy_evse", "energyevse"):
+            evse_data = await evse_service.get_evse_device("Energy_EVSE")
+            if evse_data:
+                evse_data["live_state"] = device.extra_data or {}
+                evse_data["id"] = str(device.id)
+                evse_data["name"] = device.name
+                return evse_data
 
-    # Fallback to file-based Matter devices
+    # Fallback to file-based Matter devices (Nebulizer and other file-only twins)
     file_path = _find_device_file(device_id)
+    if not file_path and device_name_from_db:
+        file_path = _find_device_file(device_name_from_db.replace(" ", "_"))
     if file_path:
         try:
             with open(file_path, "r") as f:
@@ -1868,7 +1942,8 @@ async def get_device_endpoint_details(
         return data
 
     if device_name_from_db:
-        return DeviceLogger._get_matter_schema(device_name_from_db, device_id)
+        schema_id = str(device.id) if device else device_id
+        return DeviceLogger._get_matter_schema(device_name_from_db, schema_id)
 
     raise HTTPException(status_code=404, detail="Device not found")
 
@@ -2516,6 +2591,7 @@ async def get_solar_user_label(
     return {"label": "", "value": ""}
 
 
+@router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/labellist")
 @router.post("/{device_id}/solar/endpoint/{endpoint}/cluster/{cluster}/setlabellist")
 @limiter.limit("60/minute")
 async def set_solar_user_label(
@@ -2802,7 +2878,6 @@ _GET_ONLY_ATTRIBUTES = {
     "labellist", "cumulativeenergyexported", "periodicenergyexported", "activepower", "voltage",
     "activecurrent", "frequency", "powerfactor", "stateofcharge", "currentsessionenergy",
     "hvbatvoltage", "hvsoc", "auxbatvoltage", "avgspeed", "gettargets",
-    "washermodes", "spinspeed", "spinspeeds", "numberofrinses", "norinse", "temperatureconfig",
 }
 
 
@@ -2835,28 +2910,61 @@ def _read_laundry_washer_attribute(attr: str, state: dict) -> Optional[dict]:
     return None
 
 
-@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster}/{attribute}")
+@router.get("/{device_id}/endpoint/{endpoint}/cluster/{cluster_path:path}")
 @limiter.limit("60/minute")
 async def get_appliance_attribute(
     request: Request,
     device_id: str,
     endpoint: int,
-    cluster: str,
-    attribute: str,
+    cluster_path: str,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """GET counterpart for read-only appliance attributes (e.g. washer modes, rinses, spin speed)."""
+    """Read a Matter attribute. Accepts cluster names or hex ids, any case, trimmed."""
     device = await _find_device_by_id_or_name(device_id, db)
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
-    attr = _normalize_attribute(attribute)
-    dtype = device.type.value if hasattr(device.type, "value") else device.type
-    data = None
-    if dtype == "washing_machine":
-        data = _read_laundry_washer_attribute(attr, device.extra_data or {})
-    if data is None:
-        raise HTTPException(status_code=404, detail=f"Attribute '{attribute}' not available for this device")
-    return data
+    resolved = resolve_matter_path(device.type, cluster_path)
+    if isinstance(resolved, ResolveError):
+        bare = read_bare_cluster(device, cluster_path)
+        if bare is not None:
+            return bare
+        raise HTTPException(status_code=resolved.status_code, detail=resolved.detail)
+    return read_resolved_attribute(device, resolved)
+
+
+@router.post("/{device_id}/endpoint/{endpoint}/configuration")
+@limiter.limit("60/minute")
+async def update_endpoint_configuration(
+    request: Request,
+    device_id: str,
+    endpoint: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Washer configuration: mode, temperature, spin speed, and rinses."""
+    device = await _find_device_by_id_or_name(device_id, db)
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    meta = dict(device.extra_data or {})
+    if "mode" in body:
+        meta["wash_mode"] = body["mode"]
+    if "temperature" in body:
+        meta["temperature_setpoint"] = body["temperature"]
+    if "spinSpeed" in body:
+        meta["spin_speed"] = body["spinSpeed"]
+    if "rinses" in body:
+        meta["number_of_rinses"] = body["rinses"]
+    device.extra_data = meta
+    device.last_updated = datetime.now(timezone.utc)
+    await db.commit()
+    return {
+        "status": "success",
+        "endpoint": endpoint,
+        "mode": meta.get("wash_mode"),
+        "temperature": meta.get("temperature_setpoint"),
+        "spinSpeed": meta.get("spin_speed"),
+        "rinses": meta.get("number_of_rinses"),
+    }
 
 
 # =============================================================================
@@ -2880,11 +2988,31 @@ async def generic_matter_post_command_path(
     except (ValueError, json.JSONDecodeError):
         payload = {}
         
-    clean_command_path = command_path.strip("/")
+    clean_command_path = command_path.strip().strip("/")
+    cluster_clean = cluster.strip()
+    matter_path = "/".join(part for part in (cluster_clean, clean_command_path) if part)
+
+    device_for_attr = await _find_device_by_id_or_name(device_id, db)
+    if device_for_attr:
+        resolved = resolve_matter_path(device_for_attr.type, matter_path)
+        if not isinstance(resolved, ResolveError):
+            if not resolved.writable:
+                raise HTTPException(
+                    status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                    detail=f"'{resolved.attribute_name}' is a read-only attribute. Use GET.",
+                    headers={"Allow": "GET"},
+                )
+            try:
+                written = apply_attribute_write(device_for_attr, resolved, payload)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            device_for_attr.last_updated = datetime.now(timezone.utc)
+            await db.commit()
+            return written
 
     # Read-only attributes are GET-only. Without this guard the catch-all accepted POST
     # for any path and returned 200, so documented-GET endpoints silently "worked" as POST.
-    last_segment = (clean_command_path.split("/")[-1] if clean_command_path else cluster).lower()
+    last_segment = (clean_command_path.split("/")[-1] if clean_command_path else cluster_clean).lower()
     if last_segment in _GET_ONLY_ATTRIBUTES or last_segment.startswith("get"):
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,

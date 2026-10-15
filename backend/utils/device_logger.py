@@ -215,7 +215,8 @@ class DeviceLogger:
                             "name": "OnOff",
                             "side": "server",
                             "mandatory": False,
-                            "attributes": [{"name": "PowerState", "type": "bool"}]
+                            "attributes": [{"name": "OnOff", "type": "bool"},
+                                           {"name": "PowerState", "type": "bool"}]
                         },
                         {
                             "clusterId": "0x0056",
@@ -272,7 +273,8 @@ class DeviceLogger:
                     "deviceType": "LaundryWasher",
                     "clusters": [
                         {"clusterId": "0x0006", "name": "OnOff", "side": "server", "mandatory": False,
-                         "attributes": [{"name": "PowerState", "type": "bool"}]},
+                         "attributes": [{"name": "OnOff", "type": "bool"},
+                                        {"name": "PowerState", "type": "bool"}]},
                         {"clusterId": "0x0051", "name": "LaundryWasherMode", "side": "server", "mandatory": True,
                          "attributes": [{"name": "SupportedModes", "type": "list"}, {"name": "CurrentMode", "type": "string"}]},
                         {"clusterId": "0x0053", "name": "LaundryWasherControls", "side": "server", "mandatory": False,
@@ -507,6 +509,10 @@ class DeviceLogger:
                             "name": "OnOff",
                             "side": "client",
                             "mandatory": True,
+                            "attributes": [
+                                {"name": "OnOff", "type": "bool"},
+                                {"name": "PowerState", "type": "bool"}
+                            ],
                             "commands": [
                                 {"commandId": "0x0000", "name": "Off"},
                                 {"commandId": "0x0001", "name": "On"},
@@ -698,7 +704,7 @@ class DeviceLogger:
                             "commands": [{"commandId": "0x0040", "name": "TriggerEffect"}]
                         },
                         {
-                            "clusterId": "0x0000",
+                            "clusterId": "0x0041",
                             "name": "UserLabel",
                             "side": "server",
                             "attributes": [{"name": "LabelList", "value": [{"label": "Name", "value": "SolarArray01"}]}]
@@ -725,6 +731,151 @@ class DeviceLogger:
                         }
                     ]
                 }]
+            }
+        }
+
+    @staticmethod
+    def _schema_plug(device_name: str, device_id: str) -> dict:
+        """OnOff plug / breaker – Matter OnOff 0x0006."""
+        return {
+            "deviceType": {
+                "id": "0x010A",
+                "name": "OnOffPlug",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "OnOffPlug",
+                    "clusters": [
+                        {"clusterId": "0x0006", "name": "OnOff", "side": "server", "mandatory": True,
+                         "attributes": [{"name": "OnOff", "type": "bool"}, {"name": "PowerState", "type": "bool"}]},
+                        {"clusterId": "0x0090", "name": "ElectricalPowerMeasurement", "side": "server",
+                         "attributes": [{"name": "ActivePower", "type": "int64"},
+                                        {"name": "Voltage", "type": "int64"},
+                                        {"name": "ActiveCurrent", "type": "int64"}]},
+                    ],
+                }],
+            }
+        }
+
+    @staticmethod
+    def _schema_refrigerator(device_name: str, device_id: str) -> dict:
+        """Refrigerator – Matter 0x0070."""
+        return {
+            "deviceType": {
+                "id": "0x0070",
+                "name": "Refrigerator",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "Refrigerator",
+                    "clusters": [
+                        {"clusterId": "0x0006", "name": "OnOff", "side": "server",
+                         "attributes": [{"name": "OnOff", "type": "bool"}]},
+                        {"clusterId": "0x0056", "name": "TemperatureControl", "side": "server",
+                         "attributes": [{"name": "TemperatureSetpoint", "type": "temperature"},
+                                        {"name": "SelectedTemperatureLevel", "type": "uint8"}]},
+                    ],
+                }],
+            }
+        }
+
+    @staticmethod
+    def _schema_microwave(device_name: str, device_id: str) -> dict:
+        return {
+            "deviceType": {
+                "id": "0x0079",
+                "name": "MicrowaveOven",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "MicrowaveOven",
+                    "clusters": [
+                        {"clusterId": "0x0006", "name": "OnOff", "side": "server",
+                         "attributes": [{"name": "OnOff", "type": "bool"}]},
+                        {"clusterId": "0x0060", "name": "OperationalState", "side": "server",
+                         "attributes": [{"name": "CurrentState", "type": "string"}]},
+                    ],
+                }],
+            }
+        }
+
+    @staticmethod
+    def _schema_meter(device_name: str, device_id: str) -> dict:
+        return {
+            "deviceType": {
+                "id": "0x0510",
+                "name": "ElectricalSensor",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "ElectricalSensor",
+                    "clusters": [
+                        {"clusterId": "0x0090", "name": "ElectricalPowerMeasurement", "side": "server",
+                         "attributes": [{"name": "ActivePower", "type": "int64"},
+                                        {"name": "Voltage", "type": "int64"},
+                                        {"name": "ActiveCurrent", "type": "int64"}]},
+                        {"clusterId": "0x0091", "name": "ElectricalEnergyMeasurement", "side": "server",
+                         "attributes": [{"name": "CumulativeEnergyImported", "type": "energy-mWh"},
+                                        {"name": "CumulativeEnergyExported", "type": "energy-mWh"}]},
+                    ],
+                }],
+            }
+        }
+
+    @staticmethod
+    def _schema_battery(device_name: str, device_id: str) -> dict:
+        return {
+            "deviceType": {
+                "id": "0x0018",
+                "name": "BatteryStorage",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "BatteryStorage",
+                    "clusters": [
+                        {"clusterId": "0x0006", "name": "OnOff", "side": "server",
+                         "attributes": [{"name": "OnOff", "type": "bool"}]},
+                        {"clusterId": "0x0090", "name": "ElectricalPowerMeasurement", "side": "server",
+                         "attributes": [{"name": "ActivePower", "type": "int64"},
+                                        {"name": "Voltage", "type": "int64"},
+                                        {"name": "StateOfCharge", "type": "percent"}]},
+                    ],
+                }],
+            }
+        }
+
+    @staticmethod
+    def _schema_ev_vehicle(device_name: str, device_id: str) -> dict:
+        return {
+            "deviceType": {
+                "id": "0x050D",
+                "name": "EvVehicle",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "EvVehicle",
+                    "clusters": [
+                        {"clusterId": "0x0099", "name": "EvVehicleData", "side": "server", "mandatory": True,
+                         "attributes": [
+                             {"name": "HVBATVoltage", "type": "float"},
+                             {"name": "HVSoC", "type": "percent"},
+                             {"name": "AuxBatVoltage", "type": "float"},
+                             {"name": "AvgSpeed", "type": "float"},
+                         ]},
+                    ],
+                }],
             }
         }
 
