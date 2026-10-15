@@ -35,6 +35,7 @@ DEVICE_TYPE_BUILDERS: dict[str, str] = {
     "BATTERY_STORAGE": "_schema_battery",
     "MCB": "_schema_plug",
     "EV_VEHICLE": "_schema_ev_vehicle",
+    "NEBULIZER": "_schema_nebulizer",
 }
 
 # Normalized alias -> normalized canonical attribute name.

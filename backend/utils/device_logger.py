@@ -17,6 +17,7 @@ class DeviceLogger:
     # Maps recognisable substrings in a device name to the correct schema
     # builder.  Order matters: first match wins.
     _DEVICE_TYPE_PATTERNS = [
+        (r"nebuli[sz]er",                         "nebulizer"),
         (r"charger|evse",                         "evse"),
         (r"garage",                               "garagedoor"),
         (r"dish\s*washer",                        "dishwasher"),
@@ -879,6 +880,56 @@ class DeviceLogger:
             }
         }
 
+    @staticmethod
+    def _schema_nebulizer(device_name: str, device_id: str) -> dict:
+        """Nebulizer – project type 0x0701, cluster NebulizerControl 0x1000."""
+        return {
+            "deviceType": {
+                "id": "0x0701",
+                "name": "Nebulizer",
+                "device_name": device_name,
+                "device_id": device_id,
+                "revision": 1,
+                "classification": {"class": "simple", "scope": "endpoint"},
+                "endpoints": [{
+                    "endpointId": 1,
+                    "deviceType": "Nebulizer",
+                    "clusters": [
+                        {"clusterId": "0x1000", "name": "NebulizerControl", "side": "server", "mandatory": True,
+                         "attributes": [
+                             {"name": "PowerState", "type": "enum"},
+                             {"name": "CurrentSessionTime", "type": "uint32"},
+                             {"name": "TotalUsageTime", "type": "uint32"},
+                             {"name": "MistLevel", "type": "enum"},
+                         ],
+                         "commands": [
+                             {"name": "StartSession"},
+                             {"name": "PauseSession"},
+                             {"name": "StopSession"},
+                             {"name": "SetMistLevel"},
+                         ]},
+                        {"clusterId": "0x1001", "name": "MedicationMonitoring", "side": "server", "mandatory": True,
+                         "attributes": [
+                             {"name": "MedicationLevel", "type": "percent"},
+                             {"name": "MedicationStatus", "type": "enum"},
+                         ]},
+                        {"clusterId": "0x1002", "name": "HealthSessionData", "side": "server", "mandatory": False,
+                         "attributes": [
+                             {"name": "LastSessionDuration", "type": "uint32"},
+                             {"name": "SessionsToday", "type": "uint8"},
+                         ]},
+                        {"clusterId": "0x1003", "name": "DeviceSafety", "side": "server", "mandatory": True,
+                         "attributes": [
+                             {"name": "TemperatureStatus", "type": "enum"},
+                             {"name": "MaskAttached", "type": "bool"},
+                             {"name": "DeviceError", "type": "enum"},
+                         ]},
+                    ],
+                }],
+            },
+            "communication_history": [],
+        }
+
     _SCHEMA_BUILDER_MAP: dict[str, str] = {
         "evse":       "_schema_evse",
         "light":      "_schema_light",
@@ -891,6 +942,7 @@ class DeviceLogger:
         "garagedoor": "_schema_garagedoor",
         "switch":     "_schema_switch",
         "solar":      "_schema_solar",
+        "nebulizer":  "_schema_nebulizer",
     }
 
     @classmethod

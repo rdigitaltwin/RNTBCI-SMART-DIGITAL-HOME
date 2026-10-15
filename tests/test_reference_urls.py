@@ -23,6 +23,7 @@ HEATER = "5dd8cce9-6033-46ff-8be1-25c1b5078dc7"
 EVSE = "b0dae2ad-3332-4f9d-a7f5-bf55032dbb4e"
 SOLAR = "1ec2d468-1d91-4a34-9d55-5049b6e41ea0"
 EV = "fb338bef-0060-4626-93a6-ef7df4ac3bcb"
+NEBULIZER = "ed3367d0-60b2-480f-acbd-cf4a2000a865"
 
 
 def _device(device_id, name, dtype, power=PowerState.OFF, meta=None):
@@ -116,6 +117,7 @@ def _client():
         _device(EVSE, "EV Charger", DeviceType.ENERGY_EVSE, meta={"StateOfCharge": 62, "ActivePower": 11000000, "Voltage": 230000, "ActiveCurrent": 16000}),
         _device(SOLAR, "Solar Panel Array", DeviceType.SOLAR_PV, meta={"LabelList": [{"label": "Name", "value": "SolarArray01"}], "ActivePower": 4690000, "CumulativeEnergyExported": 15200000}),
         _device(EV, "EV Vehicle", DeviceType.EV_VEHICLE, meta={"HVBATVoltage": 340, "HVSoC": 58, "AuxBatVoltage": 12.6, "AvgSpeed": 50}),
+        _device(NEBULIZER, "Nebulizer", DeviceType.NEBULIZER, meta={"MistLevel": "Low"}),
     ]
     app = FastAPI()
     app.state.limiter = devices_api.limiter
@@ -153,6 +155,7 @@ def test_reference_urls():
         ("GET", f"{BASE}/devices/Bedroom_AC/endpoint/1", None),
         ("POST", f"{BASE}/devices/{AC}/endpoint/1/cluster/0x0201/command", {"command": "SetTargetTemperature", "temperature": 23.0}),
         ("POST", f"{BASE}/devices/{AC}/endpoint/1/cluster/0x0201/command", {"command": "SetMode", "mode": "Heat"}),
+        ("GET", f"{BASE}/devices/{NEBULIZER}/endpoint/1", None),
         ("GET", f"{BASE}/devices/Nebulizer/endpoint/1", None),
         ("POST", f"{BASE}/devices/Nebulizer/endpoint/1/cluster/0x1000/command", {"command": "StartSession"}),
         ("POST", f"{BASE}/devices/Nebulizer/endpoint/1/cluster/0x1000/command", {"command": "PauseSession"}),

@@ -216,6 +216,34 @@
                 "targetTemperatureLevel": 3
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.634814+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.639744+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.644174+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
         }
     ]
 }

@@ -196,6 +196,36 @@
                 "DoorState": "stopped"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.662559+05:30",
+            "action": "OpenDoor",
+            "payload": {
+                "status": "success",
+                "command": "OpenDoor",
+                "DoorState": "open"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.666737+05:30",
+            "action": "CloseDoor",
+            "payload": {
+                "status": "success",
+                "command": "CloseDoor",
+                "DoorState": "closed"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.670671+05:30",
+            "action": "StopDoor",
+            "payload": {
+                "status": "success",
+                "command": "StopDoor",
+                "DoorState": "stopped"
+            },
+            "source": "matter_api"
         }
     ]
 }

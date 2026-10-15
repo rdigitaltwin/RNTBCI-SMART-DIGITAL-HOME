@@ -157,6 +157,7 @@ def _get_default_device_kw(device: Device) -> float:
         "solar_panel": -4.69,
         "energy_solar": -4.69,
         "ev_vehicle": 7.5,
+        "nebulizer": 0.04,
     }
     return defaults.get(dev_type_val, 0.15)
 

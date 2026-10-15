@@ -226,6 +226,44 @@
                 "NumberOfRinses": "Extra"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.729670+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.734463+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.743196+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.749917+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
         }
     ]
 }

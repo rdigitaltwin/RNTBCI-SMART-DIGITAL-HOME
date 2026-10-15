@@ -86,7 +86,7 @@ async def init_db() -> bool:
         if "postgresql" not in settings.database_url:
             return
         # Name (SQLAlchemy default) and value (in case an earlier hotfix added it).
-        labels = ("EV_VEHICLE", "ev_vehicle")
+        labels = ("EV_VEHICLE", "ev_vehicle", "NEBULIZER", "nebulizer")
         async with engine.connect() as conn:
             await conn.execution_options(isolation_level="AUTOCOMMIT")
             for label in labels:

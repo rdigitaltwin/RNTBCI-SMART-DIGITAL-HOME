@@ -81,6 +81,7 @@ class DeviceType(str, enum.Enum):
     BATTERY_STORAGE = "battery_storage"
     MCB = "mcb"
     EV_VEHICLE = "ev_vehicle"
+    NEBULIZER = "nebulizer"
 
 
 class DeviceStatus(str, enum.Enum):

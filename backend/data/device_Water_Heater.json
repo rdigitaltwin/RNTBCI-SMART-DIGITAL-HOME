@@ -185,6 +185,36 @@
                 "BoostState": "inactive"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.759695+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.764154+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.768276+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
         }
     ]
 }

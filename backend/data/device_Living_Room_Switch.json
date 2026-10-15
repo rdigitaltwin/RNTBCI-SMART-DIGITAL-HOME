@@ -175,6 +175,33 @@
                 "name": "Toggle"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.710394+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.715143+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.719763+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
         }
     ]
 }

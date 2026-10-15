@@ -232,6 +232,46 @@
                 "command": "SetMistLevel"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.691491+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession",
+                "session": "startsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.695581+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession",
+                "session": "pausesession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.699695+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession",
+                "session": "stopsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.703203+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel",
+                "MistLevel": "High"
+            },
+            "source": "matter_api"
         }
     ]
 }

@@ -137,6 +137,26 @@
                 "LockState": "unlocked"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.651482+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-15T13:18:18.656001+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
         }
     ]
 }
