@@ -19,6 +19,7 @@ from backend.api.v1.events import alerts_router, events_router
 from backend.api.v1.home_power import home_power_router
 from backend.api.v1.system import router as system_router
 from backend.api.v1.ml import router as ml_router
+from backend.api.v1.metering import catalog_router, device_metering_router, shunt_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -44,4 +45,9 @@ api_v1_router.include_router(location_router)
 api_v1_router.include_router(pipeline_router)
 api_v1_router.include_router(timetravel_router)
 api_v1_router.include_router(ml_router)
+
+# Additive shunt / internal-meter routes (do not replace existing device routers)
+api_v1_router.include_router(shunt_router)
+api_v1_router.include_router(device_metering_router)
+api_v1_router.include_router(catalog_router)
 

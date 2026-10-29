@@ -215,6 +215,156 @@
                 "BoostState": "inactive"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.883264+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.886375+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.889289+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.759297+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.762166+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.765102+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.379134+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.382113+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.385267+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.377509+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.380464+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.383568+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.612300+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Eco"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.615396+05:30",
+            "action": "Boost",
+            "payload": {
+                "status": "success",
+                "command": "Boost",
+                "BoostState": "active"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.618540+05:30",
+            "action": "CancelBoost",
+            "payload": {
+                "status": "success",
+                "command": "CancelBoost",
+                "BoostState": "inactive"
+            },
+            "source": "matter_api"
         }
     ]
 }

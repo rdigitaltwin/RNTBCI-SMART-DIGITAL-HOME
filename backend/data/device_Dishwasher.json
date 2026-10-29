@@ -244,6 +244,146 @@
                 "targetTemperatureLevel": 3
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.798093+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.801522+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.804717+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.670971+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.674380+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.677943+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.289127+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.292619+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.295815+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.286668+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.290159+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.294027+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.488230+05:30",
+            "action": "On",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.491864+05:30",
+            "action": "Off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.495294+05:30",
+            "action": "SetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTemperature",
+                "targetTemperatureLevel": 3
+            },
+            "source": "matter_api"
         }
     ]
 }

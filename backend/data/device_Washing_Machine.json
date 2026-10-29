@@ -264,6 +264,196 @@
                 "NumberOfRinses": "Extra"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.862285+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.865508+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.871859+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.876420+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.738475+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.741799+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.748059+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.752561+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.358029+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.361352+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.367683+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.372480+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.355430+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.359247+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.365589+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.370473+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.559561+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.572571+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.593058+05:30",
+            "action": "setspin",
+            "payload": {
+                "status": "success",
+                "command": "setspin",
+                "SpinSpeedCurrent": 3
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.604023+05:30",
+            "action": "setrinse",
+            "payload": {
+                "status": "success",
+                "command": "setrinse",
+                "NumberOfRinses": "Extra"
+            },
+            "source": "matter_api"
         }
     ]
 }

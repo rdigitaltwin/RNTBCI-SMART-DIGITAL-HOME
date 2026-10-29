@@ -712,3 +712,66 @@ class DevicePowerHistory(Base):
         Index("ix_device_power_timestamp", "timestamp"),
     )
 
+
+class DeviceMeteringCategory(Base):
+    """Category 1/2/3 mapping for shunt vs internal vs battery devices.
+
+    New table on purpose: existing `devices` columns are never altered.
+    """
+
+    __tablename__ = "device_metering_categories"
+
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    category: Mapped[int] = mapped_column(Integer, nullable=False)
+    meter_type: Mapped[str] = mapped_column(String(16), nullable=False)
+
+
+class ShuntMeter(Base):
+    """Modbus shunt meter (Category 2 device meters and the grid meter)."""
+
+    __tablename__ = "shunt_meters"
+
+    meter_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    device_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    role: Mapped[str] = mapped_column(String(16), nullable=False, default="device")
+    voltage: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    current: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    power: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    last_posted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (Index("ix_shunt_meters_device_id", "device_id"),)
+
+
+class DeviceEpm(Base):
+    """Internal electrical power measurement for Category 1 devices."""
+
+    __tablename__ = "device_epm"
+
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    voltage: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    current: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    power: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    last_posted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+

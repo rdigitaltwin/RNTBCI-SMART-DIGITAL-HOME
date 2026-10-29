@@ -462,6 +462,25 @@ RNTBCI_FINAL/
 
 ---
 
+## Shunt meter / internal EPM (additive)
+
+New routes under `/api/v1` for Modbus shunt meters and Category 1 internal
+meters. They do not replace existing `/devices/{uuid}/endpoint/...` Matter
+paths. Full reference, schema, seed, simulator, ESP32 POST, and rollback:
+[`docs/SHUNT_METER.md`](docs/SHUNT_METER.md). Postman folder:
+[`postman/Shunt_Meter_Integration.postman_collection.json`](postman/Shunt_Meter_Integration.postman_collection.json).
+
+| Method | Path |
+|---|---|
+| GET | `/api/v1/shunt` |
+| GET | `/api/v1/shunt/{meterId}` |
+| GET | `/api/v1/shunt/{meterId}/voltage` (also `/current`, `/power`) |
+| POST | `/api/v1/shunt/{meterId}/measurements` |
+| GET/POST | `/api/v1/devices/{id}/epm` |
+| GET | `/api/v1/devices/{id}/metering` |
+
+---
+
 <p align="center">
   <sub>Built with precision by RNTBCI · Nexus Core v1.0.0</sub>
 </p>

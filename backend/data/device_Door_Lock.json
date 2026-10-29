@@ -157,6 +157,106 @@
                 "LockState": "unlocked"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.809688+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.812572+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.683339+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.686487+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.301117+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.304572+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.299185+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.302511+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.500439+05:30",
+            "action": "LockDoor",
+            "payload": {
+                "status": "success",
+                "command": "LockDoor",
+                "LockState": "locked"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.503616+05:30",
+            "action": "UnlockDoor",
+            "payload": {
+                "status": "success",
+                "command": "UnlockDoor",
+                "LockState": "unlocked"
+            },
+            "source": "matter_api"
         }
     ]
 }

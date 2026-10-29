@@ -1,0 +1,194 @@
+{
+  "info": {
+    "_postman_id": "a7c3e9d1-4b82-4f06-9c1e-shunt-meter-001",
+    "name": "Shunt Meter Integration",
+    "description": "New Modbus shunt meter and internal EPM endpoints. Does not replace existing device folders.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Shunt Meter Integration",
+      "item": [
+        {
+          "name": "List shunt meters",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt"
+          }
+        },
+        {
+          "name": "SHUNT001 Dishwasher reading",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt001}}"
+          }
+        },
+        {
+          "name": "SHUNT001 voltage",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt001}}/voltage"
+          }
+        },
+        {
+          "name": "SHUNT001 current",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt001}}/current"
+          }
+        },
+        {
+          "name": "SHUNT001 power",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt001}}/power"
+          }
+        },
+        {
+          "name": "SHUNT002 Washing Machine reading",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt002}}"
+          }
+        },
+        {
+          "name": "SHUNT002 voltage",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt002}}/voltage"
+          }
+        },
+        {
+          "name": "SHUNT002 current",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt002}}/current"
+          }
+        },
+        {
+          "name": "SHUNT002 power",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{shunt002}}/power"
+          }
+        },
+        {
+          "name": "GRID001 reading",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{grid001}}"
+          }
+        },
+        {
+          "name": "GRID001 voltage",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{grid001}}/voltage"
+          }
+        },
+        {
+          "name": "GRID001 current",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{grid001}}/current"
+          }
+        },
+        {
+          "name": "GRID001 power",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/shunt/{{grid001}}/power"
+          }
+        },
+        {
+          "name": "POST SHUNT001 measurements (ESP32)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voltage\": 230.2,\n  \"current\": 7.8\n}"
+            },
+            "url": "{{base_url}}/shunt/{{shunt001}}/measurements"
+          }
+        },
+        {
+          "name": "Water Heater EPM",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/devices/{{water_heater_id}}/epm"
+          }
+        },
+        {
+          "name": "Water Heater EPM voltage",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/devices/{{water_heater_id}}/epm/voltage"
+          }
+        },
+        {
+          "name": "Water Heater EPM current",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/devices/{{water_heater_id}}/epm/current"
+          }
+        },
+        {
+          "name": "Water Heater EPM power",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/devices/{{water_heater_id}}/epm/power"
+          }
+        },
+        {
+          "name": "POST Water Heater EPM",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voltage\": 230.0,\n  \"current\": 8.7\n}"
+            },
+            "url": "{{base_url}}/devices/{{water_heater_id}}/epm"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://rntbci-project-production.up.railway.app/api/v1"
+    },
+    { "key": "access_token", "value": "" },
+    { "key": "shunt001", "value": "SHUNT001" },
+    { "key": "shunt002", "value": "SHUNT002" },
+    { "key": "grid001", "value": "GRID001" },
+    { "key": "water_heater_id", "value": "5dd8cce9-6033-46ff-8be1-25c1b5078dc7" },
+    { "key": "dishwasher_id", "value": "f75d41ea-91a3-460c-8020-9a5e15bd5354" },
+    { "key": "washing_machine_id", "value": "bf431833-e422-49ea-8235-da09454d02b4" }
+  ]
+}

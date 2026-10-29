@@ -272,6 +272,206 @@
                 "MistLevel": "High"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.836656+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession",
+                "session": "startsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.839487+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession",
+                "session": "pausesession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.841944+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession",
+                "session": "stopsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.844293+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel",
+                "MistLevel": "High"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.712007+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession",
+                "session": "startsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.714851+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession",
+                "session": "pausesession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.717427+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession",
+                "session": "stopsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.719880+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel",
+                "MistLevel": "High"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.330716+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession",
+                "session": "startsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.333352+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession",
+                "session": "pausesession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.335778+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession",
+                "session": "stopsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.338310+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel",
+                "MistLevel": "High"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.328126+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession",
+                "session": "startsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.330764+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession",
+                "session": "pausesession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.333229+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession",
+                "session": "stopsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.335816+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel",
+                "MistLevel": "High"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.529735+05:30",
+            "action": "StartSession",
+            "payload": {
+                "status": "success",
+                "command": "StartSession",
+                "session": "startsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.532535+05:30",
+            "action": "PauseSession",
+            "payload": {
+                "status": "success",
+                "command": "PauseSession",
+                "session": "pausesession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.535214+05:30",
+            "action": "StopSession",
+            "payload": {
+                "status": "success",
+                "command": "StopSession",
+                "session": "stopsession"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.537787+05:30",
+            "action": "SetMistLevel",
+            "payload": {
+                "status": "success",
+                "command": "SetMistLevel",
+                "MistLevel": "High"
+            },
+            "source": "matter_api"
         }
     ]
 }

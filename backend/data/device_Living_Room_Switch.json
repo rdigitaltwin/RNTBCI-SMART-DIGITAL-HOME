@@ -202,6 +202,141 @@
                 "name": "Toggle"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.849197+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.852297+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.855375+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.725215+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.728344+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.731591+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.343925+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.347306+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.350772+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.340874+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.344382+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.347567+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.543210+05:30",
+            "action": "off",
+            "payload": {
+                "id": "0x00",
+                "name": "Off"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.546528+05:30",
+            "action": "on",
+            "payload": {
+                "id": "0x01",
+                "name": "On"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.549758+05:30",
+            "action": "toggle",
+            "payload": {
+                "id": "0x02",
+                "name": "Toggle"
+            },
+            "source": "matter_api"
         }
     ]
 }

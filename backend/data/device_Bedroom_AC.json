@@ -194,6 +194,106 @@
                 "mode": "Heat"
             },
             "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.827103+05:30",
+            "action": "SetTargetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTargetTemperature",
+                "temperature": 23.0
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:34:45.830302+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Heat"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.701779+05:30",
+            "action": "SetTargetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTargetTemperature",
+                "temperature": 23.0
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:06.704853+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Heat"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.320487+05:30",
+            "action": "SetTargetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTargetTemperature",
+                "temperature": 23.0
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:44:21.323920+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Heat"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.317979+05:30",
+            "action": "SetTargetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTargetTemperature",
+                "temperature": 23.0
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:06.321266+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Heat"
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.519341+05:30",
+            "action": "SetTargetTemperature",
+            "payload": {
+                "status": "success",
+                "command": "SetTargetTemperature",
+                "temperature": 23.0
+            },
+            "source": "matter_api"
+        },
+        {
+            "timestamp": "2026-10-29T16:49:29.522547+05:30",
+            "action": "SetMode",
+            "payload": {
+                "status": "success",
+                "command": "SetMode",
+                "mode": "Heat"
+            },
+            "source": "matter_api"
         }
     ]
 }
