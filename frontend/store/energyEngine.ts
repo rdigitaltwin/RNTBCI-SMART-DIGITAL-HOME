@@ -15,7 +15,7 @@
  */
 
 import { create } from 'zustand';
-import { useSimulationStore } from './index';
+import { useDeviceStore, useSimulationStore } from './index';
 import {
   APPLIANCE_DATABASE,
   type ApplianceSpec,
@@ -257,6 +257,18 @@ const initialEVCharger: EVChargerInfo = {
   estimatedCompletion: null,
 };
 
+function isSolarEnergyDevice(d: { type?: string; id?: string } | null | undefined) {
+  if (!d) return false;
+  const type = String(d.type || '').toLowerCase();
+  const id = String(d.id || '').toLowerCase();
+  return type === 'solar_pv' || type === 'solar_panel' || type === 'energy_solar' || id.includes('solar');
+}
+
+function runningConsumptionWatts(device: EnergyDevice) {
+  if (device.powerState !== 'on') return 0;
+  return Math.abs(device.currentConsumption) || Math.abs(device.defaultPower) || 0;
+}
+
 // =============================================================================
 // STORE IMPLEMENTATION
 // =============================================================================
@@ -309,7 +321,7 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
         room: backendDevice.room_name || 'unknown',
         powerState: powerState,
         status: (backendDevice.status as any) || 'standby',
-        currentConsumption: powerState === 'on' ? spec.defaultPower : 0,
+        currentConsumption: powerState === 'on' ? Math.abs(spec.defaultPower) : 0,
         ratedPowerMin: spec.ratedPowerMin,
         ratedPowerMax: spec.ratedPowerMax,
         defaultPower: spec.defaultPower,
@@ -730,13 +742,19 @@ export const useEnergyStore = create<EnergyEngineState>((set, get) => ({
 
     // Current load = sum of all ON device consumption (excluding generation devices)
     const rawLoad = devices
-      .filter((d) => d.type !== 'solar_panel' && d.type !== 'energy_solar' && d.type !== 'solar_pv')
-      .reduce((sum, d) => sum + d.currentConsumption, 0);
+      .filter((d) => !isSolarEnergyDevice(d))
+      .reduce((sum, d) => sum + Math.max(0, d.currentConsumption), 0);
 
+    const solarFromDevices = devices
+      .filter((d) => isSolarEnergyDevice(d) && d.powerState === 'on')
+      .reduce((sum, d) => sum + Math.abs(d.currentConsumption || d.defaultPower || 0), 0);
+    const storeSolarKw = useDeviceStore.getState().devices
+      .filter((d) => isSolarEnergyDevice(d) && d.power_state === 'on')
+      .reduce((sum, d) => sum + Math.abs(Number(d.energy_usage_kw) || 0), 0);
     const solarGenerationKw = useSimulationStore.getState().metrics.solar_generation_kw || 0;
-    const solarGenerationWatts = solarGenerationKw * 1000;
-    
-    // Net load after solar generation (can be negative, but bounded to 0 for load metrics)
+    const solarGenerationWatts = Math.max(solarFromDevices, storeSolarKw * 1000, solarGenerationKw * 1000);
+
+    // Net load after solar generation (bounded to 0 — surplus is export, not extra load)
     const currentLoad = Math.max(0, rawLoad - solarGenerationWatts);
 
     // Peak load tracking
@@ -1038,6 +1056,7 @@ export const selectDeviceCountsByStatus = (state: EnergyEngineState) => {
 export const selectRoomConsumption = (state: EnergyEngineState) => {
   const rooms: Record<string, number> = {};
   Object.values(state.devices).forEach((d) => {
+    if (isSolarEnergyDevice(d)) return;
     rooms[d.room] = (rooms[d.room] || 0) + d.currentConsumption;
   });
   return Object.entries(rooms).map(([name, power]) => ({ name, power }));
@@ -1054,8 +1073,6 @@ export const selectLoadColor = (state: EnergyEngineState) =>
 // =============================================================================
 // BACKEND SYNC (Device Store -> Energy Engine)
 // =============================================================================
-
-import { useDeviceStore } from '@/store';
 
 let isSyncing = false;
 
@@ -1117,7 +1134,7 @@ useDeviceStore.subscribe((state, prevState) => {
         if (ed.id === device.id || ed.type === device.type || ed.applianceId === device.id) {
           deviceUpdates[ed.id] = {
             powerState: targetState,
-            currentConsumption: targetState === 'off' ? 0 : ed.currentConsumption,
+            currentConsumption: targetState === 'off' ? 0 : runningConsumptionWatts({ ...ed, powerState: 'on' }),
           };
           hasUpdates = true;
         }
@@ -1146,6 +1163,7 @@ useDeviceStore.subscribe((state, prevState) => {
       });
       return { devices: updatedDevices };
     });
+    useEnergyStore.getState()._recalculateMetrics();
   }
   
   isSyncing = false;

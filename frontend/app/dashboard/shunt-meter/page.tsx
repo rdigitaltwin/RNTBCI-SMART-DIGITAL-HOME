@@ -52,6 +52,8 @@ type MonitorRow = {
   available: boolean;
   updatedAt: string | null;
   measurements: Measurements | null;
+  loadW?: number;
+  solarOffsetW?: number;
 };
 
 function typeMeta(type: string) {
@@ -236,6 +238,11 @@ function normalizeType(type: string | undefined | null) {
   return (type || '').toLowerCase();
 }
 
+function isSolarType(type?: string | null) {
+  const t = normalizeType(type);
+  return t === 'solar_pv' || t === 'solar_panel' || t === 'energy_solar';
+}
+
 function catalogCategory(
   entry: MeteringCatalogDevice,
   linkedShunt?: ShuntReading,
@@ -394,24 +401,22 @@ function EnergyMonitoringView() {
     const seen = new Set<string>();
     const gridReading = shuntByMeter[catalog?.grid.meterId || 'GRID001'] || shuntByMeter.GRID001;
     const gridLive = resolveReading({ reading: gridReading, isGrid: true });
-    if (catalog?.grid || gridReading) {
-      list.push({
-        key: 'grid',
-        kind: 'grid',
-        deviceId: null,
-        name: 'House feed',
-        type: 'smart_meter',
-        room: 'Grid',
-        category: 2,
-        meterType: 'Shunt',
-        meterId: gridReading?.meterId || catalog?.grid.meterId || 'GRID001',
-        protocol: 'Modbus',
-        powerState: 'on',
-        available: true,
-        updatedAt: gridLive.updatedAt,
-        measurements: gridLive.measurements,
-      });
-    }
+    list.push({
+      key: 'grid',
+      kind: 'grid',
+      deviceId: null,
+      name: 'House feed',
+      type: 'smart_meter',
+      room: 'Grid',
+      category: 2,
+      meterType: 'Shunt',
+      meterId: gridReading?.meterId || catalog?.grid.meterId || 'GRID001',
+      protocol: 'Modbus',
+      powerState: 'on',
+      available: true,
+      updatedAt: gridLive.updatedAt,
+      measurements: gridLive.measurements,
+    });
 
     (catalog?.devices || []).forEach((entry) => {
       const category = catalogCategory(entry, shuntByDevice[entry.deviceId]);
@@ -475,18 +480,27 @@ function EnergyMonitoringView() {
     });
 
     const gridRow = list.find((row) => row.kind === 'grid');
-    if (gridRow && !(gridRow.measurements && gridRow.measurements.power > 0)) {
-      const childPower = list
-        .filter((row) => row.kind === 'device' && isOn(row.powerState) && row.measurements && !['solar_pv', 'solar_panel', 'energy_solar'].includes(normalizeType(row.type)))
-        .reduce((sum, row) => sum + (row.measurements?.power || 0), 0);
-      if (childPower > 0) {
-        const voltage = gridRow.measurements?.voltage || 0;
+    if (gridRow) {
+      const loadW = list
+        .filter((row) => row.kind === 'device' && isOn(row.powerState) && row.measurements && !isSolarType(row.type))
+        .reduce((sum, row) => sum + Math.max(0, row.measurements?.power || 0), 0);
+      const solarOffsetW = list
+        .filter((row) => row.kind === 'device' && isOn(row.powerState) && row.measurements && isSolarType(row.type))
+        .reduce((sum, row) => sum + Math.abs(row.measurements?.power || 0), 0);
+      const netW = Math.max(0, loadW - solarOffsetW);
+      const backendPower = gridRow.measurements?.power || 0;
+      if (loadW > 0 || solarOffsetW > 0 || !(backendPower > 0)) {
+        const voltage = gridRow.measurements?.voltage && gridRow.measurements.voltage > 0
+          ? gridRow.measurements.voltage
+          : 230;
         gridRow.measurements = {
           voltage,
-          current: voltage > 0 ? childPower / voltage : 0,
-          power: childPower,
+          current: voltage > 0 ? netW / voltage : 0,
+          power: netW,
         };
       }
+      gridRow.loadW = loadW;
+      gridRow.solarOffsetW = solarOffsetW;
     }
     return list;
   }, [catalog, devices, rooms, epms, shuntByMeter, shuntByDevice, shunts]);
@@ -771,6 +785,17 @@ function HouseFeedCard({
             </button>
           )}
         </div>
+        {(grid.solarOffsetW || 0) > 0 && (
+          <div style={{
+            padding: '0 14px 10px',
+            fontSize: '11px',
+            color: '#FCD34D',
+            fontFamily: "'JetBrains Mono', monospace",
+          }}>
+            Grid import after solar −{formatPower(grid.solarOffsetW)}
+            {grid.loadW != null ? ` · house load ${formatPower(grid.loadW)}` : ''}
+          </div>
+        )}
         {open && childrenRows.length > 0 && (
           <div style={{
             borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -1036,6 +1061,12 @@ function SelectedMeter({
                 : power
             } />
             {energy && <MetricCell icon={<Gauge size={14} color="#818CF8" />} label="Energy" value={energy} />}
+            {row.kind === 'grid' && (row.solarOffsetW || 0) > 0 && (
+              <>
+                <MetricCell icon={<Zap size={14} color="#94A3B8" />} label="House load" value={formatNumber(row.loadW, 1, 'W')} />
+                <MetricCell icon={<Zap size={14} color="#FCD34D" />} label="Solar offset" value={formatNumber(-(row.solarOffsetW || 0), 1, 'W')} />
+              </>
+            )}
           </div>
 
           {row.deviceId && (

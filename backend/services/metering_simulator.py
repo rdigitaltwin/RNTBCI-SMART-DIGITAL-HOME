@@ -67,6 +67,20 @@ def _is_running(device: Device) -> bool:
     return str(raw).lower() == PowerState.ON.value
 
 
+def _is_solar(device: Device | None) -> bool:
+    if device is None:
+        return False
+    if _device_type(device) == DeviceType.SOLAR_PV:
+        return True
+    blob = f"{device.type} {device.name} {device.id}".lower()
+    return "solar" in blob
+
+
+def net_grid_power(load_power: float, solar_power: float) -> float:
+    """GRID001 import = house consumption minus solar generation (not below 0)."""
+    return round(max(0.0, float(load_power) - max(0.0, float(solar_power))), 4)
+
+
 def _rated_watts(device: Device) -> float:
     key = _device_type(device)
     if key in RATED_W:
@@ -139,12 +153,16 @@ class MeteringSimulator:
             epms = list((await db.execute(select(DeviceEpm))).scalars().all())
 
             load_power = 0.0
+            solar_power = 0.0
             for row in epms:
                 device = devices.get(row.device_id)
                 if not device:
                     continue
                 if _recently_posted(row.last_posted_at, now):
-                    load_power += row.power or 0.0
+                    if _is_solar(device):
+                        solar_power += row.power or 0.0
+                    else:
+                        load_power += row.power or 0.0
                     continue
                 mapping = categories.get(device.id)
                 if mapping and mapping.category != 1:
@@ -152,15 +170,19 @@ class MeteringSimulator:
                 voltage, current, power = _sample(_is_running(device), _rated_watts(device))
                 row.voltage, row.current, row.power = voltage, current, power
                 row.updated_at = now
-                load_power += power
+                if _is_solar(device):
+                    solar_power += power
+                else:
+                    load_power += power
 
             for meter in shunts:
                 if meter.role == "grid":
                     continue
                 if _recently_posted(meter.last_posted_at, now):
                     device = devices.get(meter.device_id) if meter.device_id else None
-                    dtype = _device_type(device) if device else None
-                    if dtype != DeviceType.SOLAR_PV:
+                    if _is_solar(device):
+                        solar_power += meter.power or 0.0
+                    else:
                         load_power += meter.power or 0.0
                     continue
                 device = devices.get(meter.device_id) if meter.device_id else None
@@ -171,16 +193,19 @@ class MeteringSimulator:
                 voltage, current, power = _sample(_is_running(device), _rated_watts(device))
                 meter.voltage, meter.current, meter.power = voltage, current, power
                 meter.updated_at = now
-                if _device_type(device) != DeviceType.SOLAR_PV:
+                if _is_solar(device):
+                    solar_power += power
+                else:
                     load_power += power
 
             grid = next((meter for meter in shunts if meter.role == "grid"), None)
             if grid and not _recently_posted(grid.last_posted_at, now):
                 voltage = 230.0 + random.uniform(-2.0, 2.0)
-                current = (load_power / voltage) if voltage else 0.0
+                grid_power = net_grid_power(load_power, solar_power)
+                current = (grid_power / voltage) if voltage else 0.0
                 grid.voltage = round(voltage, 3)
                 grid.current = round(current, 4)
-                grid.power = round(load_power, 4)
+                grid.power = grid_power
                 grid.updated_at = now
 
             await db.commit()

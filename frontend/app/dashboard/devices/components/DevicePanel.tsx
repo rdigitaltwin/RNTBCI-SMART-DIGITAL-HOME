@@ -11,6 +11,7 @@ import api from '@/services/api';
 interface DevicePanelProps {
   device: Device | null;
   onClose: () => void;
+  openEpoch?: number;
 }
 
 // =============================================================================
@@ -282,18 +283,35 @@ function SensorMetaSection({ meta, deviceType, deviceName, liveDevice }: SensorM
   );
 }
 
-export default function DevicePanel({ device, onClose }: DevicePanelProps) {
+export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const dismissedIdRef = useRef<string | null>(null);
+  const lastEpochRef = useRef(openEpoch);
+  const [closed, setClosed] = useState(false);
+
+  if (openEpoch !== lastEpochRef.current) {
+    lastEpochRef.current = openEpoch;
+    dismissedIdRef.current = null;
+    if (closed) setClosed(false);
+  }
 
   // Subscribe to live device in Zustand store for 0ms real-time sync
   const storeDevice = useDeviceStore((s) => s.devices.find((d) => d.id === device?.id));
-  const liveDevice = storeDevice || device;
+  const liveDevice = closed || (device && dismissedIdRef.current === device.id)
+    ? null
+    : (storeDevice || device);
+
+  const closePanel = () => {
+    if (device?.id) dismissedIdRef.current = device.id;
+    setClosed(true);
+    onClose();
+  };
 
   // Close on Escape key — only while a device is actually shown
   useEffect(() => {
     if (!liveDevice) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closePanel();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -408,7 +426,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onClose();
+            closePanel();
           }}
           style={{
             position: 'fixed',
@@ -513,12 +531,12 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               aria-label="Close device panel"
               onPointerDown={(e) => {
                 e.stopPropagation();
-                onClose();
+                closePanel();
               }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onClose();
+                closePanel();
               }}
               style={{ 
                 background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer',

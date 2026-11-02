@@ -397,7 +397,9 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
       if (ed && (ed.id === device.id || ed.type === device.type || ed.applianceId === device.id)) {
         deviceUpdates[ed.id] = {
           powerState: newState,
-          currentConsumption: newState === 'off' ? 0 : ed.currentConsumption,
+          currentConsumption: newState === 'off'
+            ? 0
+            : (Math.abs(ed.currentConsumption) || Math.abs(ed.defaultPower) || 0),
         };
       }
     });
@@ -411,6 +413,7 @@ export async function toggleDeviceState(device: Device, targetNewState?: 'on' | 
         });
         return { devices: updatedDevices };
       });
+      useEnergyStore.getState()._recalculateMetrics();
     }
     if (isEvse || device.type === 'ev_vehicle') {
       const updatedDevices = useDeviceStore.getState().devices;

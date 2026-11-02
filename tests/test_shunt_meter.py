@@ -237,6 +237,15 @@ def test_category3_and_unknown_are_404():
     assert missing.status_code == 400
 
 
+def test_solar_reduces_grid_import():
+    from backend.services.metering_simulator import net_grid_power
+
+    assert net_grid_power(2500, 0) == 2500
+    assert net_grid_power(2500, 1000) == 1500
+    assert net_grid_power(2500, 4690) == 0
+    assert net_grid_power(0, 4690) == 0
+
+
 def test_metering_resolver_and_grid_formula():
     client, store = _client()
     store["devices"][uuid.UUID(DISHWASHER)].power_state = PowerState.ON

@@ -7,7 +7,8 @@
  * Each card shows real-time power, status, and device-specific metadata.
  */
 
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback, Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Search, Filter, Power, Zap, Thermometer, Wifi, Lock,
   Eye, ChevronDown, ToggleLeft, ToggleRight, RefreshCw, Plus, X,
@@ -18,6 +19,12 @@ import { useDeviceStore, type Device } from '@/store';
 import DeviceCard from './components/DeviceCard';
 import DevicePanel from './components/DevicePanel';
 import { DEVICE_TYPE_CONFIG, isDeviceConnected } from './constants';
+import {
+  allowDevicePanel,
+  canAutoOpenDevicePanel,
+  canManuallyOpenDevicePanel,
+  dismissDevicePanel,
+} from './panelGate';
 // =============================================================================
 // DEVICE ONBOARDING MODAL
 // =============================================================================
@@ -178,40 +185,53 @@ function DeviceOnboardingModal({ isOpen, onClose, onAdd }: { isOpen: boolean; on
 // =============================================================================
 
 export default function DevicesPage() {
+  return (
+    <Suspense fallback={<div style={{ color: '#64748B', fontSize: '13px' }}>Loading devices…</div>}>
+      <DevicesView />
+    </Suspense>
+  );
+}
+
+function DevicesView() {
   const devices = useDeviceStore((s) => s.devices);
   const addDevice = useDeviceStore((s) => s.addDevice);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  // After the user closes the panel, ignore leftover ?device= so store refreshes
-  // (WebSocket / energy ticks) cannot immediately reopen it.
-  const ignoreDeviceQuery = useRef(false);
-  const closedAt = useRef(0);
+  const [openEpoch, setOpenEpoch] = useState(0);
+  const [clickShield, setClickShield] = useState(false);
+  const selectedIdRef = useRef<string | null>(null);
+  const appliedQueryRef = useRef<string | null>(null);
+  selectedIdRef.current = selectedDevice?.id ?? null;
 
   const clearDeviceQuery = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has('device')) return;
-    url.searchParams.delete('device');
-    const qs = url.searchParams.toString();
-    window.history.replaceState(null, '', `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`);
-  }, []);
+    if (!searchParams.get('device')) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('device');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   const handleClosePanel = useCallback(() => {
-    ignoreDeviceQuery.current = true;
-    closedAt.current = Date.now();
+    dismissDevicePanel(selectedIdRef.current);
+    setClickShield(true);
     setSelectedDevice(null);
     clearDeviceQuery();
+    window.setTimeout(() => setClickShield(false), 1200);
   }, [clearDeviceQuery]);
 
   const handleOpenDevice = useCallback((device: Device) => {
-    // Ignore the leftover click that lands on a card after the panel unmounts.
-    if (Date.now() - closedAt.current < 400) return;
-    ignoreDeviceQuery.current = false;
+    if (!canManuallyOpenDevicePanel()) return;
+    allowDevicePanel(device.id);
+    appliedQueryRef.current = device.id;
     setSelectedDevice(device);
+    setOpenEpoch((n) => n + 1);
   }, []);
 
   const fetchDevices = async () => {
@@ -247,14 +267,18 @@ export default function DevicesPage() {
   useEffect(() => { fetchDevices(); }, []);
 
   useEffect(() => {
-    if (ignoreDeviceQuery.current) return;
-    const requested = new URLSearchParams(window.location.search).get('device');
-    if (!requested) return;
-    const match = devices.find((d) => d.id === requested);
-    if (match) {
-      setSelectedDevice((current) => (current?.id === match.id ? current : match));
+    const requested = searchParams.get('device');
+    if (!requested) {
+      appliedQueryRef.current = null;
+      return;
     }
-  }, [devices]);
+    if (appliedQueryRef.current === requested) return;
+    if (!canAutoOpenDevicePanel(requested)) return;
+    const match = devices.find((d) => d.id === requested);
+    if (!match) return;
+    appliedQueryRef.current = requested;
+    setSelectedDevice(match);
+  }, [devices, searchParams]);
 
   const connectedCount = devices.filter((d) => isDeviceConnected(d)).length;
   const disconnectedCount = devices.length - connectedCount;
@@ -382,6 +406,7 @@ export default function DevicesPage() {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         gap: '16px',
+        pointerEvents: selectedDevice || clickShield ? 'none' : 'auto',
       }}>
         {displayDevices.map((device) => (
           <DeviceCard key={device.id} device={device} onClick={() => handleOpenDevice(device)} />
@@ -395,9 +420,19 @@ export default function DevicesPage() {
       />
 
       <DevicePanel 
-        device={selectedDevice} 
+        device={selectedDevice}
+        openEpoch={openEpoch}
         onClose={handleClosePanel} 
       />
+
+      {clickShield && (
+        <div
+          aria-hidden
+          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1100 }}
+        />
+      )}
     </div>
   );
 }
