@@ -292,23 +292,26 @@ function EnergyMonitoringView() {
 
   const fetchMetering = useCallback(async () => {
     try {
-      const [catalogRes, shuntRes] = await Promise.all([
+      const [catalogOutcome, shuntOutcome] = await Promise.allSettled([
         api.getMeteringCatalog(),
         api.getShuntMeters(),
       ]);
-      setCatalog(catalogRes);
-      let shuntList = normalizeShuntList(shuntRes);
+      const catalogRes = catalogOutcome.status === 'fulfilled' ? catalogOutcome.value : null;
+      let shuntList = shuntOutcome.status === 'fulfilled'
+        ? normalizeShuntList(shuntOutcome.value)
+        : [];
+      if (catalogRes) setCatalog(catalogRes);
       if (!shuntList.some((s) => s.role === 'grid' || s.meterId === 'GRID001')) {
         try {
-          const grid = normalizeShunt(await api.getShuntMeter(catalogRes.grid?.meterId || 'GRID001'));
+          const grid = normalizeShunt(await api.getShuntMeter(catalogRes?.grid?.meterId || 'GRID001'));
           if (grid) shuntList = [...shuntList, grid];
         } catch { /* GRID001 may not be seeded yet */ }
       }
-      setShunts(shuntList);
+      if (shuntList.length > 0) setShunts(shuntList);
       const shuntByDeviceId: Record<string, ShuntReading> = {};
       shuntList.forEach((s) => { if (s.deviceId) shuntByDeviceId[s.deviceId] = s; });
 
-      const catalogCat1 = (catalogRes.devices || []).filter(
+      const catalogCat1 = (catalogRes?.devices || []).filter(
         (d) => catalogCategory(d, shuntByDeviceId[d.deviceId]) === 1
       );
       const storeCat1 = useDeviceStore.getState().devices.filter(
@@ -334,9 +337,14 @@ function EnergyMonitoringView() {
         const normalized = normalizeEpm(raw, id);
         if (normalized) next[id] = normalized;
       });
-      setEpms(next);
-      setError(null);
-      setSyncedAt(new Date());
+      if (Object.keys(next).length > 0) setEpms((prev) => ({ ...prev, ...next }));
+      if (catalogRes || shuntList.length > 0) {
+        setError(null);
+        setSyncedAt(new Date());
+      } else {
+        const failed = catalogOutcome.status === 'rejected' ? catalogOutcome.reason : shuntOutcome.status === 'rejected' ? shuntOutcome.reason : null;
+        setError(failed instanceof Error ? failed.message : 'Unable to reach metering');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to reach metering');
     } finally {
@@ -345,13 +353,13 @@ function EnergyMonitoringView() {
   }, []);
 
   const powerSignature = devices
-    .map((d) => `${d.id}:${d.power_state}:${d.energy_usage_kw}`)
+    .map((d) => `${d.id}:${d.power_state}`)
     .sort()
     .join('|');
 
   useEffect(() => {
     fetchMetering();
-    const interval = setInterval(fetchMetering, 5000);
+    const interval = setInterval(fetchMetering, 10_000);
     return () => clearInterval(interval);
   }, [fetchMetering, powerSignature]);
 
@@ -623,7 +631,7 @@ function EnergyMonitoringView() {
         </div>
       </header>
 
-      {error && (
+      {error && !catalog && shunts.length === 0 && (
         <div style={{
           background: 'rgba(255, 77, 109, 0.08)',
           border: '1px solid rgba(255, 77, 109, 0.28)',
