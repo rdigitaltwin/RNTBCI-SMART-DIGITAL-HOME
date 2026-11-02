@@ -26,6 +26,15 @@ import { DEVICE_TYPE_CONFIG } from '../devices/constants';
 
 const LIVE_WINDOW_MS = 30_000;
 
+/** Category 2 — each has its own Modbus shunt, all feeding the house meter. */
+const SHUNT_DEVICE_TYPES = new Set([
+  'dishwasher', 'washing_machine', 'solar_pv', 'nebulizer', 'energy_evse',
+]);
+/** Category 1 — internal EPM, wired straight to the house feed / main grid. */
+const GRID_DIRECT_TYPES = new Set([
+  'smart_switch', 'smart_light', 'heat_pump', 'water_heater', 'hvac', 'air_conditioner',
+]);
+
 type HistoryRange = 'live' | '1h' | '24h' | '7d';
 
 type MonitorRow = {
@@ -100,6 +109,26 @@ function roomFor(device: Device | undefined, rooms: { id: string; name: string }
   return rooms.find((r) => r.id === device.room_id)?.name || '—';
 }
 
+function normalizeType(type: string | undefined | null) {
+  return (type || '').toLowerCase();
+}
+
+function catalogCategory(
+  entry: MeteringCatalogDevice,
+  linkedShunt?: ShuntReading,
+): 1 | 2 | 3 | null {
+  if (entry.category === 1 || entry.category === 2 || entry.category === 3) {
+    return entry.category;
+  }
+  if (entry.meterType === 'Internal') return 1;
+  if (entry.meterType === 'Shunt' || entry.meterId || linkedShunt) return 2;
+  if (entry.meterType === 'None') return 3;
+  const type = normalizeType(entry.type);
+  if (GRID_DIRECT_TYPES.has(type)) return 1;
+  if (SHUNT_DEVICE_TYPES.has(type)) return 2;
+  return null;
+}
+
 export default function EnergyMonitoringPage() {
   return (
     <Suspense fallback={<div style={{ color: '#64748B', fontSize: '13px' }}>Loading energy monitoring…</div>}>
@@ -129,6 +158,7 @@ function EnergyMonitoringView() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [gridOpen, setGridOpen] = useState(true);
 
   const fetchMetering = useCallback(async () => {
     try {
@@ -137,11 +167,23 @@ function EnergyMonitoringView() {
         api.getShuntMeters(),
       ]);
       setCatalog(catalogRes);
-      setShunts(Array.isArray(shuntRes) ? shuntRes : []);
+      const shuntList = Array.isArray(shuntRes) ? shuntRes : [];
+      setShunts(shuntList);
+      const shuntByDeviceId: Record<string, ShuntReading> = {};
+      shuntList.forEach((s) => { if (s.deviceId) shuntByDeviceId[s.deviceId] = s; });
 
-      const cat1 = (catalogRes.devices || []).filter((d) => d.category === 1);
+      const catalogCat1 = (catalogRes.devices || []).filter(
+        (d) => catalogCategory(d, shuntByDeviceId[d.deviceId]) === 1
+      );
+      const storeCat1 = useDeviceStore.getState().devices.filter(
+        (d) => GRID_DIRECT_TYPES.has(normalizeType(d.type))
+      );
+      const cat1Ids = Array.from(new Set([
+        ...catalogCat1.map((d) => d.deviceId),
+        ...storeCat1.map((d) => d.id),
+      ]));
       const epmEntries = await Promise.allSettled(
-        cat1.map(async (d) => [d.deviceId, await api.getDeviceEpm(d.deviceId)] as const)
+        cat1Ids.map(async (id) => [id, await api.getDeviceEpm(id)] as const)
       );
       const next: Record<string, EpmReading> = {};
       epmEntries.forEach((entry) => {
@@ -180,8 +222,34 @@ function EnergyMonitoringView() {
     return map;
   }, [shunts]);
 
+  const rowFromCatalog = (entry: MeteringCatalogDevice, category: 1 | 2): MonitorRow => {
+    const storeDevice = devices.find((d) => d.id === entry.deviceId);
+    const reading = category === 1
+      ? epms[entry.deviceId]
+      : ((entry.meterId && shuntByMeter[entry.meterId]) || shuntByDevice[entry.deviceId]);
+    const live = liveMeasurements(reading);
+    const available = reading ? live.available : entry.available;
+    return {
+      key: entry.deviceId,
+      kind: 'device',
+      deviceId: entry.deviceId,
+      name: storeDevice?.name || entry.name,
+      type: storeDevice?.type || entry.type,
+      room: roomFor(storeDevice, rooms),
+      category,
+      meterType: entry.meterType || (category === 1 ? 'Internal' : 'Shunt'),
+      meterId: entry.meterId || (category === 1 ? 'Internal EPM' : reading && 'meterId' in reading ? reading.meterId : '—'),
+      protocol: category === 1 ? 'Internal EPM' : 'Modbus',
+      powerState: storeDevice?.power_state || entry.devicePowerState,
+      available,
+      updatedAt: live.updatedAt,
+      measurements: available ? live.measurements : null,
+    };
+  };
+
   const rows: MonitorRow[] = useMemo(() => {
     const list: MonitorRow[] = [];
+    const seen = new Set<string>();
     const gridReading = shuntByMeter[catalog?.grid.meterId || 'GRID001'] || shuntByMeter.GRID001;
     const gridLive = liveMeasurements(gridReading);
     if (catalog?.grid || gridReading) {
@@ -203,34 +271,64 @@ function EnergyMonitoringView() {
       });
     }
 
-    (catalog?.devices || [])
-      .filter((d) => d.category === 1 || d.category === 2)
-      .forEach((entry: MeteringCatalogDevice) => {
-        const storeDevice = devices.find((d) => d.id === entry.deviceId);
-        const reading = entry.category === 1
-          ? epms[entry.deviceId]
-          : ((entry.meterId && shuntByMeter[entry.meterId]) || shuntByDevice[entry.deviceId]);
-        const live = liveMeasurements(reading);
-        const available = reading ? live.available : entry.available;
-        list.push({
-          key: entry.deviceId,
-          kind: 'device',
-          deviceId: entry.deviceId,
-          name: storeDevice?.name || entry.name,
-          type: storeDevice?.type || entry.type,
-          room: roomFor(storeDevice, rooms),
-          category: entry.category,
-          meterType: entry.meterType || (entry.category === 1 ? 'Internal' : 'Shunt'),
-          meterId: entry.meterId || (entry.category === 1 ? 'Internal EPM' : '—'),
-          protocol: entry.category === 1 ? 'Internal EPM' : 'Modbus',
-          powerState: storeDevice?.power_state || entry.devicePowerState,
-          available,
-          updatedAt: live.updatedAt,
-          measurements: available ? live.measurements : null,
-        });
+    (catalog?.devices || []).forEach((entry) => {
+      const category = catalogCategory(entry, shuntByDevice[entry.deviceId]);
+      if (category !== 1 && category !== 2) return;
+      seen.add(entry.deviceId);
+      list.push(rowFromCatalog(entry, category));
+    });
+
+    shunts.forEach((shunt) => {
+      if (shunt.role === 'grid' || !shunt.deviceId || seen.has(shunt.deviceId)) return;
+      const storeDevice = devices.find((d) => d.id === shunt.deviceId);
+      const live = liveMeasurements(shunt);
+      seen.add(shunt.deviceId);
+      list.push({
+        key: shunt.deviceId,
+        kind: 'device',
+        deviceId: shunt.deviceId,
+        name: storeDevice?.name || shunt.deviceName || shunt.meterId,
+        type: storeDevice?.type || 'smart_meter',
+        room: roomFor(storeDevice, rooms),
+        category: 2,
+        meterType: 'Shunt',
+        meterId: shunt.meterId,
+        protocol: 'Modbus',
+        powerState: storeDevice?.power_state || shunt.devicePowerState || null,
+        available: live.available,
+        updatedAt: live.updatedAt,
+        measurements: live.measurements,
       });
+    });
+
+    devices.forEach((device) => {
+      if (seen.has(device.id)) return;
+      const type = normalizeType(device.type);
+      const category = SHUNT_DEVICE_TYPES.has(type) ? 2 : GRID_DIRECT_TYPES.has(type) ? 1 : null;
+      if (!category) return;
+      const shunt = shuntByDevice[device.id];
+      const reading = category === 1 ? epms[device.id] : shunt;
+      const live = liveMeasurements(reading);
+      seen.add(device.id);
+      list.push({
+        key: device.id,
+        kind: 'device',
+        deviceId: device.id,
+        name: device.name,
+        type: device.type,
+        room: roomFor(device, rooms),
+        category,
+        meterType: category === 1 ? 'Internal' : 'Shunt',
+        meterId: category === 1 ? 'Internal EPM' : (shunt?.meterId || '—'),
+        protocol: category === 1 ? 'Internal EPM' : 'Modbus',
+        powerState: device.power_state,
+        available: live.available,
+        updatedAt: live.updatedAt,
+        measurements: live.measurements,
+      });
+    });
     return list;
-  }, [catalog, devices, rooms, epms, shuntByMeter, shuntByDevice]);
+  }, [catalog, devices, rooms, epms, shuntByMeter, shuntByDevice, shunts]);
 
   useEffect(() => {
     const requested = searchParams.get('device');
@@ -376,14 +474,22 @@ function EnergyMonitoringView() {
           {loading && rows.length === 0 && (
             <div style={{ color: '#64748B', fontSize: '13px' }}>Loading meters…</div>
           )}
-          {grouped.grid.length > 0 && (
-            <DeviceGroup title="Grid" rows={grouped.grid} selectedKey={selectedKey} onSelect={setSelectedKey} />
+          {grouped.grid.length > 0 && grouped.grid.map((grid) => (
+            <HouseFeedCard
+              key={grid.key}
+              grid={grid}
+              childrenRows={grouped.cat1}
+              open={gridOpen}
+              onToggle={() => setGridOpen((v) => !v)}
+              selectedKey={selectedKey}
+              onSelect={setSelectedKey}
+            />
+          ))}
+          {grouped.grid.length === 0 && grouped.cat1.length > 0 && (
+            <DeviceGroup title="Direct to grid" rows={grouped.cat1} selectedKey={selectedKey} onSelect={setSelectedKey} />
           )}
           {grouped.cat2.length > 0 && (
-            <DeviceGroup title="Modbus shunt" rows={grouped.cat2} selectedKey={selectedKey} onSelect={setSelectedKey} />
-          )}
-          {grouped.cat1.length > 0 && (
-            <DeviceGroup title="Internal EPM" rows={grouped.cat1} selectedKey={selectedKey} onSelect={setSelectedKey} />
+            <DeviceGroup title="Shunt meters" rows={grouped.cat2} selectedKey={selectedKey} onSelect={setSelectedKey} />
           )}
           {!loading && rows.length === 0 && !error && (
             <div style={{ fontSize: '13px', color: '#64748B' }}>No metered devices are configured.</div>
@@ -446,6 +552,91 @@ function EnergyMonitoringView() {
   );
 }
 
+function HouseFeedCard({
+  grid,
+  childrenRows,
+  open,
+  onToggle,
+  selectedKey,
+  onSelect,
+}: {
+  grid: MonitorRow;
+  childrenRows: MonitorRow[];
+  open: boolean;
+  onToggle: () => void;
+  selectedKey: string | null;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#475569' }}>
+        House feed
+      </div>
+      <div
+        style={{
+          borderRadius: '14px',
+          background: selectedKey === grid.key ? 'rgba(0, 229, 255, 0.08)' : 'rgba(15, 23, 42, 0.55)',
+          border: `1px solid ${selectedKey === grid.key ? 'rgba(0, 229, 255, 0.35)' : 'rgba(255,255,255,0.06)'}`,
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'stretch' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <DeviceRowCard
+              row={grid}
+              selected={false}
+              onSelect={() => onSelect(grid.key)}
+              embedded
+            />
+          </div>
+          {childrenRows.length > 0 && (
+            <button
+              aria-label={open ? 'Hide grid-connected devices' : 'Show grid-connected devices'}
+              onClick={onToggle}
+              style={{
+                width: '40px',
+                flexShrink: 0,
+                background: 'transparent',
+                border: 'none',
+                borderLeft: '1px solid rgba(255,255,255,0.06)',
+                color: '#00E5FF',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+          )}
+        </div>
+        {open && childrenRows.length > 0 && (
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            padding: '8px 8px 10px 18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}>
+            <div style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569', padding: '4px 6px 2px' }}>
+              Direct to grid
+            </div>
+            {childrenRows.map((row) => (
+              <DeviceRowCard
+                key={row.key}
+                row={row}
+                selected={selectedKey === row.key}
+                onSelect={() => onSelect(row.key)}
+                nested
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DeviceGroup({
   title,
   rows,
@@ -476,10 +667,14 @@ function DeviceRowCard({
   row,
   selected,
   onSelect,
+  nested = false,
+  embedded = false,
 }: {
   row: MonitorRow;
   selected: boolean;
   onSelect: () => void;
+  nested?: boolean;
+  embedded?: boolean;
 }) {
   const meta = typeMeta(row.type);
   const power = row.available ? formatPower(row.measurements?.power) : null;
@@ -490,14 +685,18 @@ function DeviceRowCard({
       style={{
         textAlign: 'left',
         width: '100%',
-        padding: '14px',
-        borderRadius: '14px',
-        background: selected ? 'rgba(0, 229, 255, 0.08)' : 'rgba(15, 23, 42, 0.55)',
-        border: `1px solid ${selected ? 'rgba(0, 229, 255, 0.35)' : 'rgba(255,255,255,0.06)'}`,
+        padding: nested ? '10px 12px' : '14px',
+        borderRadius: embedded ? 0 : (nested ? '10px' : '14px'),
+        background: embedded
+          ? 'transparent'
+          : selected ? 'rgba(0, 229, 255, 0.08)' : (nested ? 'rgba(11, 17, 32, 0.7)' : 'rgba(15, 23, 42, 0.55)'),
+        border: embedded
+          ? 'none'
+          : `1px solid ${selected ? 'rgba(0, 229, 255, 0.35)' : 'rgba(255,255,255,0.06)'}`,
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
+        gap: nested ? '6px' : '8px',
         transition: 'border-color 0.2s ease, background 0.2s ease',
       }}
     >
@@ -515,9 +714,9 @@ function DeviceRowCard({
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#00E5FF', fontWeight: 700 }}>
             {power}
           </div>
-        ) : (
-          <div style={{ fontSize: '11px', color: '#64748B' }}>{row.available ? '—' : 'OFF'}</div>
-        )}
+        ) : row.kind === 'grid' ? (
+          <div style={{ fontSize: '11px', color: '#64748B' }}>—</div>
+        ) : null}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
         <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#94A3B8' }}>{row.meterId}</span>
@@ -637,10 +836,12 @@ function SelectedMeter({
         }}>
           <div style={{ fontSize: '16px', fontWeight: 650, color: '#F8FAFC' }}>Shunt Meter Unavailable</div>
           <div style={{ fontSize: '13px', color: '#94A3B8', marginTop: '8px', lineHeight: 1.5 }}>
-            Turn on the associated device to resume energy monitoring.
+            {row.powerState === 'on'
+              ? 'Meter readings are not available for this device yet.'
+              : 'Turn on the associated device to resume energy monitoring.'}
           </div>
           <div style={{ marginTop: '10px', fontSize: '12px', color: '#64748B' }}>
-            {row.name} is OFF
+            {row.name} is {row.powerState === 'on' ? 'ON' : 'OFF'}
           </div>
           {onOpenControls && (
             <button
