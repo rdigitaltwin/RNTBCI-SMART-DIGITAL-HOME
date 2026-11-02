@@ -21,7 +21,7 @@ import api, {
   type MeteringCatalogDevice,
   type ShuntReading,
 } from '@/services/api';
-import { useDeviceStore, useEventStore, useWSStore, type Device } from '@/store';
+import { DEFAULT_DEVICE_KW, useDeviceStore, useEventStore, useWSStore, type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG } from '../devices/constants';
 
 const LIVE_WINDOW_MS = 30_000;
@@ -66,19 +66,142 @@ function isFresh(updatedAt: string | null, available: boolean) {
   return Date.now() - ts <= LIVE_WINDOW_MS;
 }
 
-function liveMeasurements(data: ShuntReading | EpmReading | null | undefined): {
-  measurements: Measurements | null;
-  updatedAt: string | null;
-  available: boolean;
-} {
-  if (!data) return { measurements: null, updatedAt: null, available: false };
-  if (!data.available) {
-    return { measurements: null, updatedAt: data.updatedAt, available: false };
+function asMeasurements(raw: unknown): Measurements | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const obj = raw as Record<string, unknown>;
+  const nested = obj.measurements || obj.epm;
+  const src = nested && typeof nested === 'object' ? nested as Record<string, unknown> : obj;
+  const voltage = Number(src.voltage);
+  const current = Number(src.current);
+  const power = Number(src.power);
+  if (![voltage, current, power].some((n) => Number.isFinite(n))) return null;
+  return {
+    voltage: Number.isFinite(voltage) ? voltage : 0,
+    current: Number.isFinite(current) ? current : 0,
+    power: Number.isFinite(power) ? power : 0,
+  };
+}
+
+function normalizeShunt(raw: unknown): ShuntReading | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const obj = raw as Record<string, unknown>;
+  const meterId = String(obj.meterId || obj.meter_id || '');
+  if (!meterId) return null;
+  const deviceId = (obj.deviceId ?? obj.device_id) as string | null;
+  return {
+    meterId,
+    meterType: 'Shunt',
+    deviceId: deviceId ? String(deviceId) : null,
+    deviceName: (obj.deviceName ?? obj.device_name) as string | undefined,
+    role: String(obj.role || 'device'),
+    devicePowerState: (obj.devicePowerState ?? obj.device_power_state) as string | undefined,
+    available: obj.available !== false,
+    measurements: asMeasurements(obj) || { voltage: 0, current: 0, power: 0 },
+    updatedAt: (obj.updatedAt ?? obj.updated_at ?? null) as string | null,
+  };
+}
+
+function normalizeEpm(raw: unknown, fallbackId: string): EpmReading | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const obj = raw as Record<string, unknown>;
+  const measurements = asMeasurements(obj);
+  if (!measurements) return null;
+  return {
+    deviceId: String(obj.deviceId || obj.device_id || fallbackId),
+    deviceName: obj.deviceName as string | undefined,
+    meterType: 'Internal',
+    devicePowerState: (obj.devicePowerState ?? obj.device_power_state) as string | undefined,
+    available: obj.available !== false,
+    epm: measurements,
+    updatedAt: (obj.updatedAt ?? obj.updated_at ?? null) as string | null,
+  };
+}
+
+function normalizeShuntList(res: unknown): ShuntReading[] {
+  if (Array.isArray(res)) return res.map(normalizeShunt).filter((s): s is ShuntReading => !!s);
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const nested = obj.meters || obj.items || obj.shunts || obj.data;
+    if (Array.isArray(nested)) return nested.map(normalizeShunt).filter((s): s is ShuntReading => !!s);
+    const single = normalizeShunt(res);
+    if (single) return [single];
   }
-  const measurements = 'measurements' in data && data.measurements
-    ? data.measurements
-    : ('epm' in data && data.epm ? data.epm : null);
-  return { measurements, updatedAt: data.updatedAt, available: true };
+  return [];
+}
+
+function meterPayload(data: ShuntReading | EpmReading | null | undefined): Measurements | null {
+  if (!data) return null;
+  if ('measurements' in data && data.measurements) return data.measurements;
+  if ('epm' in data && data.epm) return data.epm;
+  return asMeasurements(data);
+}
+
+function isOn(powerState?: string | null) {
+  return String(powerState || '').trim().toLowerCase() === 'on';
+}
+
+function findStoreDevice(devices: Device[], id?: string | null, name?: string | null) {
+  if (id) {
+    const byId = devices.find((d) => d.id === id);
+    if (byId) return byId;
+  }
+  if (name) {
+    const n = name.trim().toLowerCase();
+    return devices.find((d) => d.name.trim().toLowerCase() === n);
+  }
+}
+
+function fromDeviceTelemetry(device: Device | undefined, base: Measurements | null): Measurements | null {
+  if (!device || !isOn(device.power_state)) return base;
+  const typeKw = DEFAULT_DEVICE_KW[normalizeType(device.type)];
+  const usageKw = Math.abs(Number(device.energy_usage_kw) || 0);
+  const powerW = (usageKw > 0 ? usageKw : typeKw || 0) * 1000;
+  const meta = (device.metadata || {}) as Record<string, unknown>;
+  let voltage = base?.voltage && base.voltage > 0 ? base.voltage : undefined;
+  const rawV = Number(meta.Voltage ?? meta.voltage);
+  if (Number.isFinite(rawV) && rawV > 0) {
+    voltage = rawV > 1000 ? rawV / 1000 : rawV;
+  }
+  if (voltage == null) voltage = 230;
+  let current = base?.current && base.current > 0 ? base.current : undefined;
+  if ((!current || current === 0) && voltage > 0 && powerW > 0) {
+    current = powerW / voltage;
+  }
+  return {
+    voltage,
+    current: current ?? 0,
+    power: powerW || base?.power || 0,
+  };
+}
+
+function resolveReading(opts: {
+  reading?: ShuntReading | EpmReading | null;
+  device?: Device;
+  catalogAvailable?: boolean;
+  catalogState?: string | null;
+  isGrid?: boolean;
+}) {
+  const meter = meterPayload(opts.reading);
+  const on = opts.isGrid
+    || isOn(opts.device?.power_state)
+    || isOn(opts.catalogState)
+    || opts.catalogAvailable === true;
+  if (opts.isGrid) {
+    return {
+      available: true,
+      measurements: meter,
+      updatedAt: opts.reading?.updatedAt || null,
+    };
+  }
+  if (!on) {
+    return { available: false, measurements: null, updatedAt: opts.reading?.updatedAt || null };
+  }
+  const measurements = fromDeviceTelemetry(opts.device, meter);
+  return {
+    available: true,
+    measurements,
+    updatedAt: opts.reading?.updatedAt || opts.device?.last_updated || null,
+  };
 }
 
 function formatPower(watts: number | null | undefined) {
@@ -167,7 +290,13 @@ function EnergyMonitoringView() {
         api.getShuntMeters(),
       ]);
       setCatalog(catalogRes);
-      const shuntList = Array.isArray(shuntRes) ? shuntRes : [];
+      let shuntList = normalizeShuntList(shuntRes);
+      if (!shuntList.some((s) => s.role === 'grid' || s.meterId === 'GRID001')) {
+        try {
+          const grid = normalizeShunt(await api.getShuntMeter(catalogRes.grid?.meterId || 'GRID001'));
+          if (grid) shuntList = [...shuntList, grid];
+        } catch { /* GRID001 may not be seeded yet */ }
+      }
       setShunts(shuntList);
       const shuntByDeviceId: Record<string, ShuntReading> = {};
       shuntList.forEach((s) => { if (s.deviceId) shuntByDeviceId[s.deviceId] = s; });
@@ -183,11 +312,20 @@ function EnergyMonitoringView() {
         ...storeCat1.map((d) => d.id),
       ]));
       const epmEntries = await Promise.allSettled(
-        cat1Ids.map(async (id) => [id, await api.getDeviceEpm(id)] as const)
+        cat1Ids.map(async (id) => {
+          try {
+            return [id, await api.getDeviceEpm(id)] as const;
+          } catch {
+            return [id, await api.getDeviceMetering(id)] as const;
+          }
+        })
       );
       const next: Record<string, EpmReading> = {};
       epmEntries.forEach((entry) => {
-        if (entry.status === 'fulfilled') next[entry.value[0]] = entry.value[1];
+        if (entry.status !== 'fulfilled') return;
+        const [id, raw] = entry.value;
+        const normalized = normalizeEpm(raw, id);
+        if (normalized) next[id] = normalized;
       });
       setEpms(next);
       setError(null);
@@ -200,7 +338,7 @@ function EnergyMonitoringView() {
   }, []);
 
   const powerSignature = devices
-    .map((d) => `${d.id}:${d.power_state}`)
+    .map((d) => `${d.id}:${d.power_state}:${d.energy_usage_kw}`)
     .sort()
     .join('|');
 
@@ -223,12 +361,16 @@ function EnergyMonitoringView() {
   }, [shunts]);
 
   const rowFromCatalog = (entry: MeteringCatalogDevice, category: 1 | 2): MonitorRow => {
-    const storeDevice = devices.find((d) => d.id === entry.deviceId);
+    const storeDevice = findStoreDevice(devices, entry.deviceId, entry.name);
     const reading = category === 1
       ? epms[entry.deviceId]
       : ((entry.meterId && shuntByMeter[entry.meterId]) || shuntByDevice[entry.deviceId]);
-    const live = liveMeasurements(reading);
-    const available = reading ? live.available : entry.available;
+    const live = resolveReading({
+      reading,
+      device: storeDevice,
+      catalogAvailable: entry.available,
+      catalogState: entry.devicePowerState,
+    });
     return {
       key: entry.deviceId,
       kind: 'device',
@@ -241,9 +383,9 @@ function EnergyMonitoringView() {
       meterId: entry.meterId || (category === 1 ? 'Internal EPM' : reading && 'meterId' in reading ? reading.meterId : '—'),
       protocol: category === 1 ? 'Internal EPM' : 'Modbus',
       powerState: storeDevice?.power_state || entry.devicePowerState,
-      available,
+      available: isOn(storeDevice?.power_state) || isOn(entry.devicePowerState) || live.available,
       updatedAt: live.updatedAt,
-      measurements: available ? live.measurements : null,
+      measurements: live.measurements,
     };
   };
 
@@ -251,7 +393,7 @@ function EnergyMonitoringView() {
     const list: MonitorRow[] = [];
     const seen = new Set<string>();
     const gridReading = shuntByMeter[catalog?.grid.meterId || 'GRID001'] || shuntByMeter.GRID001;
-    const gridLive = liveMeasurements(gridReading);
+    const gridLive = resolveReading({ reading: gridReading, isGrid: true });
     if (catalog?.grid || gridReading) {
       list.push({
         key: 'grid',
@@ -265,7 +407,7 @@ function EnergyMonitoringView() {
         meterId: gridReading?.meterId || catalog?.grid.meterId || 'GRID001',
         protocol: 'Modbus',
         powerState: 'on',
-        available: gridLive.available || catalog?.grid.available === true,
+        available: true,
         updatedAt: gridLive.updatedAt,
         measurements: gridLive.measurements,
       });
@@ -280,8 +422,12 @@ function EnergyMonitoringView() {
 
     shunts.forEach((shunt) => {
       if (shunt.role === 'grid' || !shunt.deviceId || seen.has(shunt.deviceId)) return;
-      const storeDevice = devices.find((d) => d.id === shunt.deviceId);
-      const live = liveMeasurements(shunt);
+      const storeDevice = findStoreDevice(devices, shunt.deviceId, shunt.deviceName);
+      const live = resolveReading({
+        reading: shunt,
+        device: storeDevice,
+        catalogState: shunt.devicePowerState,
+      });
       seen.add(shunt.deviceId);
       list.push({
         key: shunt.deviceId,
@@ -295,7 +441,7 @@ function EnergyMonitoringView() {
         meterId: shunt.meterId,
         protocol: 'Modbus',
         powerState: storeDevice?.power_state || shunt.devicePowerState || null,
-        available: live.available,
+        available: isOn(storeDevice?.power_state) || isOn(shunt.devicePowerState) || live.available,
         updatedAt: live.updatedAt,
         measurements: live.measurements,
       });
@@ -308,7 +454,7 @@ function EnergyMonitoringView() {
       if (!category) return;
       const shunt = shuntByDevice[device.id];
       const reading = category === 1 ? epms[device.id] : shunt;
-      const live = liveMeasurements(reading);
+      const live = resolveReading({ reading, device });
       seen.add(device.id);
       list.push({
         key: device.id,
@@ -322,11 +468,26 @@ function EnergyMonitoringView() {
         meterId: category === 1 ? 'Internal EPM' : (shunt?.meterId || '—'),
         protocol: category === 1 ? 'Internal EPM' : 'Modbus',
         powerState: device.power_state,
-        available: live.available,
+        available: isOn(device.power_state),
         updatedAt: live.updatedAt,
         measurements: live.measurements,
       });
     });
+
+    const gridRow = list.find((row) => row.kind === 'grid');
+    if (gridRow && !(gridRow.measurements && gridRow.measurements.power > 0)) {
+      const childPower = list
+        .filter((row) => row.kind === 'device' && isOn(row.powerState) && row.measurements && !['solar_pv', 'solar_panel', 'energy_solar'].includes(normalizeType(row.type)))
+        .reduce((sum, row) => sum + (row.measurements?.power || 0), 0);
+      if (childPower > 0) {
+        const voltage = gridRow.measurements?.voltage || 0;
+        gridRow.measurements = {
+          voltage,
+          current: voltage > 0 ? childPower / voltage : 0,
+          power: childPower,
+        };
+      }
+    }
     return list;
   }, [catalog, devices, rooms, epms, shuntByMeter, shuntByDevice, shunts]);
 
@@ -343,7 +504,7 @@ function EnergyMonitoringView() {
   const selected = rows.find((r) => r.key === selectedKey) || null;
 
   useEffect(() => {
-    if (!selected?.deviceId || !selected.available) {
+    if (!selected?.deviceId || !isOn(selected.powerState)) {
       setHistory([]);
       setHistoryError(null);
       setHistoryLoading(false);
@@ -396,10 +557,10 @@ function EnergyMonitoringView() {
   const storeDevice = selected?.deviceId
     ? devices.find((d) => d.id === selected.deviceId)
     : undefined;
-  const energyKwh = selected?.available && storeDevice && Number.isFinite(storeDevice.total_energy_kwh)
+  const energyKwh = selected && isOn(selected.powerState) && storeDevice && Number.isFinite(storeDevice.total_energy_kwh)
     ? storeDevice.total_energy_kwh
     : null;
-  const selectedLive = selected ? isFresh(selected.updatedAt, selected.available) : false;
+  const selectedLive = selected ? isFresh(selected.updatedAt, selected.kind === 'grid' || isOn(selected.powerState)) : false;
 
   const grouped = useMemo(() => {
     const cat1 = rows.filter((r) => r.kind === 'device' && r.category === 1);
@@ -677,7 +838,8 @@ function DeviceRowCard({
   embedded?: boolean;
 }) {
   const meta = typeMeta(row.type);
-  const power = row.available ? formatPower(row.measurements?.power) : null;
+  const meterOn = row.kind === 'grid' || isOn(row.powerState);
+  const power = meterOn ? formatPower(row.measurements?.power) : null;
 
   return (
     <button
@@ -722,9 +884,9 @@ function DeviceRowCard({
         <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#94A3B8' }}>{row.meterId}</span>
         <span style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {row.kind !== 'grid' && (
-            <StatusChip on={row.powerState === 'on'} label={row.powerState === 'on' ? 'ON' : 'OFF'} />
+            <StatusChip on={meterOn} label={meterOn ? 'ON' : 'OFF'} />
           )}
-          <StatusChip on={row.available} label={row.available ? 'METER CONNECTED' : 'UNAVAILABLE'} />
+          <StatusChip on={meterOn} label={meterOn ? 'METER CONNECTED' : 'UNAVAILABLE'} />
         </span>
       </div>
     </button>
@@ -774,10 +936,11 @@ function SelectedMeter({
   onOpenControls?: () => void;
 }) {
   const meta = typeMeta(row.type);
-  const voltage = row.available ? formatNumber(row.measurements?.voltage, 1, 'V') : null;
-  const current = row.available ? formatNumber(row.measurements?.current, 3, 'A') : null;
-  const power = row.available ? formatNumber(row.measurements?.power, 1, 'W') : null;
-  const energy = row.available && energyKwh != null ? formatNumber(energyKwh, 2, 'kWh') : null;
+  const meterOn = row.kind === 'grid' || isOn(row.powerState);
+  const voltage = meterOn ? formatNumber(row.measurements?.voltage, 1, 'V') : null;
+  const current = meterOn ? formatNumber(row.measurements?.current, 3, 'A') : null;
+  const power = meterOn ? formatNumber(row.measurements?.power, 1, 'W') : null;
+  const energy = meterOn && energyKwh != null ? formatNumber(energyKwh, 2, 'kWh') : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -826,7 +989,7 @@ function SelectedMeter({
         </div>
       </div>
 
-      {!row.available ? (
+      {!meterOn ? (
         <div style={{
           padding: '28px 20px',
           borderRadius: '16px',
@@ -834,14 +997,14 @@ function SelectedMeter({
           border: '1px dashed rgba(148,163,184,0.25)',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '16px', fontWeight: 650, color: '#F8FAFC' }}>Shunt Meter Unavailable</div>
+          <div style={{ fontSize: '16px', fontWeight: 650, color: '#F8FAFC' }}>
+            {row.category === 1 ? 'Internal meter unavailable' : 'Shunt Meter Unavailable'}
+          </div>
           <div style={{ fontSize: '13px', color: '#94A3B8', marginTop: '8px', lineHeight: 1.5 }}>
-            {row.powerState === 'on'
-              ? 'Meter readings are not available for this device yet.'
-              : 'Turn on the associated device to resume energy monitoring.'}
+            Turn on the associated device to resume energy monitoring.
           </div>
           <div style={{ marginTop: '10px', fontSize: '12px', color: '#64748B' }}>
-            {row.name} is {row.powerState === 'on' ? 'ON' : 'OFF'}
+            {row.name} is OFF
           </div>
           {onOpenControls && (
             <button
@@ -957,7 +1120,7 @@ function SelectedMeter({
             <InfoCell label="Associated device" value={row.name} />
             <InfoCell label="Meter category" value={row.category === 1 ? 'Category 1 · Internal EPM' : row.kind === 'grid' ? 'Grid shunt' : 'Category 2 · Modbus shunt'} />
             <InfoCell label="Protocol" value={row.protocol} />
-            <InfoCell label="Connection" value={row.available ? 'Connected' : 'Unavailable'} />
+            <InfoCell label="Connection" value={meterOn ? 'Connected' : 'Unavailable'} />
             <InfoCell label="Last successful reading" value={row.updatedAt ? new Date(row.updatedAt).toLocaleString() : '—'} />
           </div>
         )}
