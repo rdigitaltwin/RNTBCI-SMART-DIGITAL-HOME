@@ -31,6 +31,7 @@ const NAV_ITEMS = [
   { id: 'devices', label: 'Devices', icon: Cpu, href: '/dashboard/devices' },
   { id: 'digital-twin', label: '3D Digital Twin', icon: Home, href: '/dashboard/twin' },
   { id: 'energy-command', label: 'Energy Command', icon: Shield, href: '/dashboard/energy-command' },
+  { id: 'shunt-meter', label: 'Shunt Meter', icon: PlugZap, href: '/dashboard/shunt-meter' },
   { id: 'energy', label: 'Energy Analytics', icon: Zap, href: '/dashboard/energy' },
   { id: 'home-power', label: 'Home Power History', icon: Activity, href: '/dashboard/home-power' },
   { id: 'appliance-power', label: 'Appliance Power', icon: Activity, href: '/dashboard/appliance-power' },

@@ -5,6 +5,7 @@ import { useDeviceStore, type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG, isDeviceConnected } from '../constants';
 import DeviceControls from './DeviceControls';
 import DeviceToggle from './DeviceToggle';
+import DeviceMetering from './DeviceMetering';
 import api from '@/services/api';
 
 interface DevicePanelProps {
@@ -752,6 +753,8 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
               )}
             </div>
           </div>
+
+          <DeviceMetering device={liveDevice} />
 
           {/* Sensor Values & Meta — structured, categorised */}
           <SensorMetaSection

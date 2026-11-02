@@ -59,7 +59,9 @@ class APIClient {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      throw new Error(errorMessage);
+      const err = new Error(errorMessage) as Error & { status?: number };
+      err.status = response.status;
+      throw err;
     }
 
     if (response.status === 204) return {} as T;
@@ -385,6 +387,89 @@ class APIClient {
   async setEVVehicleAvgSpeed(id: string, endpoint: number = 1, value: number) {
     return this.request(`/api/v1/devices/${id}/endpoint/${endpoint}/cluster/EvVehicleData/avgspeed`, { method: 'POST', body: { value } });
   }
+
+  // Shunt meter / internal EPM
+  async getShuntMeters() {
+    return this.request<ShuntReading[]>('/api/v1/shunt');
+  }
+
+  async getShuntMeter(meterId: string) {
+    return this.request<ShuntReading>(`/api/v1/shunt/${meterId}`);
+  }
+
+  async getShuntField(meterId: string, field: 'voltage' | 'current' | 'power') {
+    return this.request<Record<string, unknown>>(`/api/v1/shunt/${meterId}/${field}`);
+  }
+
+  async postShuntMeasurements(meterId: string, body: { voltage: number; current: number; power?: number }) {
+    return this.request<ShuntReading>(`/api/v1/shunt/${meterId}/measurements`, { method: 'POST', body });
+  }
+
+  async getDeviceEpm(id: string) {
+    return this.request<EpmReading>(`/api/v1/devices/${id}/epm`);
+  }
+
+  async getDeviceMetering(id: string) {
+    return this.request<ShuntReading | EpmReading>(`/api/v1/devices/${id}/metering`);
+  }
+
+  async getDeviceShunt(id: string) {
+    return this.request<ShuntReading>(`/api/v1/devices/${id}/shunt`);
+  }
+
+  async getMeteringCatalog() {
+    return this.request<MeteringCatalog>('/api/v1/metering/catalog');
+  }
+}
+
+export interface Measurements {
+  voltage: number;
+  current: number;
+  power: number;
+}
+
+export interface ShuntReading {
+  meterId: string;
+  meterType: 'Shunt';
+  deviceId: string | null;
+  deviceName?: string | null;
+  role: string;
+  devicePowerState?: string | null;
+  available: boolean;
+  measurements: Measurements;
+  updatedAt: string | null;
+}
+
+export interface EpmReading {
+  deviceId: string;
+  deviceName?: string;
+  meterType: 'Internal';
+  devicePowerState?: string;
+  available: boolean;
+  epm: Measurements;
+  updatedAt: string | null;
+}
+
+export interface MeteringCatalogDevice {
+  deviceId: string;
+  name: string;
+  type: string;
+  category: number | null;
+  devicePowerState: string | null;
+  available: boolean;
+  meterType?: string;
+  meterId?: string | null;
+  access: Record<string, string> | null;
+}
+
+export interface MeteringCatalog {
+  categories: Record<string, string>;
+  grid: {
+    meterId: string;
+    access: Record<string, string>;
+    available: boolean;
+  };
+  devices: MeteringCatalogDevice[];
 }
 
 export const api = new APIClient(API_BASE);
