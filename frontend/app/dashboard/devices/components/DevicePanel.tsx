@@ -391,6 +391,14 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
   const isConnected = liveDevice ? isDeviceConnected(liveDevice) : false;
   const isOn = Boolean(liveDevice && isConnected && liveDevice.power_state === 'on');
   const meta = ((liveDevice?.metadata || {}) as Record<string, unknown>);
+  const metaNum = (key: string) => {
+    const value = meta[key];
+    const num = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(num) ? num : null;
+  };
+  const labelList = Array.isArray(meta.LabelList)
+    ? (meta.LabelList as Array<{ label?: string; value?: string }>)
+    : [];
 
   const handleToggleConnection = async () => {
     if (!liveDevice) return;
@@ -652,7 +660,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                 </div>
               )}
 
-              {(liveDevice.type === 'energy_evse' || meta.Voltage != null || meta.ActiveCurrent != null || meta.ActivePower != null) && isConnected && (
+              {(liveDevice.type === 'energy_evse' || metaNum('Voltage') != null || metaNum('ActiveCurrent') != null || metaNum('ActivePower') != null) && isConnected && (
                 <>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -660,7 +668,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Voltage</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.Voltage != null ? (meta.Voltage / 1000).toFixed(1) + ' V' : '—'}
+                      {metaNum('Voltage') != null ? (metaNum('Voltage')! / 1000).toFixed(1) + ' V' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -669,7 +677,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Current</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.ActiveCurrent != null ? (meta.ActiveCurrent / 1000).toFixed(1) + ' A' : '—'}
+                      {metaNum('ActiveCurrent') != null ? (metaNum('ActiveCurrent')! / 1000).toFixed(1) + ' A' : '—'}
                     </div>
                   </div>
                 </>
@@ -682,12 +690,12 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <div>
                         <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>Panel Identification</div>
                         <div style={{ fontSize: '14px', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          Label: {meta.LabelList?.[0]?.value || 'Unknown'}
+                          Label: {labelList[0]?.value || 'Unknown'}
                           <button 
                             onClick={() => {
-                              const newLabel = window.prompt("Enter new label value:", meta.LabelList?.[0]?.value || "");
+                              const newLabel = window.prompt("Enter new label value:", labelList[0]?.value || "");
                               if (newLabel) {
-                                api.setSolarUserLabel(liveDevice.id, meta.LabelList?.[0]?.label || "name", newLabel);
+                                api.setSolarUserLabel(liveDevice.id, labelList[0]?.label || "name", newLabel);
                               }
                             }}
                             style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', padding: 0 }}
@@ -715,7 +723,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Voltage</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.Voltage != null ? (meta.Voltage / 1000).toFixed(1) + ' V' : '—'}
+                      {metaNum('Voltage') != null ? (metaNum('Voltage')! / 1000).toFixed(1) + ' V' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -724,7 +732,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Current</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.ActiveCurrent != null ? (meta.ActiveCurrent / 1000).toFixed(1) + ' A' : '—'}
+                      {metaNum('ActiveCurrent') != null ? (metaNum('ActiveCurrent')! / 1000).toFixed(1) + ' A' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -733,7 +741,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Frequency</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.Frequency != null ? (meta.Frequency / 1000).toFixed(1) + ' Hz' : '—'}
+                      {metaNum('Frequency') != null ? (metaNum('Frequency')! / 1000).toFixed(1) + ' Hz' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -742,7 +750,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Power Factor</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.PowerFactor != null ? (meta.PowerFactor / 10000).toFixed(2) : '—'}
+                      {metaNum('PowerFactor') != null ? (metaNum('PowerFactor')! / 10000).toFixed(2) : '—'}
                     </div>
                   </div>
                 </>
@@ -756,7 +764,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>HV Battery Voltage</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.HVBATVoltage != null ? meta.HVBATVoltage + ' V' : '—'}
+                      {metaNum('HVBATVoltage') != null ? metaNum('HVBATVoltage') + ' V' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -765,7 +773,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>HV State of Charge</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#6366F1', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.HVSoC != null ? meta.HVSoC + ' %' : '—'}
+                      {metaNum('HVSoC') != null ? metaNum('HVSoC') + ' %' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -774,7 +782,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Aux Battery Voltage</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.AuxBatVoltage != null ? meta.AuxBatVoltage + ' V' : '—'}
+                      {metaNum('AuxBatVoltage') != null ? metaNum('AuxBatVoltage') + ' V' : '—'}
                     </div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -783,7 +791,7 @@ export default function DevicePanel({ device, onClose, openEpoch = 0 }: DevicePa
                       <span style={{ fontSize: '12px', color: '#94A3B8' }}>Average Speed</span>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', fontFamily: "'JetBrains Mono', monospace" }}>
-                      {meta.AvgSpeed != null ? meta.AvgSpeed + ' km/h' : '—'}
+                      {metaNum('AvgSpeed') != null ? metaNum('AvgSpeed') + ' km/h' : '—'}
                     </div>
                   </div>
                 </>
