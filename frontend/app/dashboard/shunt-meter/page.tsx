@@ -1,12 +1,19 @@
 'use client';
 
 /**
- * Shunt Meter Integration — Category 1 internal EPM, Category 2 Modbus shunts,
- * GRID001 house feed, Category 3 control-only. Load values only while the device is ON.
+ * Energy Monitoring — device-first view of existing shunt / internal EPM APIs.
+ * Availability is taken from the backend `available` flag (device must be ON).
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Activity, Gauge, PlugZap, Power, RefreshCw, ShieldAlert, Zap } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Activity, ChevronDown, ChevronRight, Gauge, PlugZap, RefreshCw,
+  Wifi, WifiOff, Zap,
+} from 'lucide-react';
+import {
+  Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';
 import api, {
   type EpmReading,
   type Measurements,
@@ -14,151 +21,116 @@ import api, {
   type MeteringCatalogDevice,
   type ShuntReading,
 } from '@/services/api';
-import { toggleDeviceState, useDeviceStore } from '@/store';
-import { MeasurementStrip } from '../devices/components/DeviceMetering';
+import { useDeviceStore, useEventStore, useWSStore, type Device } from '@/store';
 import { DEVICE_TYPE_CONFIG } from '../devices/constants';
 
-const EMPTY: Measurements = { voltage: 0, current: 0, power: 0 };
+const LIVE_WINDOW_MS = 30_000;
 
-function readingsFrom(data: ShuntReading | EpmReading | null | undefined): Measurements {
-  if (!data) return EMPTY;
-  if ('measurements' in data && data.measurements) return data.measurements;
-  if ('epm' in data && data.epm) return data.epm;
-  return EMPTY;
-}
+type HistoryRange = 'live' | '1h' | '24h' | '7d';
 
-function typeLabel(type: string) {
-  const key = type.toLowerCase();
-  return DEVICE_TYPE_CONFIG[key]?.label || type.replace(/_/g, ' ');
-}
-
-function typeEmoji(type: string) {
-  const key = type.toLowerCase();
-  return DEVICE_TYPE_CONFIG[key]?.emoji || '⚡';
-}
-
-function CardShell({ children, accent }: { children: ReactNode; accent: string }) {
-  return (
-    <div
-      className="glass-card"
-      style={{
-        padding: '18px',
-        border: `1px solid ${accent}`,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '14px',
-        minHeight: '210px',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function LiveBadge({ live }: { live: boolean }) {
-  return (
-    <span style={{
-      fontSize: '10px',
-      fontWeight: 700,
-      letterSpacing: '0.08em',
-      color: live ? '#00FF9D' : '#FFC857',
-      background: live ? 'rgba(0,255,157,0.12)' : 'rgba(255,200,87,0.12)',
-      border: `1px solid ${live ? 'rgba(0,255,157,0.3)' : 'rgba(255,200,87,0.3)'}`,
-      borderRadius: '999px',
-      padding: '3px 8px',
-    }}>
-      {live ? 'LOAD LIVE' : 'DEVICE OFF'}
-    </span>
-  );
-}
-
-function MeterCard({
-  title,
-  subtitle,
-  type,
-  meterId,
-  available,
-  measurements,
-  deviceId,
-  categoryLabel,
-  onToggle,
-  toggling,
-}: {
-  title: string;
-  subtitle: string;
+type MonitorRow = {
+  key: string;
+  kind: 'grid' | 'device';
+  deviceId: string | null;
+  name: string;
   type: string;
+  room: string;
+  category: number | null;
+  meterType: string;
   meterId: string;
+  protocol: string;
+  powerState: string | null;
   available: boolean;
-  measurements: Measurements;
-  deviceId?: string | null;
-  categoryLabel: string;
-  onToggle?: () => void;
-  toggling?: boolean;
-}) {
+  updatedAt: string | null;
+  measurements: Measurements | null;
+};
+
+function typeMeta(type: string) {
+  const key = type.toLowerCase();
+  return DEVICE_TYPE_CONFIG[key] || { emoji: '⚡', label: type.replace(/_/g, ' '), color: '#94A3B8' };
+}
+
+function isFresh(updatedAt: string | null, available: boolean) {
+  if (!available || !updatedAt) return false;
+  const ts = Date.parse(updatedAt);
+  if (!Number.isFinite(ts)) return false;
+  return Date.now() - ts <= LIVE_WINDOW_MS;
+}
+
+function liveMeasurements(data: ShuntReading | EpmReading | null | undefined): {
+  measurements: Measurements | null;
+  updatedAt: string | null;
+  available: boolean;
+} {
+  if (!data) return { measurements: null, updatedAt: null, available: false };
+  if (!data.available) {
+    return { measurements: null, updatedAt: data.updatedAt, available: false };
+  }
+  const measurements = 'measurements' in data && data.measurements
+    ? data.measurements
+    : ('epm' in data && data.epm ? data.epm : null);
+  return { measurements, updatedAt: data.updatedAt, available: true };
+}
+
+function formatPower(watts: number | null | undefined) {
+  if (watts == null || !Number.isFinite(watts)) return null;
+  if (Math.abs(watts) >= 1000) return `${(watts / 1000).toFixed(2)} kW`;
+  return `${watts.toFixed(1)} W`;
+}
+
+function formatNumber(value: number | null | undefined, digits: number, unit: string) {
+  if (value == null || !Number.isFinite(value)) return null;
+  return { display: value.toFixed(digits), unit };
+}
+
+function rangeStart(range: HistoryRange) {
+  const now = Date.now();
+  const spans: Record<HistoryRange, number> = {
+    live: 15 * 60 * 1000,
+    '1h': 60 * 60 * 1000,
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+  };
+  return new Date(now - spans[range]).toISOString();
+}
+
+function roomFor(device: Device | undefined, rooms: { id: string; name: string }[]) {
+  if (!device) return '—';
+  if (device.room_name) return device.room_name;
+  return rooms.find((r) => r.id === device.room_id)?.name || '—';
+}
+
+export default function EnergyMonitoringPage() {
   return (
-    <CardShell accent={available ? 'rgba(0, 229, 255, 0.18)' : 'rgba(255, 200, 87, 0.18)'}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontSize: '22px' }}>{typeEmoji(type)}</span>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>{title}</div>
-            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
-              {subtitle} · {typeLabel(type)}
-            </div>
-          </div>
-        </div>
-        <LiveBadge live={available} />
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#94A3B8' }}>
-          {meterId}
-        </span>
-        <span style={{ fontSize: '10px', color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          {categoryLabel}
-        </span>
-      </div>
-
-      <MeasurementStrip measurements={measurements} available={available} compact />
-
-      {deviceId && onToggle && (
-        <button
-          onClick={onToggle}
-          disabled={toggling}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '8px',
-            borderRadius: '10px',
-            background: available ? 'rgba(255, 77, 109, 0.1)' : 'rgba(0, 255, 157, 0.1)',
-            border: `1px solid ${available ? 'rgba(255, 77, 109, 0.3)' : 'rgba(0, 255, 157, 0.3)'}`,
-            color: available ? '#FF4D6D' : '#00FF9D',
-            cursor: toggling ? 'wait' : 'pointer',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}
-        >
-          <Power size={13} />
-          {toggling ? 'Updating…' : available ? 'Turn OFF' : 'Turn ON to read load'}
-        </button>
-      )}
-    </CardShell>
+    <Suspense fallback={<div style={{ color: '#64748B', fontSize: '13px' }}>Loading energy monitoring…</div>}>
+      <EnergyMonitoringView />
+    </Suspense>
   );
 }
 
-export default function ShuntMeterPage() {
+function EnergyMonitoringView() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const devices = useDeviceStore((s) => s.devices);
+  const rooms = useDeviceStore((s) => s.rooms);
+  const wsConnected = useWSStore((s) => s.connected);
+  const events = useEventStore((s) => s.events);
+
   const [catalog, setCatalog] = useState<MeteringCatalog | null>(null);
   const [shunts, setShunts] = useState<ShuntReading[]>([]);
   const [epms, setEpms] = useState<Record<string, EpmReading>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [syncedAt, setSyncedAt] = useState<Date | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [historyRange, setHistoryRange] = useState<HistoryRange>('live');
+  const [history, setHistory] = useState<Array<{ time: string; kw: number }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
 
-  const fetchAll = useCallback(async () => {
+  const fetchMetering = useCallback(async () => {
     try {
       const [catalogRes, shuntRes] = await Promise.all([
         api.getMeteringCatalog(),
@@ -173,25 +145,28 @@ export default function ShuntMeterPage() {
       );
       const next: Record<string, EpmReading> = {};
       epmEntries.forEach((entry) => {
-        if (entry.status === 'fulfilled') {
-          next[entry.value[0]] = entry.value[1];
-        }
+        if (entry.status === 'fulfilled') next[entry.value[0]] = entry.value[1];
       });
       setEpms(next);
       setError(null);
-      setUpdatedAt(new Date());
+      setSyncedAt(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load metering');
+      setError(err instanceof Error ? err.message : 'Unable to reach metering');
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const powerSignature = devices
+    .map((d) => `${d.id}:${d.power_state}`)
+    .sort()
+    .join('|');
+
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 5000);
+    fetchMetering();
+    const interval = setInterval(fetchMetering, 5000);
     return () => clearInterval(interval);
-  }, [fetchAll]);
+  }, [fetchMetering, powerSignature]);
 
   const shuntByMeter = useMemo(() => {
     const map: Record<string, ShuntReading> = {};
@@ -201,55 +176,168 @@ export default function ShuntMeterPage() {
 
   const shuntByDevice = useMemo(() => {
     const map: Record<string, ShuntReading> = {};
-    shunts.forEach((s) => {
-      if (s.deviceId) map[s.deviceId] = s;
-    });
+    shunts.forEach((s) => { if (s.deviceId) map[s.deviceId] = s; });
     return map;
   }, [shunts]);
 
-  const grid = shuntByMeter.GRID001 || shuntByMeter[catalog?.grid.meterId || 'GRID001'];
-  const cat1 = (catalog?.devices || []).filter((d) => d.category === 1);
-  const cat2 = (catalog?.devices || []).filter((d) => d.category === 2);
-  const cat3 = (catalog?.devices || []).filter((d) => d.category === 3);
-
-  const handleToggle = async (row: MeteringCatalogDevice) => {
-    const storeDevice = devices.find((d) => d.id === row.deviceId);
-    if (!storeDevice || togglingId) return;
-    setTogglingId(row.deviceId);
-    try {
-      await toggleDeviceState(storeDevice, storeDevice.power_state === 'on' ? 'off' : 'on');
-      await fetchAll();
-    } finally {
-      setTogglingId(null);
+  const rows: MonitorRow[] = useMemo(() => {
+    const list: MonitorRow[] = [];
+    const gridReading = shuntByMeter[catalog?.grid.meterId || 'GRID001'] || shuntByMeter.GRID001;
+    const gridLive = liveMeasurements(gridReading);
+    if (catalog?.grid || gridReading) {
+      list.push({
+        key: 'grid',
+        kind: 'grid',
+        deviceId: null,
+        name: 'House feed',
+        type: 'smart_meter',
+        room: 'Grid',
+        category: 2,
+        meterType: 'Shunt',
+        meterId: gridReading?.meterId || catalog?.grid.meterId || 'GRID001',
+        protocol: 'Modbus',
+        powerState: 'on',
+        available: gridLive.available || catalog?.grid.available === true,
+        updatedAt: gridLive.updatedAt,
+        measurements: gridLive.measurements,
+      });
     }
+
+    (catalog?.devices || [])
+      .filter((d) => d.category === 1 || d.category === 2)
+      .forEach((entry: MeteringCatalogDevice) => {
+        const storeDevice = devices.find((d) => d.id === entry.deviceId);
+        const reading = entry.category === 1
+          ? epms[entry.deviceId]
+          : ((entry.meterId && shuntByMeter[entry.meterId]) || shuntByDevice[entry.deviceId]);
+        const live = liveMeasurements(reading);
+        const available = reading ? live.available : entry.available;
+        list.push({
+          key: entry.deviceId,
+          kind: 'device',
+          deviceId: entry.deviceId,
+          name: storeDevice?.name || entry.name,
+          type: storeDevice?.type || entry.type,
+          room: roomFor(storeDevice, rooms),
+          category: entry.category,
+          meterType: entry.meterType || (entry.category === 1 ? 'Internal' : 'Shunt'),
+          meterId: entry.meterId || (entry.category === 1 ? 'Internal EPM' : '—'),
+          protocol: entry.category === 1 ? 'Internal EPM' : 'Modbus',
+          powerState: storeDevice?.power_state || entry.devicePowerState,
+          available,
+          updatedAt: live.updatedAt,
+          measurements: available ? live.measurements : null,
+        });
+      });
+    return list;
+  }, [catalog, devices, rooms, epms, shuntByMeter, shuntByDevice]);
+
+  useEffect(() => {
+    const requested = searchParams.get('device');
+    setSelectedKey((current) => {
+      if (current && rows.some((r) => r.key === current)) return current;
+      if (requested && rows.some((r) => r.deviceId === requested)) return requested;
+      const firstLive = rows.find((r) => r.available);
+      return firstLive?.key || rows[0]?.key || null;
+    });
+  }, [rows, searchParams]);
+
+  const selected = rows.find((r) => r.key === selectedKey) || null;
+
+  useEffect(() => {
+    if (!selected?.deviceId || !selected.available) {
+      setHistory([]);
+      setHistoryError(null);
+      setHistoryLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const loadHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const res = await api.getDevicePowerHistory({
+          device_id: selected.deviceId!,
+          start_date: rangeStart(historyRange),
+          per_page: historyRange === '7d' ? 2000 : 800,
+        }) as { records?: Array<{ timestamp: string; total_power_consumption_kw: number }> };
+        if (cancelled) return;
+        const records = (res.records || [])
+          .slice()
+          .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+          .map((r) => {
+            const date = new Date(r.timestamp);
+            const time = historyRange === '7d'
+              ? date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+              : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return { time, kw: Number(r.total_power_consumption_kw) };
+          })
+          .filter((r) => Number.isFinite(r.kw));
+        setHistory(records);
+        setHistoryError(null);
+      } catch (err) {
+        if (!cancelled) {
+          setHistory([]);
+          setHistoryError(err instanceof Error ? err.message : 'History unavailable');
+        }
+      } finally {
+        if (!cancelled) setHistoryLoading(false);
+      }
+    };
+    loadHistory();
+    const interval = historyRange === 'live' ? setInterval(loadHistory, 15000) : undefined;
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [selected?.deviceId, selected?.available, historyRange]);
+
+  const openDeviceControls = (deviceId: string) => {
+    router.push(`/dashboard/devices?device=${encodeURIComponent(deviceId)}`);
   };
 
-  const liveCount = [...cat1, ...cat2].filter((d) => d.available).length + (grid?.available ? 1 : 0);
+  const storeDevice = selected?.deviceId
+    ? devices.find((d) => d.id === selected.deviceId)
+    : undefined;
+  const energyKwh = selected?.available && storeDevice && Number.isFinite(storeDevice.total_energy_kwh)
+    ? storeDevice.total_energy_kwh
+    : null;
+  const selectedLive = selected ? isFresh(selected.updatedAt, selected.available) : false;
+
+  const grouped = useMemo(() => {
+    const cat1 = rows.filter((r) => r.kind === 'device' && r.category === 1);
+    const cat2 = rows.filter((r) => r.kind === 'device' && r.category === 2);
+    const grid = rows.filter((r) => r.kind === 'grid');
+    return { cat1, cat2, grid };
+  }, [rows]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <PlugZap size={18} color="#00E5FF" />
-            <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#F8FAFC', margin: 0 }}>
-              Shunt Meter Integration
-            </h1>
-          </div>
-          <p style={{ fontSize: '13px', color: '#94A3B8', maxWidth: '720px', lineHeight: 1.5 }}>
-            Category 1 devices expose an internal EPM. Category 2 loads are read through Modbus shunts
-            (SHUNT001–005). GRID001 is the house feed (solar generation is excluded from the grid sum).
-            Current and power are only readable while the linked device is ON.
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F8FAFC', margin: 0 }}>Energy Monitoring</h1>
+          <p style={{ fontSize: '13px', color: '#94A3B8', marginTop: '6px' }}>
+            Monitor connected devices and their real-time electrical consumption.
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#64748B' }}>
-            {updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : 'Waiting…'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            fontSize: '11px', fontFamily: "'JetBrains Mono', monospace",
+            color: wsConnected ? '#00FF9D' : '#FF4D6D',
+            padding: '6px 10px', borderRadius: '999px',
+            background: wsConnected ? 'rgba(0,255,157,0.08)' : 'rgba(255,77,109,0.08)',
+            border: `1px solid ${wsConnected ? 'rgba(0,255,157,0.25)' : 'rgba(255,77,109,0.25)'}`,
+          }}>
+            {wsConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+            {wsConnected ? 'CONNECTED' : 'OFFLINE'}
+          </span>
+          <span style={{ fontSize: '11px', color: '#64748B', fontFamily: "'JetBrains Mono', monospace" }}>
+            {syncedAt ? `Synced ${syncedAt.toLocaleTimeString()}` : 'Waiting'}
           </span>
           <button
-            onClick={fetchAll}
+            onClick={fetchMetering}
             style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
               padding: '8px 12px', borderRadius: '8px',
               background: 'rgba(0, 229, 255, 0.08)',
               border: '1px solid rgba(0, 229, 255, 0.25)',
@@ -260,153 +348,461 @@ export default function ShuntMeterPage() {
             Refresh
           </button>
         </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
-        {[
-          { label: 'Live meters', value: String(liveCount), icon: Activity, color: '#00FF9D' },
-          { label: 'Cat 1 EPM', value: String(cat1.length), icon: Gauge, color: '#8B5CF6' },
-          { label: 'Cat 2 Shunts', value: String(cat2.length), icon: PlugZap, color: '#00E5FF' },
-          { label: 'Cat 3 Control', value: String(cat3.length), icon: ShieldAlert, color: '#818CF8' },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="glass-card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Icon size={16} color={stat.color} />
-              <div>
-                <div style={{ fontSize: '11px', color: '#64748B' }}>{stat.label}</div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '18px', fontWeight: 700, color: stat.color }}>
-                  {stat.value}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      </header>
 
       {error && (
         <div style={{
-          background: 'rgba(255, 77, 109, 0.1)',
-          border: '1px solid rgba(255, 77, 109, 0.35)',
-          color: '#FF4D6D',
+          background: 'rgba(255, 77, 109, 0.08)',
+          border: '1px solid rgba(255, 77, 109, 0.28)',
+          color: '#FCA5A5',
           padding: '12px 16px',
           borderRadius: '12px',
           fontSize: '13px',
         }}>
-          {error}. Start the backend and apply the shunt-meter migration if this persists.
+          Metering is unreachable. Device controls remain available on the Devices page.
         </div>
       )}
 
-      {loading && !catalog && (
-        <div style={{ color: '#64748B', fontSize: '13px' }}>Loading metering catalog…</div>
-      )}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '16px',
+        alignItems: 'start',
+      }}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h2 style={{ fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748B', margin: 0 }}>
+            Connected devices
+          </h2>
+          {loading && rows.length === 0 && (
+            <div style={{ color: '#64748B', fontSize: '13px' }}>Loading meters…</div>
+          )}
+          {grouped.grid.length > 0 && (
+            <DeviceGroup title="Grid" rows={grouped.grid} selectedKey={selectedKey} onSelect={setSelectedKey} />
+          )}
+          {grouped.cat2.length > 0 && (
+            <DeviceGroup title="Modbus shunt" rows={grouped.cat2} selectedKey={selectedKey} onSelect={setSelectedKey} />
+          )}
+          {grouped.cat1.length > 0 && (
+            <DeviceGroup title="Internal EPM" rows={grouped.cat1} selectedKey={selectedKey} onSelect={setSelectedKey} />
+          )}
+          {!loading && rows.length === 0 && !error && (
+            <div style={{ fontSize: '13px', color: '#64748B' }}>No metered devices are configured.</div>
+          )}
+        </section>
+
+        <section className="glass-card" style={{ padding: '22px', minHeight: rows.length ? '420px' : 'auto' }}>
+          {!selected ? (
+            <div style={{ color: '#64748B', fontSize: '13px' }}>
+              {rows.length === 0 ? 'Meters appear here when the catalog is reachable.' : 'Select a device to inspect its meter.'}
+            </div>
+          ) : (
+            <SelectedMeter
+              row={selected}
+              live={selectedLive}
+              energyKwh={energyKwh}
+              infoOpen={infoOpen}
+              onToggleInfo={() => setInfoOpen((v) => !v)}
+              history={history}
+              historyRange={historyRange}
+              onRange={setHistoryRange}
+              historyLoading={historyLoading}
+              historyError={historyError}
+              onOpenControls={selected.deviceId ? () => openDeviceControls(selected.deviceId!) : undefined}
+            />
+          )}
+        </section>
+      </div>
 
       <section>
-        <SectionTitle icon={<Zap size={14} color="#FFC857" />} title="GRID001 — House feed" hint="Always readable. Sum of Category 1 EPM + Category 2 shunts except solar." />
-        {grid ? (
-          <MeterCard
-            title="Grid intake"
-            subtitle="Modbus grid shunt"
-            type="smart_meter"
-            meterId={grid.meterId}
-            available={grid.available}
-            measurements={readingsFrom(grid)}
-            categoryLabel="Grid"
-          />
-        ) : (
-          !error && <EmptyHint text="GRID001 will appear once the metering catalog loads." />
+        <button
+          onClick={() => setDiagnosticsOpen((v) => !v)}
+          style={{
+            background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: 0,
+          }}
+        >
+          {diagnosticsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          Diagnostics
+        </button>
+        {diagnosticsOpen && (
+          <div className="glass-card" style={{ marginTop: '10px', padding: '14px 16px', maxHeight: '180px', overflowY: 'auto' }}>
+            {events.slice(0, 20).length === 0 ? (
+              <div style={{ color: '#64748B', fontSize: '12px' }}>No recent events.</div>
+            ) : (
+              events.slice(0, 20).map((event) => (
+                <div key={event.id} style={{ display: 'flex', gap: '10px', fontSize: '12px', padding: '4px 0', color: '#94A3B8' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", color: '#64748B', minWidth: '64px' }}>
+                    {new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false })}
+                  </span>
+                  <span style={{ color: '#CBD5E1' }}>{event.device_name || 'System'}</span>
+                  <span>{event.message}</span>
+                </div>
+              ))
+            )}
+          </div>
         )}
       </section>
+    </div>
+  );
+}
 
-      <section>
-        <SectionTitle icon={<PlugZap size={14} color="#00E5FF" />} title="Category 2 — Modbus shunt meters" hint="Dishwasher, washing machine, solar, nebulizer, EVSE." />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
-          {cat2.map((row) => {
-            const reading = (row.meterId && shuntByMeter[row.meterId]) || shuntByDevice[row.deviceId];
-            return (
-              <MeterCard
-                key={row.deviceId}
-                title={row.name}
-                subtitle="Shunt"
-                type={row.type}
-                meterId={row.meterId || reading?.meterId || '—'}
-                available={reading?.available ?? row.available}
-                measurements={readingsFrom(reading)}
-                deviceId={row.deviceId}
-                categoryLabel="Category 2"
-                onToggle={() => handleToggle(row)}
-                toggling={togglingId === row.deviceId}
-              />
-            );
-          })}
-          {!loading && cat2.length === 0 && (
-            <EmptyHint text="No Category 2 shunt devices in the catalog yet." />
+function DeviceGroup({
+  title,
+  rows,
+  selectedKey,
+  onSelect,
+}: {
+  title: string;
+  rows: MonitorRow[];
+  selectedKey: string | null;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#475569' }}>{title}</div>
+      {rows.map((row) => (
+        <DeviceRowCard
+          key={row.key}
+          row={row}
+          selected={selectedKey === row.key}
+          onSelect={() => onSelect(row.key)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DeviceRowCard({
+  row,
+  selected,
+  onSelect,
+}: {
+  row: MonitorRow;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const meta = typeMeta(row.type);
+  const power = row.available ? formatPower(row.measurements?.power) : null;
+
+  return (
+    <button
+      onClick={onSelect}
+      style={{
+        textAlign: 'left',
+        width: '100%',
+        padding: '14px',
+        borderRadius: '14px',
+        background: selected ? 'rgba(0, 229, 255, 0.08)' : 'rgba(15, 23, 42, 0.55)',
+        border: `1px solid ${selected ? 'rgba(0, 229, 255, 0.35)' : 'rgba(255,255,255,0.06)'}`,
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        transition: 'border-color 0.2s ease, background 0.2s ease',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', minWidth: 0 }}>
+          <span style={{ fontSize: '20px', lineHeight: 1 }}>{meta.emoji}</span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {row.name}
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{row.room}</div>
+          </div>
+        </div>
+        {power ? (
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#00E5FF', fontWeight: 700 }}>
+            {power}
+          </div>
+        ) : (
+          <div style={{ fontSize: '11px', color: '#64748B' }}>{row.available ? '—' : 'OFF'}</div>
+        )}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#94A3B8' }}>{row.meterId}</span>
+        <span style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {row.kind !== 'grid' && (
+            <StatusChip on={row.powerState === 'on'} label={row.powerState === 'on' ? 'ON' : 'OFF'} />
+          )}
+          <StatusChip on={row.available} label={row.available ? 'METER CONNECTED' : 'UNAVAILABLE'} />
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function StatusChip({ on, label }: { on: boolean; label: string }) {
+  return (
+    <span style={{
+      fontSize: '9px',
+      fontWeight: 700,
+      letterSpacing: '0.08em',
+      color: on ? '#00FF9D' : '#94A3B8',
+      background: on ? 'rgba(0,255,157,0.1)' : 'rgba(148,163,184,0.1)',
+      border: `1px solid ${on ? 'rgba(0,255,157,0.28)' : 'rgba(148,163,184,0.2)'}`,
+      borderRadius: '999px',
+      padding: '3px 7px',
+    }}>
+      {label}
+    </span>
+  );
+}
+
+function SelectedMeter({
+  row,
+  live,
+  energyKwh,
+  infoOpen,
+  onToggleInfo,
+  history,
+  historyRange,
+  onRange,
+  historyLoading,
+  historyError,
+  onOpenControls,
+}: {
+  row: MonitorRow;
+  live: boolean;
+  energyKwh: number | null;
+  infoOpen: boolean;
+  onToggleInfo: () => void;
+  history: Array<{ time: string; kw: number }>;
+  historyRange: HistoryRange;
+  onRange: (range: HistoryRange) => void;
+  historyLoading: boolean;
+  historyError: string | null;
+  onOpenControls?: () => void;
+}) {
+  const meta = typeMeta(row.type);
+  const voltage = row.available ? formatNumber(row.measurements?.voltage, 1, 'V') : null;
+  const current = row.available ? formatNumber(row.measurements?.current, 3, 'A') : null;
+  const power = row.available ? formatNumber(row.measurements?.power, 1, 'W') : null;
+  const energy = row.available && energyKwh != null ? formatNumber(energyKwh, 2, 'kWh') : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '12px',
+            background: `${meta.color}18`, border: `1px solid ${meta.color}33`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
+          }}>
+            {meta.emoji}
+          </div>
+          <div>
+            <div style={{ fontSize: '18px', fontWeight: 650, color: '#F8FAFC' }}>{row.name}</div>
+            <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+              {row.room} · {row.meterId}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {live && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              fontSize: '11px', color: '#00E5FF',
+              padding: '4px 10px', borderRadius: '999px',
+              background: 'rgba(0,229,255,0.1)', border: '1px solid rgba(0,229,255,0.25)',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 8px rgba(0,229,255,0.8)' }} />
+              LIVE
+            </span>
+          )}
+          {onOpenControls && (
+            <button
+              onClick={onOpenControls}
+              style={{
+                padding: '8px 12px', borderRadius: '8px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#E2E8F0', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+              }}
+            >
+              Device controls
+            </button>
           )}
         </div>
-      </section>
+      </div>
 
-      <section>
-        <SectionTitle icon={<Gauge size={14} color="#8B5CF6" />} title="Category 1 — Internal EPM" hint="Switch, light, heat pump, water heater. Values live on the device EPM, not a shunt." />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
-          {cat1.map((row) => {
-            const reading = epms[row.deviceId];
-            return (
-              <MeterCard
-                key={row.deviceId}
-                title={row.name}
-                subtitle="Internal EPM"
-                type={row.type}
-                meterId="Internal"
-                available={reading?.available ?? row.available}
-                measurements={readingsFrom(reading)}
-                deviceId={row.deviceId}
-                categoryLabel="Category 1"
-                onToggle={() => handleToggle(row)}
-                toggling={togglingId === row.deviceId}
-              />
-            );
-          })}
-          {!loading && cat1.length === 0 && (
-            <EmptyHint text="No Category 1 internal-EPM devices in the catalog yet." />
+      {!row.available ? (
+        <div style={{
+          padding: '28px 20px',
+          borderRadius: '16px',
+          background: 'rgba(15, 23, 42, 0.6)',
+          border: '1px dashed rgba(148,163,184,0.25)',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '16px', fontWeight: 650, color: '#F8FAFC' }}>Shunt Meter Unavailable</div>
+          <div style={{ fontSize: '13px', color: '#94A3B8', marginTop: '8px', lineHeight: 1.5 }}>
+            Turn on the associated device to resume energy monitoring.
+          </div>
+          <div style={{ marginTop: '10px', fontSize: '12px', color: '#64748B' }}>
+            {row.name} is OFF
+          </div>
+          {onOpenControls && (
+            <button
+              onClick={onOpenControls}
+              style={{
+                marginTop: '16px',
+                padding: '9px 14px',
+                borderRadius: '8px',
+                background: 'rgba(0, 229, 255, 0.1)',
+                border: '1px solid rgba(0, 229, 255, 0.3)',
+                color: '#00E5FF',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 600,
+              }}
+            >
+              Open device controls
+            </button>
           )}
         </div>
-      </section>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+            <MetricCell icon={<Zap size={14} color="#00E5FF" />} label="Voltage" value={voltage} />
+            <MetricCell icon={<Activity size={14} color="#FFC857" />} label="Current" value={current} />
+            <MetricCell icon={<PlugZap size={14} color="#00FF9D" />} label="Active Power" value={
+              power && row.measurements?.power != null && Math.abs(row.measurements.power) >= 1000
+                ? { display: (row.measurements.power / 1000).toFixed(2), unit: 'kW' }
+                : power
+            } />
+            {energy && <MetricCell icon={<Gauge size={14} color="#818CF8" />} label="Energy" value={energy} />}
+          </div>
 
-      <section>
-        <SectionTitle icon={<ShieldAlert size={14} color="#818CF8" />} title="Category 3 — Control only" hint="Door lock, garage door, camera, EV. No voltage, current, or power." />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-          {cat3.map((row) => (
-            <div key={row.deviceId} className="glass-card" style={{ padding: '14px 16px', opacity: 0.85 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '18px' }}>{typeEmoji(row.type)}</span>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>{row.name}</div>
-                  <div style={{ fontSize: '11px', color: '#64748B' }}>{typeLabel(row.type)} · no meter</div>
+          {row.deviceId && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748B', margin: 0 }}>
+                  Consumption history
+                </h3>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {(['live', '1h', '24h', '7d'] as HistoryRange[]).map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => onRange(range)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        color: historyRange === range ? '#050816' : '#94A3B8',
+                        background: historyRange === range ? '#00E5FF' : 'transparent',
+                        border: `1px solid ${historyRange === range ? '#00E5FF' : 'rgba(255,255,255,0.08)'}`,
+                      }}
+                    >
+                      {range === 'live' ? 'Live' : range === '1h' ? '1 Hour' : range === '24h' ? '24 Hours' : '7 Days'}
+                    </button>
+                  ))}
                 </div>
               </div>
+              {historyLoading && history.length === 0 ? (
+                <div style={{ color: '#64748B', fontSize: '12px', padding: '24px 0' }}>Loading history…</div>
+              ) : history.length === 0 ? (
+                <div style={{ color: '#64748B', fontSize: '12px', padding: '24px 0' }}>
+                  {historyError ? 'Historical telemetry is not available for this device.' : 'No historical telemetry for this period.'}
+                </div>
+              ) : (
+                <div style={{ height: 180 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={history}>
+                      <defs>
+                        <linearGradient id="kwFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#00E5FF" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="#00E5FF" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis dataKey="time" tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={24} />
+                      <YAxis tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} tickLine={false} width={36} />
+                      <Tooltip
+                        contentStyle={{ background: '#0B1120', border: '1px solid rgba(0,229,255,0.2)', borderRadius: 8, fontSize: 12 }}
+                        formatter={(value) => [`${Number(value).toFixed(3)} kW`, 'Power']}
+                      />
+                      <Area type="monotone" dataKey="kw" stroke="#00E5FF" fill="url(#kwFill)" strokeWidth={2} dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
-          ))}
-          {!loading && cat3.length === 0 && (
-            <EmptyHint text="No Category 3 devices listed." />
           )}
-        </div>
-      </section>
-    </div>
-  );
-}
+        </>
+      )}
 
-function SectionTitle({ icon, title, hint }: { icon: ReactNode; title: string; hint: string }) {
-  return (
-    <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {icon}
-        <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#F8FAFC', margin: 0 }}>{title}</h2>
+      <div>
+        <button
+          onClick={onToggleInfo}
+          style={{
+            background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: 0,
+          }}
+        >
+          {infoOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          Meter information
+        </button>
+        {infoOpen && (
+          <div style={{
+            marginTop: '10px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: '10px',
+          }}>
+            <InfoCell label="Meter ID" value={row.meterId} />
+            <InfoCell label="Associated device" value={row.name} />
+            <InfoCell label="Meter category" value={row.category === 1 ? 'Category 1 · Internal EPM' : row.kind === 'grid' ? 'Grid shunt' : 'Category 2 · Modbus shunt'} />
+            <InfoCell label="Protocol" value={row.protocol} />
+            <InfoCell label="Connection" value={row.available ? 'Connected' : 'Unavailable'} />
+            <InfoCell label="Last successful reading" value={row.updatedAt ? new Date(row.updatedAt).toLocaleString() : '—'} />
+          </div>
+        )}
       </div>
-      <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>{hint}</p>
     </div>
   );
 }
 
-function EmptyHint({ text }: { text: string }) {
-  return <div style={{ color: '#64748B', fontSize: '13px', fontStyle: 'italic' }}>{text}</div>;
+function MetricCell({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: { display: string; unit: string } | null;
+}) {
+  return (
+    <div style={{
+      padding: '16px',
+      borderRadius: '14px',
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      minHeight: '92px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '11px', marginBottom: '8px' }}>
+        {icon}
+        {label}
+      </div>
+      {value ? (
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#F8FAFC', fontSize: '24px', lineHeight: 1.1 }}>
+          {value.display}
+          <span style={{ fontSize: '12px', color: '#64748B', marginLeft: '6px', fontWeight: 500 }}>{value.unit}</span>
+        </div>
+      ) : (
+        <div style={{ color: '#475569', fontSize: '18px' }}>—</div>
+      )}
+    </div>
+  );
+}
+
+function InfoCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ padding: '10px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '12px', color: '#E2E8F0', fontFamily: "'JetBrains Mono', monospace" }}>{value}</div>
+    </div>
+  );
 }

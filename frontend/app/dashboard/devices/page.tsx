@@ -219,6 +219,13 @@ export default function DevicesPage() {
 
   useEffect(() => { fetchDevices(); }, []);
 
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('device');
+    if (!requested) return;
+    const match = devices.find((d) => d.id === requested);
+    if (match) setSelectedDevice(match);
+  }, [devices]);
+
   const connectedCount = devices.filter((d) => isDeviceConnected(d)).length;
   const disconnectedCount = devices.length - connectedCount;
   const activeCount = devices.filter((d) => isDeviceConnected(d) && d.power_state === 'on').length;

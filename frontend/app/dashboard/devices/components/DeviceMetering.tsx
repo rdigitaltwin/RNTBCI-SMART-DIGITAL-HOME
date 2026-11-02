@@ -1,18 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Gauge, PlugZap, Power, ShieldAlert, Zap } from 'lucide-react';
+import { Gauge, PlugZap, ShieldAlert } from 'lucide-react';
 import api, { type EpmReading, type Measurements, type ShuntReading } from '@/services/api';
-import { toggleDeviceState, type Device } from '@/store';
+import { type Device } from '@/store';
 
-function readingsFrom(data: ShuntReading | EpmReading): Measurements {
+function readingsFrom(data: ShuntReading | EpmReading): Measurements | null {
+  if (!data.available) return null;
   if ('measurements' in data && data.measurements) return data.measurements;
   if ('epm' in data && data.epm) return data.epm;
-  return { voltage: 0, current: 0, power: 0 };
+  return null;
 }
 
 function fmt(value: number, digits = 2) {
-  if (!Number.isFinite(value)) return '—';
+  if (!Number.isFinite(value)) return null;
   return value.toFixed(digits);
 }
 
@@ -21,18 +22,25 @@ export function MeasurementStrip({
   available,
   compact = false,
 }: {
-  measurements: Measurements;
+  measurements: Measurements | null;
   available: boolean;
   compact?: boolean;
 }) {
+  if (!available || !measurements) return null;
+
+  const voltage = fmt(measurements.voltage);
+  const current = fmt(measurements.current, 3);
+  const power = fmt(measurements.power, 1);
   const cells = [
-    { label: 'Voltage', value: `${fmt(measurements.voltage)} V`, live: true, color: '#00E5FF' },
-    { label: 'Current', value: available ? `${fmt(measurements.current, 3)} A` : '—', live: available, color: '#FFC857' },
-    { label: 'Power', value: available ? `${fmt(measurements.power, 1)} W` : '—', live: available, color: '#00FF9D' },
-  ];
+    { label: 'Voltage', value: voltage ? `${voltage} V` : null, color: '#00E5FF' },
+    { label: 'Current', value: current ? `${current} A` : null, color: '#FFC857' },
+    { label: 'Power', value: power ? `${power} W` : null, color: '#00FF9D' },
+  ].filter((cell) => cell.value != null);
+
+  if (cells.length === 0) return null;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: compact ? '8px' : '12px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cells.length}, 1fr)`, gap: compact ? '8px' : '12px' }}>
       {cells.map((cell) => (
         <div
           key={cell.label}
@@ -40,8 +48,7 @@ export function MeasurementStrip({
             background: 'rgba(255,255,255,0.02)',
             padding: compact ? '10px 12px' : '14px 16px',
             borderRadius: '12px',
-            border: `1px solid ${cell.live ? 'rgba(0, 229, 255, 0.18)' : 'rgba(255,255,255,0.05)'}`,
-            opacity: cell.live ? 1 : 0.55,
+            border: '1px solid rgba(0, 229, 255, 0.18)',
           }}
         >
           <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '4px' }}>{cell.label}</div>
@@ -49,7 +56,7 @@ export function MeasurementStrip({
             style={{
               fontSize: compact ? '15px' : '18px',
               fontWeight: 700,
-              color: cell.live ? cell.color : '#64748B',
+              color: cell.color,
               fontFamily: "'JetBrains Mono', monospace",
             }}
           >
@@ -65,7 +72,7 @@ export default function DeviceMetering({ device }: { device: Device }) {
   const [reading, setReading] = useState<ShuntReading | EpmReading | null>(null);
   const [category3, setCategory3] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
@@ -83,6 +90,8 @@ export default function DeviceMetering({ device }: { device: Device }) {
         return;
       }
       setError(message);
+    } finally {
+      setLoading(false);
     }
   }, [device.id]);
 
@@ -91,17 +100,6 @@ export default function DeviceMetering({ device }: { device: Device }) {
     const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, [load, device.power_state]);
-
-  const handleTurnOn = async () => {
-    if (toggling) return;
-    setToggling(true);
-    try {
-      await toggleDeviceState(device, 'on');
-      await load();
-    } finally {
-      setToggling(false);
-    }
-  };
 
   if (category3) {
     return (
@@ -120,7 +118,7 @@ export default function DeviceMetering({ device }: { device: Device }) {
         }}>
           <ShieldAlert size={16} color="#818CF8" style={{ marginTop: 2, flexShrink: 0 }} />
           <div style={{ fontSize: '12px', color: '#CBD5E1', lineHeight: 1.5 }}>
-            Category 3 battery / control-only device. No shunt or internal EPM is attached — use the existing control API.
+            Control-only device. Electrical monitoring is not attached.
           </div>
         </div>
       </div>
@@ -142,12 +140,13 @@ export default function DeviceMetering({ device }: { device: Device }) {
           color: '#FCD34D',
           lineHeight: 1.5,
         }}>
-          Shunt / EPM API is unreachable ({error}). Load values appear here once the backend metering routes are running.
+          Metering is currently unreachable.
         </div>
       </div>
     );
   }
 
+  if (loading && !reading) return null;
   if (!reading) return null;
 
   const measurements = readingsFrom(reading);
@@ -180,46 +179,26 @@ export default function DeviceMetering({ device }: { device: Device }) {
             fontSize: '10px',
             fontWeight: 700,
             letterSpacing: '0.08em',
-            color: available ? '#00FF9D' : '#FFC857',
-            background: available ? 'rgba(0,255,157,0.12)' : 'rgba(255,200,87,0.12)',
-            border: `1px solid ${available ? 'rgba(0,255,157,0.3)' : 'rgba(255,200,87,0.3)'}`,
+            color: available ? '#00FF9D' : '#94A3B8',
+            background: available ? 'rgba(0,255,157,0.12)' : 'rgba(148,163,184,0.12)',
+            border: `1px solid ${available ? 'rgba(0,255,157,0.3)' : 'rgba(148,163,184,0.25)'}`,
             borderRadius: '999px',
             padding: '3px 8px',
           }}>
-            {available ? 'LOAD LIVE' : 'DEVICE OFF'}
+            {available ? 'METER CONNECTED' : 'OFF'}
           </span>
         </div>
 
-        <MeasurementStrip measurements={measurements} available={available} />
-
-        {!available && (
-          <button
-            onClick={handleTurnOn}
-            disabled={toggling}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '10px',
-              borderRadius: '10px',
-              background: 'rgba(0, 255, 157, 0.1)',
-              border: '1px solid rgba(0, 255, 157, 0.3)',
-              color: '#00FF9D',
-              cursor: toggling ? 'wait' : 'pointer',
-              fontSize: '12px',
-              fontWeight: 600,
-            }}
-          >
-            <Power size={14} />
-            {toggling ? 'Turning on…' : 'Turn device ON to read current & power'}
-          </button>
-        )}
-
-        {available && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748B' }}>
-            <Zap size={12} color="#FFC857" />
-            Power = voltage × current
+        {available ? (
+          <MeasurementStrip measurements={measurements} available={available} />
+        ) : (
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '4px' }}>
+              Shunt Meter Unavailable
+            </div>
+            <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.5 }}>
+              Turn on the associated device to resume energy monitoring.
+            </div>
           </div>
         )}
       </div>
