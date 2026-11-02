@@ -125,26 +125,7 @@ export default function DeviceMetering({ device }: { device: Device }) {
     );
   }
 
-  if (error) {
-    return (
-      <div>
-        <h3 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#64748B', marginBottom: '12px' }}>
-          Metering
-        </h3>
-        <div style={{
-          background: 'rgba(255, 200, 87, 0.08)',
-          border: '1px solid rgba(255, 200, 87, 0.25)',
-          borderRadius: '12px',
-          padding: '14px 16px',
-          fontSize: '12px',
-          color: '#FCD34D',
-          lineHeight: 1.5,
-        }}>
-          Metering is currently unreachable.
-        </div>
-      </div>
-    );
-  }
+  if (error) return null;
 
   if (loading && !reading) return null;
   if (!reading) return null;

@@ -5,7 +5,7 @@
  * Availability is taken from the backend `available` flag (device must be ON).
  */
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Activity, ChevronDown, ChevronRight, Gauge, PlugZap, RefreshCw,
@@ -99,22 +99,6 @@ function normalizeShunt(raw: unknown): ShuntReading | null {
     devicePowerState: (obj.devicePowerState ?? obj.device_power_state) as string | undefined,
     available: obj.available !== false,
     measurements: asMeasurements(obj) || { voltage: 0, current: 0, power: 0 },
-    updatedAt: (obj.updatedAt ?? obj.updated_at ?? null) as string | null,
-  };
-}
-
-function normalizeEpm(raw: unknown, fallbackId: string): EpmReading | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const obj = raw as Record<string, unknown>;
-  const measurements = asMeasurements(obj);
-  if (!measurements) return null;
-  return {
-    deviceId: String(obj.deviceId || obj.device_id || fallbackId),
-    deviceName: obj.deviceName as string | undefined,
-    meterType: 'Internal',
-    devicePowerState: (obj.devicePowerState ?? obj.device_power_state) as string | undefined,
-    available: obj.available !== false,
-    epm: measurements,
     updatedAt: (obj.updatedAt ?? obj.updated_at ?? null) as string | null,
   };
 }
@@ -277,10 +261,10 @@ function EnergyMonitoringView() {
 
   const [catalog, setCatalog] = useState<MeteringCatalog | null>(null);
   const [shunts, setShunts] = useState<ShuntReading[]>([]);
-  const [epms, setEpms] = useState<Record<string, EpmReading>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [epms] = useState<Record<string, EpmReading>>({});
   const [loading, setLoading] = useState(true);
   const [syncedAt, setSyncedAt] = useState<Date | null>(null);
+  const fetchInFlight = useRef(false);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [historyRange, setHistoryRange] = useState<HistoryRange>('live');
   const [history, setHistory] = useState<Array<{ time: string; kw: number }>>([]);
@@ -291,6 +275,8 @@ function EnergyMonitoringView() {
   const [gridOpen, setGridOpen] = useState(true);
 
   const fetchMetering = useCallback(async () => {
+    if (fetchInFlight.current) return;
+    fetchInFlight.current = true;
     try {
       const [catalogOutcome, shuntOutcome] = await Promise.allSettled([
         api.getMeteringCatalog(),
@@ -305,63 +291,23 @@ function EnergyMonitoringView() {
         try {
           const grid = normalizeShunt(await api.getShuntMeter(catalogRes?.grid?.meterId || 'GRID001'));
           if (grid) shuntList = [...shuntList, grid];
-        } catch { /* GRID001 may not be seeded yet */ }
+        } catch { /* GRID001 is optional; house feed is computed from devices */ }
       }
       if (shuntList.length > 0) setShunts(shuntList);
-      const shuntByDeviceId: Record<string, ShuntReading> = {};
-      shuntList.forEach((s) => { if (s.deviceId) shuntByDeviceId[s.deviceId] = s; });
-
-      const catalogCat1 = (catalogRes?.devices || []).filter(
-        (d) => catalogCategory(d, shuntByDeviceId[d.deviceId]) === 1
-      );
-      const storeCat1 = useDeviceStore.getState().devices.filter(
-        (d) => GRID_DIRECT_TYPES.has(normalizeType(d.type))
-      );
-      const cat1Ids = Array.from(new Set([
-        ...catalogCat1.map((d) => d.deviceId),
-        ...storeCat1.map((d) => d.id),
-      ]));
-      const epmEntries = await Promise.allSettled(
-        cat1Ids.map(async (id) => {
-          try {
-            return [id, await api.getDeviceEpm(id)] as const;
-          } catch {
-            return [id, await api.getDeviceMetering(id)] as const;
-          }
-        })
-      );
-      const next: Record<string, EpmReading> = {};
-      epmEntries.forEach((entry) => {
-        if (entry.status !== 'fulfilled') return;
-        const [id, raw] = entry.value;
-        const normalized = normalizeEpm(raw, id);
-        if (normalized) next[id] = normalized;
-      });
-      if (Object.keys(next).length > 0) setEpms((prev) => ({ ...prev, ...next }));
-      if (catalogRes || shuntList.length > 0) {
-        setError(null);
-        setSyncedAt(new Date());
-      } else {
-        const failed = catalogOutcome.status === 'rejected' ? catalogOutcome.reason : shuntOutcome.status === 'rejected' ? shuntOutcome.reason : null;
-        setError(failed instanceof Error ? failed.message : 'Unable to reach metering');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to reach metering');
+    } catch {
+      /* Twin telemetry on the device store is the live source of truth. */
     } finally {
+      setSyncedAt(new Date());
       setLoading(false);
+      fetchInFlight.current = false;
     }
   }, []);
 
-  const powerSignature = devices
-    .map((d) => `${d.id}:${d.power_state}`)
-    .sort()
-    .join('|');
-
   useEffect(() => {
     fetchMetering();
-    const interval = setInterval(fetchMetering, 10_000);
+    const interval = setInterval(fetchMetering, 15_000);
     return () => clearInterval(interval);
-  }, [fetchMetering, powerSignature]);
+  }, [fetchMetering]);
 
   const shuntByMeter = useMemo(() => {
     const map: Record<string, ShuntReading> = {};
@@ -631,19 +577,6 @@ function EnergyMonitoringView() {
         </div>
       </header>
 
-      {error && !catalog && shunts.length === 0 && (
-        <div style={{
-          background: 'rgba(255, 77, 109, 0.08)',
-          border: '1px solid rgba(255, 77, 109, 0.28)',
-          color: '#FCA5A5',
-          padding: '12px 16px',
-          borderRadius: '12px',
-          fontSize: '13px',
-        }}>
-          Metering is unreachable. Device controls remain available on the Devices page.
-        </div>
-      )}
-
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -674,7 +607,7 @@ function EnergyMonitoringView() {
           {grouped.cat2.length > 0 && (
             <DeviceGroup title="Shunt meters" rows={grouped.cat2} selectedKey={selectedKey} onSelect={setSelectedKey} />
           )}
-          {!loading && rows.length === 0 && !error && (
+          {!loading && rows.length === 0 && (
             <div style={{ fontSize: '13px', color: '#64748B' }}>No metered devices are configured.</div>
           )}
         </section>
@@ -682,7 +615,7 @@ function EnergyMonitoringView() {
         <section className="glass-card" style={{ padding: '22px', minHeight: rows.length ? '420px' : 'auto' }}>
           {!selected ? (
             <div style={{ color: '#64748B', fontSize: '13px' }}>
-              {rows.length === 0 ? 'Meters appear here when the catalog is reachable.' : 'Select a device to inspect its meter.'}
+              {rows.length === 0 ? 'No metered devices are configured.' : 'Select a device to inspect its meter.'}
             </div>
           ) : (
             <SelectedMeter
