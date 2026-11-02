@@ -289,14 +289,15 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
   const storeDevice = useDeviceStore((s) => s.devices.find((d) => d.id === device?.id));
   const liveDevice = storeDevice || device;
 
-  // Close on Escape key
+  // Close on Escape key — only while a device is actually shown
   useEffect(() => {
+    if (!liveDevice) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [liveDevice, onClose]);
 
   useEffect(() => {
     if (liveDevice && isDeviceConnected(liveDevice) && (liveDevice?.type === 'energy_solar' || liveDevice?.type === 'solar_panel' || liveDevice?.type === 'solar_pv')) {
@@ -366,14 +367,15 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     }
   }, [liveDevice?.id, liveDevice?.type, liveDevice?.status, liveDevice?.connectivity]);
 
-  if (!liveDevice) return null;
-
-  const config = DEVICE_TYPE_CONFIG[liveDevice.type] || { emoji: '📱', label: liveDevice.type, color: '#94A3B8' };
-  const isConnected = isDeviceConnected(liveDevice);
-  const isOn = isConnected && liveDevice.power_state === 'on';
-  const meta = (liveDevice.metadata || {}) as any;
+  const config = liveDevice
+    ? (DEVICE_TYPE_CONFIG[liveDevice.type] || { emoji: '📱', label: liveDevice.type, color: '#94A3B8' })
+    : { emoji: '📱', label: '', color: '#94A3B8' };
+  const isConnected = liveDevice ? isDeviceConnected(liveDevice) : false;
+  const isOn = Boolean(liveDevice && isConnected && liveDevice.power_state === 'on');
+  const meta = ((liveDevice?.metadata || {}) as Record<string, unknown>);
 
   const handleToggleConnection = async () => {
+    if (!liveDevice) return;
     const newConnectivity = isConnected ? 'disconnected' : 'connected';
     const newStatus = isConnected ? 'offline' : 'online';
     const newPower = isConnected ? 'off' : liveDevice.power_state;
@@ -396,24 +398,31 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
 
   return (
     <AnimatePresence>
-      {/* Overlay */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 999,
-        }}
-      />
+      {liveDevice && (
+        <motion.div
+          key="device-panel-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 999,
+          }}
+        />
+      )}
 
-      {/* Side Panel */}
+      {liveDevice && (
       <motion.div
+        key="device-panel"
         ref={panelRef}
         initial={{ x: '100%', opacity: 0.5 }}
         animate={{ x: 0, opacity: 1 }}
@@ -500,7 +509,17 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
             </button>
 
             <button 
-              onClick={onClose}
+              type="button"
+              aria-label="Close device panel"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
               style={{ 
                 background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer',
                 padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -766,6 +785,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
 
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

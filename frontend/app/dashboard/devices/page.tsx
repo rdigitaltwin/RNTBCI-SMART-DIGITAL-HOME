@@ -7,7 +7,7 @@
  * Each card shows real-time power, status, and device-specific metadata.
  */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
   Search, Filter, Power, Zap, Thermometer, Wifi, Lock,
   Eye, ChevronDown, ToggleLeft, ToggleRight, RefreshCw, Plus, X,
@@ -186,6 +186,33 @@ export default function DevicesPage() {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+  // After the user closes the panel, ignore leftover ?device= so store refreshes
+  // (WebSocket / energy ticks) cannot immediately reopen it.
+  const ignoreDeviceQuery = useRef(false);
+  const closedAt = useRef(0);
+
+  const clearDeviceQuery = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('device')) return;
+    url.searchParams.delete('device');
+    const qs = url.searchParams.toString();
+    window.history.replaceState(null, '', `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`);
+  }, []);
+
+  const handleClosePanel = useCallback(() => {
+    ignoreDeviceQuery.current = true;
+    closedAt.current = Date.now();
+    setSelectedDevice(null);
+    clearDeviceQuery();
+  }, [clearDeviceQuery]);
+
+  const handleOpenDevice = useCallback((device: Device) => {
+    // Ignore the leftover click that lands on a card after the panel unmounts.
+    if (Date.now() - closedAt.current < 400) return;
+    ignoreDeviceQuery.current = false;
+    setSelectedDevice(device);
+  }, []);
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -220,10 +247,13 @@ export default function DevicesPage() {
   useEffect(() => { fetchDevices(); }, []);
 
   useEffect(() => {
+    if (ignoreDeviceQuery.current) return;
     const requested = new URLSearchParams(window.location.search).get('device');
     if (!requested) return;
     const match = devices.find((d) => d.id === requested);
-    if (match) setSelectedDevice(match);
+    if (match) {
+      setSelectedDevice((current) => (current?.id === match.id ? current : match));
+    }
   }, [devices]);
 
   const connectedCount = devices.filter((d) => isDeviceConnected(d)).length;
@@ -354,7 +384,7 @@ export default function DevicesPage() {
         gap: '16px',
       }}>
         {displayDevices.map((device) => (
-          <DeviceCard key={device.id} device={device} onClick={() => setSelectedDevice(device)} />
+          <DeviceCard key={device.id} device={device} onClick={() => handleOpenDevice(device)} />
         ))}
       </div>
 
@@ -366,7 +396,7 @@ export default function DevicesPage() {
 
       <DevicePanel 
         device={selectedDevice} 
-        onClose={() => setSelectedDevice(null)} 
+        onClose={handleClosePanel} 
       />
     </div>
   );
