@@ -73,6 +73,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Device schema repair skipped: {e}")
 
+    # Idempotent Category 1/2/3 metering seed (EPM rows, SHUNT001-005, GRID001)
+    try:
+        from backend.database import async_session_factory
+        from backend.utils.seed_shunt_meters import seed_shunt_metering
+
+        async with async_session_factory() as db:
+            created = await seed_shunt_metering(db)
+            logger.info("Metering seed complete: %s", created)
+    except Exception as e:
+        logger.warning("Metering seed skipped: %s", e)
+
     # Connect Redis (Redis client handles its own offline states usually)
     try:
         await redis_client.connect()

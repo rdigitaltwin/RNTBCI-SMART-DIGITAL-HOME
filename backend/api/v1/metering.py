@@ -49,6 +49,17 @@ async def get_metering_catalog(request: Request, db: AsyncSession = Depends(get_
     return await metering_service.architecture_catalog(db)
 
 
+@catalog_router.post("/seed")
+@limiter.limit("10/minute")
+async def seed_metering(request: Request, db: AsyncSession = Depends(get_db)):
+    """Idempotent seed for categories, GRID001, SHUNT001-005, and Category 1 EPM rows."""
+    from backend.utils.seed_shunt_meters import seed_shunt_metering
+
+    created = await seed_shunt_metering(db)
+    catalog = await metering_service.architecture_catalog(db)
+    return {"created": created, "grid": catalog.get("grid"), "deviceCount": len(catalog.get("devices") or [])}
+
+
 @shunt_router.get("")
 @limiter.limit("60/minute")
 async def list_shunt_meters(request: Request, db: AsyncSession = Depends(get_db)):

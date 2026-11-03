@@ -128,8 +128,13 @@ def visible_measurements(voltage: float, current: float, power: float, available
 
 
 def require_load_access(field: str, available: bool) -> None:
-    if field in LOAD_FIELDS and not available:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=OFF_DETAIL)
+    """Load fields stay readable while off — callers expose 0 via visible_measurements.
+
+    Kept as a no-op so /epm/{field} and /shunt/{id}/{field} do not 409 when the
+    device is off; POST writes of non-zero load while off still conflict via
+    enforce_off_write.
+    """
+    return
 
 
 async def find_device(identifier: str, db: AsyncSession) -> Optional[Device]:
