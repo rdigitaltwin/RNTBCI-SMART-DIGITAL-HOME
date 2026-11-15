@@ -73,7 +73,8 @@ Resources:
       StorageEncrypted: true
       PubliclyAccessible: false
       MultiAZ: false
-      BackupRetentionPeriod: 7
+      # Free-tier accounts reject longer retention; keep 1 day
+      BackupRetentionPeriod: 1
       DeletionProtection: true
       ManageMasterUserPassword: true
       MasterUsername: postgres

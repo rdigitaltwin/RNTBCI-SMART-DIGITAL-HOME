@@ -1,0 +1,41 @@
+# Runtime deps for the ECS image. CPU-only torch (no CUDA/nvidia wheels).
+# Keep in sync with requirements.txt minus GPU-heavy transitive installs.
+
+fastapi==0.115.12
+uvicorn[standard]==0.34.3
+python-multipart==0.0.20
+
+sqlalchemy[asyncio]==2.0.41
+asyncpg==0.30.0
+alembic==1.15.2
+
+pydantic[email]==2.11.3
+email-validator==2.1.1
+pydantic-settings==2.9.1
+
+python-jose[cryptography]==3.4.0
+argon2-cffi==23.1.0
+passlib==1.7.4
+
+redis[hiredis]==5.3.0
+aiomqtt==2.3.0
+slowapi==0.1.9
+
+python-dotenv==1.1.0
+httpx==0.28.1
+pytest==8.3.5
+pytest-asyncio==0.25.3
+python-json-logger==3.2.1
+openpyxl>=3.1.5
+
+joblib
+pandas
+scikit-learn
+shap
+numpy
+xgboost
+lightgbm
+catboost
+
+# CPU torch only — installed separately in Dockerfile from the pytorch CPU index
+# torch

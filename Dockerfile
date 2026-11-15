@@ -14,10 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY requirements.docker.txt .
+# CPU-only torch first (avoid CUDA/nvidia wheels that bloat the Fargate image)
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install -r requirements.txt
+    && /opt/venv/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch \
+    && /opt/venv/bin/pip install -r requirements.docker.txt
 
 
 FROM python:3.12-slim AS runtime
