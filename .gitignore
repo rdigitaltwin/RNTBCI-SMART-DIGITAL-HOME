@@ -90,3 +90,8 @@ uvicorn.log
 # patch_devices.py
 # reset_db.py
 RNTBCI_PROJECT.mov
+.env.migration
+
+# local migration secrets
+*.local
+/tmp/

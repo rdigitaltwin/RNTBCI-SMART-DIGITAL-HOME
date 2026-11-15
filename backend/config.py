@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://postgres:password@localhost:5432/rntbci"
     database_sync_url: str = "postgresql://postgres:password@localhost:5432/rntbci"
+    database_ssl: bool = False  # set DATABASE_SSL=true for RDS / managed Postgres
     db_pool_size: int = 20
     db_max_overflow: int = 10
 
@@ -93,6 +94,19 @@ class Settings(BaseSettings):
         elif url.startswith("postgresql://"):
             self.database_url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+        # Detect SSL from query string or DATABASE_SSL env; strip sslmode for asyncpg
+        lower = self.database_url.lower()
+        if "sslmode=require" in lower or "sslmode=verify" in lower or self.database_ssl:
+            self.database_ssl = True
+        if "?" in self.database_url:
+            base, _, query = self.database_url.partition("?")
+            kept = [
+                part
+                for part in query.split("&")
+                if part and not part.lower().startswith("sslmode=")
+            ]
+            self.database_url = f"{base}?{'&'.join(kept)}" if kept else base
+
         # Log environment securely (without passwords)
         env_type = "Local" if "localhost" in self.database_url or "127.0.0.1" in self.database_url else "Remote/PaaS"
         
@@ -105,7 +119,7 @@ class Settings(BaseSettings):
             logging.info(f"Environment: {env_type}")
             logging.info(f"Database Host: {safe_host}")
             logging.info(f"Database Name: {safe_db}")
-            logging.info(f"SSL Enabled: {'sslmode=' in self.database_url.lower()}")
+            logging.info(f"SSL Enabled: {self.database_ssl}")
         except Exception:
             logging.warning("Could not safely parse DATABASE_URL for logging.")
 

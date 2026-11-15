@@ -8,6 +8,11 @@ from backend.config import get_settings
 
 settings = get_settings()
 
+_connect_args: dict = {}
+if settings.database_ssl:
+    # asyncpg: enable TLS without requiring a local CA bundle (RDS / Railway)
+    _connect_args["ssl"] = True
+
 engine = create_async_engine(
     settings.database_url,
     echo=settings.debug_sql,
@@ -15,6 +20,7 @@ engine = create_async_engine(
     max_overflow=settings.db_max_overflow,
     pool_pre_ping=True,
     pool_recycle=3600,
+    connect_args=_connect_args,
 )
 
 async_session_factory = async_sessionmaker(
