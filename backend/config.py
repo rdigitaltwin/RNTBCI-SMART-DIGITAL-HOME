@@ -45,10 +45,15 @@ class Settings(BaseSettings):
     debug: bool = False
     debug_sql: bool = False
 
-    # Database
+    # Database (prefer DATABASE_URL; or assemble from DB_* when injected by ECS secrets)
     database_url: str = "postgresql+asyncpg://postgres:password@localhost:5432/rntbci"
     database_sync_url: str = "postgresql://postgres:password@localhost:5432/rntbci"
     database_ssl: bool = False  # set DATABASE_SSL=true for RDS / managed Postgres
+    db_host: str = ""
+    db_port: int = 5432
+    db_user: str = ""
+    db_password: str = ""
+    db_name: str = "rntbci"
     db_pool_size: int = 20
     db_max_overflow: int = 10
 
@@ -86,6 +91,18 @@ class Settings(BaseSettings):
         """Resolve JWT secret and validate Database URL after initialization."""
         if not self.jwt_secret_key:
             self.jwt_secret_key = _resolve_jwt_secret()
+
+        # Assemble DATABASE_URL from discrete DB_* env vars when provided (ECS Secrets)
+        if self.db_host and self.db_user and self.db_password:
+            from urllib.parse import quote_plus
+
+            user = quote_plus(self.db_user)
+            password = quote_plus(self.db_password)
+            host = self.db_host
+            port = self.db_port
+            name = self.db_name or "rntbci"
+            self.database_url = f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{name}"
+            self.database_sync_url = f"postgresql://{user}:{password}@{host}:{port}/{name}"
 
         # Parse and sanitize database URL for asyncpg (Standardize PaaS URLs)
         url = self.database_url

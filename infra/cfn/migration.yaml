@@ -1,0 +1,247 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: RNTBCI backend migration foundation (ECR, RDS, Secrets, IAM, GitHub OIDC)
+
+Parameters:
+  ProjectTag:
+    Type: String
+    Default: migration
+  GitHubOrg:
+    Type: String
+    Default: 12asascoder
+  GitHubRepo:
+    Type: String
+    Default: RNTBCI-Project
+  DbName:
+    Type: String
+    Default: rntbci
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
+Resources:
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: myapp
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS Postgres for RNTBCI migration
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 172.31.0.0/16
+          Description: Postgres from default VPC CIDR (ECS tasks)
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+        - Key: Name
+          Value: rntbci-rds-sg
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: RNTBCI migration RDS subnets
+      SubnetIds: !Ref SubnetIds
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  DbInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: rntbci-postgres
+      DBName: !Ref DbName
+      Engine: postgres
+      EngineVersion: "16"
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 20
+      StorageType: gp3
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      DeletionProtection: true
+      ManageMasterUserPassword: true
+      MasterUsername: postgres
+      VPCSecurityGroups:
+        - !Ref RdsSecurityGroup
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  AppSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: rntbci/app
+      Description: App secrets for RNTBCI ECS backend (JWT and CORS)
+      GenerateSecretString:
+        SecretStringTemplate: '{"ALLOWED_ORIGINS":"https://rntbci-project.vercel.app"}'
+        GenerateStringKey: JWT_SECRET_KEY
+        PasswordLength: 64
+        ExcludePunctuation: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  EcsTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rntbci-ecs-task-execution
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: ReadMigrationSecrets
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource:
+                  - !Ref AppSecret
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:rds!db-*"
+                Condition:
+                  Bool:
+                    aws:SecureTransport: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  EcsTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rntbci-ecs-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  ExpressInfrastructureRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ecsInfrastructureRoleForExpressServices
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - ffffffffffffffffffffffffffffffffffffffff
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rntbci-github-deploy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:*"
+      Policies:
+        - PolicyName: EcrPushAndEcsExpressUpdate
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                Resource: !GetAtt EcrRepository.Arn
+              - Effect: Allow
+                Action:
+                  - ecs:UpdateExpressGatewayService
+                  - ecs:DescribeExpressGatewayService
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DescribeTaskDefinition
+                  - ecs:ListTasks
+                  - ecs:DescribeTasks
+                  - ecs:DescribeServices
+                  - iam:PassRole
+                Resource: "*"
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectTag
+
+Outputs:
+  EcrRepositoryUri:
+    Value: !GetAtt EcrRepository.RepositoryUri
+  DbEndpoint:
+    Value: !GetAtt DbInstance.Endpoint.Address
+  DbPort:
+    Value: !GetAtt DbInstance.Endpoint.Port
+  DbInstanceId:
+    Value: !Ref DbInstance
+  AppSecretArn:
+    Value: !Ref AppSecret
+  TaskExecutionRoleArn:
+    Value: !GetAtt EcsTaskExecutionRole.Arn
+  TaskRoleArn:
+    Value: !GetAtt EcsTaskRole.Arn
+  ExpressInfrastructureRoleArn:
+    Value: !GetAtt ExpressInfrastructureRole.Arn
+  GitHubDeployRoleArn:
+    Value: !GetAtt GitHubDeployRole.Arn
+  RdsSecurityGroupId:
+    Value: !Ref RdsSecurityGroup
